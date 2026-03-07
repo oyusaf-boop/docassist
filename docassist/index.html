@@ -25,61 +25,33 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 #logo span { color:#60b0f0; }
 #hdr-meta { font-size:11px; color:rgba(255,255,255,0.35); }
 
-
-
-/* MAIN LAYOUT — two columns */
-#wrap { max-width:1360px; margin:0 auto; padding:24px 22px 60px; display:grid; grid-template-columns:480px 1fr; gap:20px; align-items:start; }
+/* MAIN LAYOUT */
+#wrap { max-width:1400px; margin:0 auto; padding:24px 22px 60px; display:grid; grid-template-columns:480px 1fr; gap:20px; align-items:start; }
 
 /* LEFT INPUT COLUMN */
 #left { display:flex; flex-direction:column; gap:0; position:sticky; top:70px; }
 
 /* NOTE TYPE TABS */
-.type-tabs { display:flex; gap:0; margin-bottom:0; }
+.type-tabs { display:flex; gap:0; }
 .ntab { flex:1; padding:10px 8px; border:1.5px solid var(--border); border-bottom:none; background:#f4f1ec; color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.12s; text-align:center; }
 .ntab:first-child { border-radius:10px 0 0 0; }
 .ntab:last-child { border-radius:0 10px 0 0; }
 .ntab.on { background:white; color:var(--navy); border-bottom-color:white; z-index:2; position:relative; }
 
 /* INPUT FORM CARD */
-#input-card { background:white; border-radius:0 10px 10px 10px; border:1.5px solid var(--border); box-shadow:var(--shadow); padding:18px; display:flex; flex-direction:column; gap:0; }
+#input-card { background:white; border-radius:0 10px 10px 10px; border:1.5px solid var(--border); box-shadow:var(--shadow); padding:18px; display:flex; flex-direction:column; }
 
-/* INDIVIDUAL INPUT SECTION */
-.input-section { display:flex; flex-direction:column; gap:0; margin-bottom:0; }
+.input-section { display:flex; flex-direction:column; }
 .input-section + .input-section { margin-top:14px; }
 
-.inp-label {
-  font-size:10px; font-weight:800; color:var(--text3);
-  text-transform:uppercase; letter-spacing:1px;
-  padding:8px 12px;
-  background:#f4f1ec;
-  border:1.5px solid var(--border);
-  border-bottom:none;
-  border-radius:8px 8px 0 0;
-  display:flex; align-items:center; gap:6px;
-}
+.inp-label { font-size:10px; font-weight:800; color:var(--text3); text-transform:uppercase; letter-spacing:1px; padding:8px 12px; background:#f4f1ec; border:1.5px solid var(--border); border-bottom:none; border-radius:8px 8px 0 0; display:flex; align-items:center; gap:6px; }
 .inp-label .lbl-icon { font-size:13px; }
 .inp-label .lbl-hint { font-size:10px; color:#b0a8a0; font-weight:400; margin-left:auto; font-style:italic; }
 
-.inp-area {
-  width:100%;
-  border:1.5px solid var(--border);
-  border-top:none;
-  border-radius:0 0 8px 8px;
-  padding:11px 13px;
-  font-family:'SF Mono',ui-monospace,monospace;
-  font-size:12.5px;
-  line-height:1.7;
-  color:var(--text);
-  background:#faf8f5;
-  resize:vertical;
-  outline:none;
-  transition:border-color 0.15s, background 0.15s;
-  min-height:100px;
-}
+.inp-area { width:100%; border:1.5px solid var(--border); border-top:none; border-radius:0 0 8px 8px; padding:11px 13px; font-family:'SF Mono',ui-monospace,monospace; font-size:12.5px; line-height:1.7; color:var(--text); background:#faf8f5; resize:vertical; outline:none; transition:border-color 0.15s, background 0.15s; min-height:100px; }
 .inp-area:focus { border-color:var(--navy2); background:white; }
 .inp-area.tall { min-height:160px; }
 
-/* CONNECTOR LINE between sections */
 .connector { width:2px; height:12px; background:var(--border); margin:0 auto; }
 
 /* ANALYZE BUTTON */
@@ -96,7 +68,6 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 #prog-fill { height:100%; background:var(--navy2); width:0%; transition:width 0.5s ease; border-radius:3px; }
 #prog-txt { font-size:11px; color:var(--text3); }
 
-/* ASSUMPTION NOTE */
 .assumption-note { margin-top:14px; padding:10px 13px; background:#f4f1ec; border-radius:8px; border:1px solid var(--border); font-size:11.5px; color:var(--text2); line-height:1.6; }
 .assumption-note strong { color:var(--text); }
 
@@ -112,8 +83,21 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .rev-val.green { color:#60d090; }
 .rev-div { width:1px; height:36px; background:rgba(255,255,255,0.15); }
 
-/* OUTPUT CARDS */
-.card { background:white; border-radius:14px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
+/* OUTPUT TABS */
+.out-tabs { display:flex; gap:0; }
+.otab { padding:10px 18px; border:1.5px solid var(--border); border-bottom:none; background:#f4f1ec; color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.12s; }
+.otab:first-child { border-radius:10px 0 0 0; }
+.otab:last-child { border-radius:0 10px 0 0; }
+.otab.on { background:white; color:var(--navy); border-bottom-color:white; z-index:2; position:relative; }
+.otab-badge { display:inline-block; background:#c0392b; color:white; border-radius:10px; font-size:9px; font-weight:800; padding:1px 5px; margin-left:4px; vertical-align:middle; }
+
+/* OUTPUT PANELS */
+.out-panel { display:none; }
+.out-panel.on { display:flex; flex-direction:column; gap:16px; }
+
+/* CARDS */
+.card { background:white; border-radius:0 14px 14px 14px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
+.card-first { border-radius:0 0 14px 14px; }
 .card-hdr { padding:13px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:#faf8f5; }
 .card-title { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.9px; }
 .card-body { padding:18px; }
@@ -185,6 +169,22 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .gap-dot { width:5px; height:5px; border-radius:50%; background:#e0a020; margin-top:6px; flex-shrink:0; }
 .sec-lbl { font-size:10.5px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; }
 
+/* OPTIMIZED A&P */
+#ap-card { background:white; border-radius:0 14px 14px 14px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
+#ap-hdr { padding:13px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:#faf8f5; }
+#ap-hdr-left { display:flex; flex-direction:column; gap:2px; }
+#ap-hdr-title { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.9px; }
+#ap-hdr-sub { font-size:11px; color:var(--text3); }
+#copy-btn { padding:8px 16px; background:var(--navy); color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:6px; transition:background 0.15s; }
+#copy-btn:hover { background:#163d5e; }
+#copy-btn.copied { background:#0f5132; }
+#ap-body { padding:20px; }
+#ap-text { font-family:'SF Mono',ui-monospace,monospace; font-size:13px; line-height:1.8; color:var(--text); white-space:pre-wrap; word-break:break-word; }
+
+/* Suggested diagnosis styling in A&P */
+.ap-suggested { background:#fff8e8; border-left:3px solid #e0a020; padding:10px 14px; margin-top:10px; border-radius:0 6px 6px 0; font-size:13px; line-height:1.7; color:var(--text); }
+.ap-suggested-label { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.7px; color:#7a4f00; margin-bottom:4px; }
+
 ::-webkit-scrollbar { width:5px; }
 ::-webkit-scrollbar-thumb { background:var(--border); border-radius:5px; }
 </style>
@@ -193,104 +193,68 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 
 <div id="hdr">
   <div id="logo"><div id="logo-icon">⚕</div>Doc<span>Assist</span></div>
-  <div id="hdr-meta">CDI & E&M Companion · Beta v1.2</div>
+  <div id="hdr-meta">CDI & E&M Companion · Beta v2.0</div>
 </div>
-
-
 
 <div id="wrap">
 
   <!-- ── LEFT: INPUT ── -->
   <div id="left">
-
-    <!-- NOTE TYPE TABS -->
     <div class="type-tabs">
-      <button class="ntab on"  onclick="setTab(this,'hp')">Initial H&P</button>
-      <button class="ntab"     onclick="setTab(this,'progress')">Progress Note</button>
-      <button class="ntab"     onclick="setTab(this,'discharge')">Discharge</button>
+      <button class="ntab on" onclick="setTab(this,'hp')">Initial H&P</button>
+      <button class="ntab"    onclick="setTab(this,'progress')">Progress Note</button>
+      <button class="ntab"    onclick="setTab(this,'discharge')">Discharge</button>
     </div>
 
-    <!-- INPUT FORM -->
     <div id="input-card">
-
-      <!-- H&P INPUTS (default visible) -->
+      <!-- H&P -->
       <div id="inputs-hp">
         <div class="input-section">
-          <div class="inp-label">
-            <span class="lbl-icon">1️⃣</span>
-            <span>History of Present Illness (HPI)</span>
-            <span class="lbl-hint">paste from MT</span>
-          </div>
+          <div class="inp-label"><span class="lbl-icon">1️⃣</span><span>History of Present Illness (HPI)</span><span class="lbl-hint">paste from MT</span></div>
           <textarea id="hp-hpi" class="inp-area" placeholder="Paste your HPI here..."></textarea>
         </div>
         <div class="connector"></div>
         <div class="input-section">
-          <div class="inp-label">
-            <span class="lbl-icon">2️⃣</span>
-            <span>Labs & Diagnostic Data</span>
-            <span class="lbl-hint">paste from MT</span>
-          </div>
+          <div class="inp-label"><span class="lbl-icon">2️⃣</span><span>Labs & Diagnostic Data</span><span class="lbl-hint">paste from MT</span></div>
           <textarea id="hp-labs" class="inp-area" placeholder="Paste labs and diagnostic data here..."></textarea>
         </div>
         <div class="connector"></div>
         <div class="input-section">
-          <div class="inp-label">
-            <span class="lbl-icon">3️⃣</span>
-            <span>Assessment & Plan (A&P)</span>
-            <span class="lbl-hint">paste from MT</span>
-          </div>
-          <textarea id="hp-ap" class="inp-area tall" placeholder="Paste your A&amp;P here..."></textarea>
+          <div class="inp-label"><span class="lbl-icon">3️⃣</span><span>Assessment & Plan (A&P)</span><span class="lbl-hint">paste from MT</span></div>
+          <textarea id="hp-ap" class="inp-area tall" placeholder="Paste your A&P here..."></textarea>
         </div>
       </div>
 
-      <!-- PROGRESS NOTE INPUTS (hidden by default) -->
+      <!-- Progress Note -->
       <div id="inputs-progress" style="display:none;">
         <div class="input-section">
-          <div class="inp-label">
-            <span class="lbl-icon">1️⃣</span>
-            <span>Labs & Diagnostic Data</span>
-            <span class="lbl-hint">paste from MT</span>
-          </div>
+          <div class="inp-label"><span class="lbl-icon">1️⃣</span><span>Labs & Diagnostic Data</span><span class="lbl-hint">paste from MT</span></div>
           <textarea id="pn-labs" class="inp-area" placeholder="Paste today's labs and data here..."></textarea>
         </div>
         <div class="connector"></div>
         <div class="input-section">
-          <div class="inp-label">
-            <span class="lbl-icon">2️⃣</span>
-            <span>Assessment & Plan (A&P)</span>
-            <span class="lbl-hint">paste from MT</span>
-          </div>
-          <textarea id="pn-ap" class="inp-area tall" placeholder="Paste today's A&amp;P here..."></textarea>
+          <div class="inp-label"><span class="lbl-icon">2️⃣</span><span>Assessment & Plan (A&P)</span><span class="lbl-hint">paste from MT</span></div>
+          <textarea id="pn-ap" class="inp-area tall" placeholder="Paste today's A&P here..."></textarea>
         </div>
       </div>
 
-      <!-- DISCHARGE INPUTS (hidden by default) -->
+      <!-- Discharge -->
       <div id="inputs-discharge" style="display:none;">
         <div class="input-section">
-          <div class="inp-label">
-            <span class="lbl-icon">1️⃣</span>
-            <span>Hospital Course & Labs</span>
-            <span class="lbl-hint">paste from MT</span>
-          </div>
+          <div class="inp-label"><span class="lbl-icon">1️⃣</span><span>Hospital Course & Labs</span><span class="lbl-hint">paste from MT</span></div>
           <textarea id="dc-labs" class="inp-area" placeholder="Paste hospital course and labs here..."></textarea>
         </div>
         <div class="connector"></div>
         <div class="input-section">
-          <div class="inp-label">
-            <span class="lbl-icon">2️⃣</span>
-            <span>Discharge Diagnoses & Plan</span>
-            <span class="lbl-hint">paste from MT</span>
-          </div>
+          <div class="inp-label"><span class="lbl-icon">2️⃣</span><span>Discharge Diagnoses & Plan</span><span class="lbl-hint">paste from MT</span></div>
           <textarea id="dc-ap" class="inp-area tall" placeholder="Paste discharge diagnoses and plan here..."></textarea>
         </div>
       </div>
 
-      <!-- ASSUMPTION NOTE -->
       <div class="assumption-note">
         <strong>Assumed documented:</strong> Physical exam, PMH/PSH, medications, allergies, ROS, social history. Analysis focuses on HPI complexity, data reviewed, and A&P for E&M + CDI.
       </div>
 
-      <!-- ANALYZE BUTTON -->
       <div id="btn-row">
         <button id="analyze-btn" onclick="analyze()"><span>⚡</span> Analyze Note</button>
         <button id="clear-btn" onclick="clearAll()">Clear</button>
@@ -300,14 +264,13 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
         <div id="prog-bg"><div id="prog-fill"></div></div>
         <div id="prog-txt"></div>
       </div>
-
     </div>
   </div>
 
   <!-- ── RIGHT: OUTPUT ── -->
   <div id="right">
 
-    <!-- REVENUE SUMMARY BAR -->
+    <!-- REVENUE BAR -->
     <div id="rev-bar">
       <div class="rev-item"><div class="rev-label">E&M Level</div><div class="rev-val" id="rev-em">—</div></div>
       <div class="rev-div"></div>
@@ -320,45 +283,72 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
       <div class="rev-item"><div class="rev-label">CDI Alerts</div><div class="rev-val" id="rev-alerts">—</div></div>
     </div>
 
-    <!-- E&M PANEL -->
-    <div class="card">
-      <div class="card-hdr">
-        <span class="card-title">E&M Level Analysis</span>
-        <span style="font-size:11px;color:var(--text3);">Based on Medical Decision Making (MDM)</span>
+    <!-- OUTPUT TABS -->
+    <div>
+      <div class="out-tabs">
+        <button class="otab on" onclick="setOutTab(this,'analysis')">📊 Analysis</button>
+        <button class="otab" id="ap-tab-btn" onclick="setOutTab(this,'ap')">✏️ Optimized A&P</button>
       </div>
-      <div class="card-body" id="em-body">
-        <div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">E&M Level Analysis</div><div class="empty-sub">Paste your note sections and click Analyze</div></div>
-      </div>
-    </div>
 
-    <!-- CDI ALERTS PANEL -->
-    <div class="card">
-      <div class="card-hdr">
-        <span class="card-title">CDI Alerts</span>
-        <span style="font-size:11px;color:var(--text3);">Clinical Documentation Integrity</span>
-      </div>
-      <div class="card-body" id="cdi-body">
-        <div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps, missing diagnoses, and coding opportunities appear here</div></div>
-      </div>
-    </div>
+      <!-- ANALYSIS PANEL -->
+      <div id="panel-analysis" class="out-panel on" style="margin-top:0;">
 
-    <!-- DRG + ICD PANEL -->
-    <div class="card">
-      <div class="card-hdr">
-        <span class="card-title">DRG & ICD-10 Optimization</span>
-        <span style="font-size:11px;color:var(--text3);">Revenue impact analysis</span>
-      </div>
-      <div class="card-body" id="drg-body">
-        <div class="empty"><div class="empty-ico">💰</div><div class="empty-ttl">DRG & ICD-10 Analysis</div><div class="empty-sub">DRG comparison, ICD-10 codes, and documentation gaps appear here</div></div>
-      </div>
-    </div>
+        <div class="card card-first">
+          <div class="card-hdr">
+            <span class="card-title">E&M Level Analysis</span>
+            <span style="font-size:11px;color:var(--text3);">Based on Medical Decision Making (MDM)</span>
+          </div>
+          <div class="card-body" id="em-body">
+            <div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">E&M Level Analysis</div><div class="empty-sub">Paste your note sections and click Analyze</div></div>
+          </div>
+        </div>
 
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">CDI Alerts</span>
+            <span style="font-size:11px;color:var(--text3);">Clinical Documentation Integrity</span>
+          </div>
+          <div class="card-body" id="cdi-body">
+            <div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps, missing diagnoses, and coding opportunities appear here</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">DRG & ICD-10 Optimization</span>
+            <span style="font-size:11px;color:var(--text3);">Revenue impact analysis</span>
+          </div>
+          <div class="card-body" id="drg-body">
+            <div class="empty"><div class="empty-ico">💰</div><div class="empty-ttl">DRG & ICD-10 Analysis</div><div class="empty-sub">DRG comparison, ICD-10 codes, and documentation gaps appear here</div></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- OPTIMIZED A&P PANEL -->
+      <div id="panel-ap" class="out-panel">
+        <div id="ap-card">
+          <div id="ap-hdr">
+            <div id="ap-hdr-left">
+              <div id="ap-hdr-title">Optimized A&P</div>
+              <div id="ap-hdr-sub">Ready to copy and paste into MT</div>
+            </div>
+            <button id="copy-btn" onclick="copyAP()">📋 Copy A&P</button>
+          </div>
+          <div id="ap-body">
+            <div class="empty"><div class="empty-ico">✏️</div><div class="empty-ttl">Optimized A&P</div><div class="empty-sub">Run analysis first — your CDI-optimized note will appear here ready to copy into MT</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end tabs wrapper -->
   </div>
 </div>
 
 <script>
 let currentTab = 'hp';
-
+let currentOutTab = 'analysis';
+let apPlainText = '';
 
 function setTab(btn, tab) {
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('on'));
@@ -369,6 +359,14 @@ function setTab(btn, tab) {
   });
 }
 
+function setOutTab(btn, tab) {
+  document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  currentOutTab = tab;
+  document.getElementById('panel-analysis').classList.toggle('on', tab==='analysis');
+  document.getElementById('panel-ap').classList.toggle('on', tab==='ap');
+}
+
 function getInputs() {
   if (currentTab === 'hp') return {
     hpi:  document.getElementById('hp-hpi').value.trim(),
@@ -377,24 +375,20 @@ function getInputs() {
     type: 'Initial H&P'
   };
   if (currentTab === 'progress') return {
-    hpi:  '',
-    labs: document.getElementById('pn-labs').value.trim(),
-    ap:   document.getElementById('pn-ap').value.trim(),
-    type: 'Subsequent Progress Note'
+    hpi: '', labs: document.getElementById('pn-labs').value.trim(),
+    ap: document.getElementById('pn-ap').value.trim(), type: 'Subsequent Progress Note'
   };
   return {
-    hpi:  '',
-    labs: document.getElementById('dc-labs').value.trim(),
-    ap:   document.getElementById('dc-ap').value.trim(),
-    type: 'Discharge Summary'
+    hpi: '', labs: document.getElementById('dc-labs').value.trim(),
+    ap: document.getElementById('dc-ap').value.trim(), type: 'Discharge Summary'
   };
 }
 
-async function callClaude(system, user, maxTokens) {
+async function callAPI(system, user, maxTokens) {
   const res = await fetch('/api/analyze', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ system, user, maxTokens: maxTokens || 2000 })
+    body: JSON.stringify({ system, user, maxTokens: maxTokens || 2500 })
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error);
@@ -407,6 +401,151 @@ function parseJSON(raw) {
   return JSON.parse(s);
 }
 
+const SYSTEM_ANALYSIS = `You are a combined CDI specialist, E&M coding expert, and inpatient medical coding specialist for hospitalist physicians. You use FY2026 ICD-10-CM guidelines and CC/MCC classifications.
+
+PHYSICAL EXAM, PMH, PSH, MEDICATIONS, ALLERGIES, ROS are ASSUMED DOCUMENTED — never flag these as missing.
+
+CRITICAL CDI RULES (FY2026):
+
+E&M CODING:
+- Initial H&P: 99221 (Low), 99222 (Moderate), 99223 (High)
+- Subsequent: 99231 (Low), 99232 (Moderate), 99233 (High)
+- Need 2/3 MDM elements: Problems, Data, Risk
+- High MDM: 1+ highly complex problem OR multiple chronic with exacerbation
+- Moderate MDM: 1 chronic with exacerbation OR 2+ stable chronic
+- Inpatient rule: "possible/probable/suspected/likely/consistent with/compatible with" = code as confirmed
+
+CC/MCC RULES (FY2026 SOI):
+HEART FAILURE: "CHF" unspecified = NON-CC (SOI=1). Must specify BOTH acuity AND type:
+  - Acute/Acute-on-Chronic Systolic or Diastolic or Combined CHF = MCC (SOI=3)
+  - Chronic Systolic/Diastolic/Combined = CC (SOI=1)
+  - ALWAYS flag unspecified CHF as critical alert
+
+RESPIRATORY FAILURE:
+  - "Respiratory insufficiency" or "respiratory distress" = NON-CC (SOI=1) — do NOT accept these
+  - Acute Respiratory Failure (J96.0x) = MCC (SOI=4) — does NOT require intubation/ventilation
+  - Acute-on-Chronic Respiratory Failure = MCC (SOI=4)
+  - Chronic Respiratory Failure = CC (SOI=2)
+  - Flag hypoxia requiring O2 or hypercapnia as potential respiratory failure
+
+AKI / RENAL:
+  - AKI (N17.9) = CC (SOI=2)
+  - AKI with Acute Tubular Necrosis (ATN) (N17.0) = MCC (SOI=4) — upgrade if: >72hr to resolve, post-contrast, post-hypotension, sepsis-associated, urine Na >40
+  - Vasomotor Nephropathy = MCC (SOI=4)
+  - Hepatorenal Syndrome = MCC (SOI=4)
+  - CKD Stage 4-5 = CC. ESRD = MCC. "Renal insufficiency" or "CRI" = NON-CC — flag it
+  - Chronic renal failure / renal insufficiency without staging = NON-CC — must specify CKD stage
+
+SEPSIS:
+  - "Urosepsis" has NO ICD-10 code — always flag, must query for sepsis vs UTI
+  - Sepsis (A41.x) = MCC. Code by organism if known: A41.01 MSSA, A41.02 MRSA, A41.51 E.coli
+  - Severe Sepsis (R65.2x) = requires documented organ dysfunction linked to sepsis
+  - Septic Shock (R65.21) requires SBP<90 unresponsive to fluids OR lactate>4
+  - Negative blood cultures do NOT rule out sepsis if clinical evidence present
+
+MALNUTRITION (highly under-documented):
+  - Mild/Moderate Malnutrition = CC (SOI=3). Severe Malnutrition = MCC (SOI=3)
+  - Flag when ANY present: albumin <3.4, prealbumin <15, unintentional weight loss, poor PO intake, NPO >5 days, muscle wasting, BMI<20, pressure ulcers
+  - Severe criteria: albumin <2.8, prealbumin <5, BMI<18.5, weight loss >5% in 1mo or >10% in 6mo
+  - Kwashiorkor rare in US — code protein-calorie malnutrition instead
+  - Nutritional consult, appetite stimulants, TPN, tube feeds all suggest malnutrition
+
+DIABETES:
+  - "Diabetes" or "T2DM" alone = low specificity. Must add organ involvement
+  - T2DM with hyperglycemia = E11.65 (CC, SOI=2) — not R73.09
+  - DKA = MCC (SOI=3-4). Hyperosmolar state (glucose >600) = MCC (SOI=4)
+  - Diabetes mellitus = hypercoagulable state (CC, SOI=2) — always codeable secondary dx
+  - Document: neuropathy, nephropathy, retinopathy, vasculopathy, hyperglycemia
+
+PNEUMONIA DRGs:
+  - DRG 177 (Resp Infections w MCC, Rel Wt 1.77): aspiration, gram-neg, staph, pseudomonas
+  - DRG 178 (w CC, Rel Wt 1.08), DRG 179 (w/o, Rel Wt 0.78)
+  - DRG 193 (Simple Pneumonia w MCC, Rel Wt 1.29): pneumococcal, H.flu, viral
+  - Specify organism and type — "pneumonia" unspecified loses DRG weight
+
+ENCEPHALOPATHY:
+  - Metabolic encephalopathy (G93.41) = MCC (SOI=4)
+  - Toxic/drug-induced encephalopathy = MCC
+  - Hepatic encephalopathy (K72.x) = MCC
+  - Hypertensive encephalopathy = MCC
+  - "Altered mental status" or "confusion" = NON-CC — must specify cause/type
+  - Flag AMS/confusion without encephalopathy diagnosis
+
+HYPERTENSION:
+  - HTN + Heart disease: ICD-10 presumes causal link, code as I11.x (hypertensive heart disease)
+  - HTN + CKD: code as I12.x (hypertensive CKD) — no explicit linkage needed
+  - Hypertensive emergency (I16.1) = CC (SOI=3)
+
+PRESSURE ULCERS:
+  - Stage 3 and 4 = MCC (SOI=3). Stage 1 and 2 = NON-CC
+  - Document stage and POA status
+
+UNCERTAIN DIAGNOSIS RULE (inpatient only):
+  - "Possible," "probable," "suspected," "likely," "questionable," "consistent with," "compatible with" = code as confirmed
+  - Aggressively recommend using these qualifiers for differential diagnoses in A&P
+
+SECONDARY DIAGNOSES always reportable: HTN, CHF, asthma, COPD, Parkinson's, diabetes
+
+Return ONLY raw JSON, no markdown, no backticks:
+{
+  "em": {
+    "note_type": "...", "justified_code": "99223", "justified_level": "High Complexity",
+    "current_likely_code": "99222", "upgrade_available": true, "revenue_gap_per_note": "$65",
+    "mdm": {
+      "problems": {"level": "High", "rationale": "..."},
+      "data": {"level": "Moderate", "rationale": "..."},
+      "risk": {"level": "High", "rationale": "..."}
+    },
+    "already_documented": ["..."],
+    "add_to_upgrade": ["..."]
+  },
+  "cdi_alerts": [
+    {"severity": "critical", "title": "...", "body": "...", "action": "..."}
+  ],
+  "drg": {
+    "current_number": "193", "current_desc": "Simple Pneumonia w/o MCC/CC",
+    "optimized_number": "177", "optimized_desc": "Respiratory Infections w MCC",
+    "revenue_impact": "+$3,200", "impact_available": true
+  },
+  "icd_codes": [
+    {"code": "J18.9", "description": "Pneumonia, unspecified", "type": "principal", "note": "Specify organism"}
+  ],
+  "gaps": ["..."],
+  "summary": {"em_code": "99223", "complexity": "High", "mcc_cc_count": "1 MCC, 2 CC", "drg_opportunity": "+$3,200", "alert_count": 3}
+}
+
+severity: critical = revenue impact >$1000 or DRG shift or MCC opportunity; warning = CC opportunity or specificity needed; info = documentation quality`;
+
+const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize clinical documentation integrity and coding specificity for inpatient billing.
+
+RULES:
+1. PRESERVE the physician's original problem list exactly — same order, same problems
+2. PRESERVE the physician's original plan text — do not delete or change their clinical thinking
+3. UPGRADE diagnosis names to their most specific, codeable form using FY2026 ICD-10 rules:
+   - "CHF" → "Acute on Chronic [Systolic/Diastolic] Congestive Heart Failure" (specify based on context)
+   - "Respiratory distress/insufficiency" → "Acute Respiratory Failure" if hypoxic or hypercapnic
+   - "AKI" → keep as AKI, but add "with Acute Tubular Necrosis" if criteria met (>72hr, post-contrast, post-sepsis)
+   - "T2DM with high glucose" → "Type 2 Diabetes Mellitus with Hyperglycemia"
+   - "AMS/confusion" → "Metabolic Encephalopathy" or appropriate type
+   - "Urosepsis" → "Sepsis due to [organism], source: UTI" or flag for query
+   - Unspecified "sepsis" → add organism code if blood cultures known
+4. DO NOT add ICD-10 codes to the note text — codes are for analysis only
+5. For NEW diagnoses the AI identifies (not in original A&P), add them at the BOTTOM clearly marked
+6. Keep the same formatting style as the original (numbered list, bullet points, etc.)
+7. If a diagnosis already uses correct specificity, leave it exactly as written
+8. Add "Suggested:" prefix only for brand new diagnoses not in original
+
+Return a JSON object:
+{
+  "ap_text": "the full rewritten A&P as plain text, preserving original formatting",
+  "suggested_diagnoses": [
+    {"name": "Protein-Calorie Malnutrition, Moderate", "rationale": "Albumin 2.9, poor PO intake x5 days, weight loss documented"}
+  ],
+  "changes_made": ["CHF upgraded to Acute on Chronic Systolic CHF", "AMS upgraded to Metabolic Encephalopathy"]
+}
+
+Return ONLY raw JSON, no markdown, no backticks.`;
+
 async function analyze() {
   const inputs = getInputs();
   if (!inputs.ap) { alert('Please paste your A&P — it is required for analysis.'); return; }
@@ -416,82 +555,41 @@ async function analyze() {
   resetOutputs();
   prog(true, 0, 'Starting analysis...');
 
-  // Build the clinical context string
   const context = [
-    inputs.type ? `Note Type: ${inputs.type}` : '',
+    `Note Type: ${inputs.type}`,
     inputs.hpi  ? `\nHISTORY OF PRESENT ILLNESS:\n${inputs.hpi}` : '',
     inputs.labs ? `\nLABS & DIAGNOSTIC DATA:\n${inputs.labs}` : '',
     `\nASSESSMENT & PLAN:\n${inputs.ap}`,
-    '\n\nASSUMED DOCUMENTED (do not flag as missing): Physical exam, PMH, PSH, medications, allergies, ROS, social history, family history.'
+    '\n\nASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergies, ROS, social history.'
   ].filter(Boolean).join('');
 
   try {
-    prog(true, 20, 'Analyzing E&M level, CDI opportunities, and ICD-10 codes...');
+    prog(true, 15, 'Analyzing E&M level, CDI opportunities, and ICD-10 codes...');
 
-    const raw = await callClaude(
-`You are a combined CDI specialist, E&M coding expert, and inpatient medical coding specialist for hospitalist physicians.
+    // Run both calls in parallel
+    const [analysisRaw, apRaw] = await Promise.all([
+      callAPI(SYSTEM_ANALYSIS, context, 2500),
+      callAPI(SYSTEM_AP, `Original A&P to optimize:\n\n${inputs.ap}\n\nContext (HPI/Labs):\n${inputs.hpi}\n${inputs.labs}`, 2000)
+    ]);
 
-The physician has provided their HPI, labs/data, and A&P. Physical exam, PMH, PSH, medications, allergies, and ROS are assumed to be documented — do NOT flag these as missing.
+    prog(true, 80, 'Rendering results...');
 
-Analyze and return ONLY a raw JSON object. No markdown, no backticks, nothing outside the JSON.
-
-{
-  "em": {
-    "note_type": "Initial H&P",
-    "justified_code": "99223",
-    "justified_level": "High Complexity",
-    "current_likely_code": "99222",
-    "upgrade_available": true,
-    "revenue_gap_per_note": "$65",
-    "mdm": {
-      "problems": { "level": "High", "rationale": "New acute problem requiring admission plus 3 chronic conditions" },
-      "data": { "level": "Moderate", "rationale": "Labs reviewed, CXR interpreted" },
-      "risk": { "level": "High", "rationale": "Prescription drug management with IV medications" }
-    },
-    "already_documented": ["4 active problems documented", "lab review noted"],
-    "add_to_upgrade": ["Explicitly state independent interpretation of CXR", "Document risk-benefit discussion for antibiotic choice"]
-  },
-  "cdi_alerts": [
-    { "severity": "critical", "title": "AKI Not Staged", "body": "AKI documented but not staged. Staged AKI qualifies as MCC and significantly improves DRG weight.", "action": "Add AKI Stage 1, 2, or 3 to A&P — DRG impact +$3,200" }
-  ],
-  "drg": {
-    "current_number": "193", "current_desc": "Simple Pneumonia w/o MCC/CC",
-    "optimized_number": "177", "optimized_desc": "Respiratory Infections w MCC",
-    "revenue_impact": "+$3,200", "impact_available": true
-  },
-  "icd_codes": [
-    { "code": "J20.9", "description": "Acute bronchitis, unspecified", "type": "principal", "note": "Specify viral vs bacterial if known" },
-    { "code": "E11.65", "description": "Type 2 diabetes with hyperglycemia", "type": "cc", "note": "Code as E11.65 not R73.09 — preserves CC status" }
-  ],
-  "gaps": ["Tobacco/smoking status not documented", "POA status for AKI not noted"],
-  "summary": { "em_code": "99223", "complexity": "High", "mcc_cc_count": "1 MCC opportunity, 2 CC captured", "drg_opportunity": "+$3,200", "alert_count": 3 }
-}
-
-CRITICAL RULES:
-- E&M inpatient: Initial = 99221/99222/99223, Subsequent = 99231/99232/99233
-- MDM High complexity (2024 AMA): 1+ highly complex problem, or multiple chronic conditions with exacerbation/progression
-- MDM Moderate: 1 chronic illness with exacerbation, or 2+ stable chronic conditions
-- MDM Low: 1 stable chronic condition
-- Need 2/3 MDM elements to justify a level
-- Inpatient coding rule: "possible" and "probable" = code as confirmed
-- Aggressively identify MCC/CC opportunities — these are the highest revenue impact
-- severity: critical = revenue impact >$1000 or DRG shift; warning = CC opportunity or specificity needed; info = documentation quality
-- Do NOT flag physical exam, PMH, medications, allergies, ROS as missing — physician confirmed these are documented`,
-      context,
-      2000
-    );
-
-    prog(true, 85, 'Rendering results...');
-
-    let data;
-    try { data = parseJSON(raw); }
-    catch { throw new Error('Parse error — raw: ' + raw.slice(0,300)); }
+    let analysis, apData;
+    try { analysis = parseJSON(analysisRaw); } catch(e) { throw new Error('Analysis parse error: ' + analysisRaw.slice(0,200)); }
+    try { apData = parseJSON(apRaw); } catch(e) { throw new Error('A&P parse error: ' + apRaw.slice(0,200)); }
 
     setSpinners(false);
-    renderEM(data.em);
-    renderCDI(data.cdi_alerts);
-    renderDRG(data.drg, data.icd_codes, data.gaps);
-    renderRevBar(data.summary);
+    renderEM(analysis.em);
+    renderCDI(analysis.cdi_alerts);
+    renderDRG(analysis.drg, analysis.icd_codes, analysis.gaps);
+    renderRevBar(analysis.summary);
+    renderAP(apData, inputs.ap);
+
+    // Badge on A&P tab
+    const alertCount = (analysis.cdi_alerts||[]).length;
+    document.getElementById('ap-tab-btn').innerHTML =
+      `✏️ Optimized A&P${alertCount > 0 ? `<span class="otab-badge">${alertCount}</span>` : ''}`;
+
     prog(true, 100, 'Analysis complete ✓');
     setTimeout(() => prog(false), 1500);
 
@@ -501,6 +599,63 @@ CRITICAL RULES:
     prog(false);
   }
   setBusy(false);
+}
+
+function renderAP(apData, originalAP) {
+  if (!apData) {
+    document.getElementById('ap-body').innerHTML = '<div class="empty"><div class="empty-ico">⚠️</div><div class="empty-ttl">Could not generate optimized A&P</div></div>';
+    return;
+  }
+
+  const mainText = (apData.ap_text || originalAP || '').trim();
+  const suggested = apData.suggested_diagnoses || [];
+  const changes = apData.changes_made || [];
+
+  // Build plain text for copy (no HTML)
+  let plainParts = [mainText];
+  if (suggested.length) {
+    plainParts.push('\n\n--- SUGGESTED ADDITIONS ---');
+    suggested.forEach(s => {
+      plainParts.push(`\nSuggested: ${s.name}\n  Rationale: ${s.rationale}`);
+    });
+  }
+  apPlainText = plainParts.join('');
+
+  // Build display HTML
+  let html = `<div id="ap-text">${esc(mainText)}</div>`;
+
+  if (suggested.length) {
+    html += `<div style="margin-top:16px;">`;
+    html += `<div class="sec-lbl" style="margin-bottom:8px;">💡 Suggested Additions</div>`;
+    suggested.forEach(s => {
+      html += `<div class="ap-suggested">
+        <div class="ap-suggested-label">Suggested: ${esc(s.name)}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">${esc(s.rationale)}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (changes.length) {
+    html += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">`;
+    html += `<div class="sec-lbl" style="margin-bottom:8px;">✅ Changes Made</div>`;
+    changes.forEach(c => {
+      html += `<div class="gap-row"><div class="dot-g"></div><span style="font-size:12.5px;">${esc(c)}</span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  document.getElementById('ap-body').innerHTML = html;
+}
+
+function copyAP() {
+  if (!apPlainText) return;
+  navigator.clipboard.writeText(apPlainText).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = '📋 Copy A&P'; btn.classList.remove('copied'); }, 2000);
+  });
 }
 
 function renderEM(em) {
@@ -588,21 +743,29 @@ function prog(show, pct, txt) {
 }
 
 function setSpinners(on) {
-  if (on) ['em-body','cdi-body','drg-body'].forEach(id => document.getElementById(id).innerHTML='<div class="spin-wrap"><div class="spin"></div>Analyzing...</div>');
+  if (on) {
+    ['em-body','cdi-body','drg-body'].forEach(id => document.getElementById(id).innerHTML='<div class="spin-wrap"><div class="spin"></div>Analyzing...</div>');
+    document.getElementById('ap-body').innerHTML='<div class="spin-wrap"><div class="spin"></div>Generating optimized A&P...</div>';
+  }
 }
 
-function resetOutputs() { document.getElementById('rev-bar').classList.remove('on'); }
+function resetOutputs() {
+  document.getElementById('rev-bar').classList.remove('on');
+  apPlainText = '';
+  document.getElementById('ap-tab-btn').innerHTML = '✏️ Optimized A&P';
+}
 
 function clearAll() {
   ['hp-hpi','hp-labs','hp-ap','pn-labs','pn-ap','dc-labs','dc-ap'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   resetOutputs();
+  prog(false);
   const empties = {
     'em-body':  ['📋','E&M Level Analysis','Paste your note sections and click Analyze'],
     'cdi-body': ['🔍','CDI Alerts','Specificity gaps and documentation opportunities appear here'],
     'drg-body': ['💰','DRG & ICD-10 Analysis','DRG comparison and ICD-10 codes appear here']
   };
   Object.entries(empties).forEach(([id,[ico,ttl,sub]]) => document.getElementById(id).innerHTML=`<div class="empty"><div class="empty-ico">${ico}</div><div class="empty-ttl">${ttl}</div><div class="empty-sub">${sub}</div></div>`);
-  prog(false);
+  document.getElementById('ap-body').innerHTML='<div class="empty"><div class="empty-ico">✏️</div><div class="empty-ttl">Optimized A&P</div><div class="empty-sub">Run analysis first — your CDI-optimized note will appear here ready to copy into MT</div></div>';
 }
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
