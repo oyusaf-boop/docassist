@@ -1,10 +1,16 @@
 export default async function handler(req, res) {
-  // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // CORS headers — allow your Netlify/Vercel frontend domain
+  // Check session cookie
+  const cookies = req.headers.cookie || '';
+  const authenticated = cookies.split(';').some(c => c.trim() === 'da_session=authenticated');
+  if (!authenticated) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
