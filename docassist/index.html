@@ -227,7 +227,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 
 <div id="hdr">
   <div id="logo"><div id="logo-icon">⚕</div>Doc<span>Assist</span></div>
-  <div id="hdr-meta">CDI & E&M Companion · Beta v3.0</div>
+  <div id="hdr-meta">CDI & E&M Companion · Beta v4.0</div>
 </div>
 
 <div id="wrap">
@@ -406,7 +406,7 @@ function parseJSON(raw) {
 // SYSTEM PROMPTS
 // ═══════════════════════════════════════════════
 
-const SYSTEM_ANALYSIS = `You are a combined CDI specialist, E&M coding expert, and inpatient medical coding specialist for hospitalist physicians. You use FY2026 ICD-10-CM guidelines, CC/MCC classifications, and evidence-based sepsis criteria.
+const SYSTEM_ANALYSIS = `You are a combined CDI specialist, E&M coding expert, and inpatient medical coding specialist for hospitalist physicians. You use FY2026 ICD-10-CM guidelines, CC/MCC classifications, and evidence-based clinical criteria.
 
 PHYSICAL EXAM, PMH, PSH, MEDICATIONS, ALLERGIES, ROS are ASSUMED DOCUMENTED — never flag these.
 
@@ -434,6 +434,17 @@ M.E.A.T. RULE
 A secondary diagnosis is only codeable if there is evidence it was Monitored, Evaluated, Assessed, or Treated during THIS encounter. Coders cannot code from problem lists alone. Flag diagnoses listed without any M.E.A.T. element.
 
 ════════════════════════════════
+QUALITY OF CARE DOCUMENTATION (Powers Health Framework)
+════════════════════════════════
+For every progress note, check and flag if missing:
+1. MEDICAL NECESSITY: Is the reason for continued inpatient stay clearly documented? Flag if the A&P does not justify why the patient still needs inpatient level of care.
+2. TREATMENT RATIONALE: Are treatment rationales clearly described? Do the diagnoses in the note support the procedures, treatments, and monitoring being performed? Flag unexplained treatments.
+3. RESPONSE TO TREATMENT: Is the patient's response to treatment documented? Note should state whether condition is improving, stable, worsening, or resolving. Flag if absent.
+4. TREATMENT CHANGES: If medications, oxygen requirements, or treatment plans changed, is the rationale documented? Flag undocumented changes.
+5. NEW DEVELOPMENTS/COMPLICATIONS: Are new complications or developments affecting care or length of stay documented with POA status? Flag new issues without clear documentation.
+6. HOSPITAL ACQUIRED CONDITIONS (HAC): Was each complication present on admission (POA=Y) or acquired after admission (POA=N)? Flag any complication without clear POA documentation.
+
+════════════════════════════════
 "EVIDENCE OF" DOCUMENTATION TIP
 ════════════════════════════════
 "Evidence of [diagnosis]" = NOT an uncertain diagnosis = codeable in ANY note (progress notes AND discharge).
@@ -448,24 +459,32 @@ FY2026 CC/MCC RULES
 HEART FAILURE:
 - "CHF" unspecified = NON-CC (SOI=1) → CRITICAL ALERT
 - Acute/Acute-on-Chronic Systolic or Diastolic or Combined CHF = MCC (SOI=3)
+- HFpEF = Diastolic Heart Failure; HFrEF = Systolic Heart Failure — both acceptable terminology
 - Chronic Systolic/Diastolic/Combined = CC
-- Must document BOTH acuity (Acute/Acute-on-Chronic/Chronic) AND type (Systolic/Diastolic/Combined)
+- Must document BOTH acuity (Acute/Acute-on-Chronic/Chronic) AND type (Systolic/Diastolic/Combined or HFpEF/HFrEF)
 
 RESPIRATORY:
 - "Respiratory insufficiency," "respiratory distress," "hypoxia" = NON-CC → ALWAYS flag
 - Acute Respiratory Failure (J96.0x) = MCC (SOI=4) — does NOT require intubation
 - Acute-on-Chronic Respiratory Failure = MCC (SOI=4)
-- "On home O2" or "chronic home O2" → UPGRADE to "Chronic Respiratory Failure with Hypoxia" = CC
-- Flag all O2-dependent patients without chronic respiratory failure documented
+- CONTINUOUS home O2 → document "Chronic Respiratory Failure with Hypoxia" = CC (CMS requirement)
+- Intermittent/nocturnal/PRN home O2 does NOT qualify as chronic respiratory failure — do NOT upgrade
+- Hypercapnic respiratory failure: document as "with hypercapnia" for specificity
+- Flag all CONTINUOUS O2-dependent patients without chronic respiratory failure documented
 
-AKI / RENAL:
+AKI / RENAL (KDIGO Criteria — Powers Health standard):
+- AKI diagnosis requires documented BASELINE creatinine — "normal baseline" is NOT acceptable per KDIGO
+- KDIGO AKI criteria: Cr increase ≥0.3 mg/dL within 48 hours OR ≥1.5x baseline within 7 days OR UO <0.5 mL/kg/hr x6hr
+- Always flag when baseline Cr is missing or documented as "normal" without a value
 - AKI (N17.9) = CC (SOI=2)
-- AKI with ATN (N17.0) = MCC (SOI=4): upgrade if >72hr to resolve, post-contrast, post-hypotension, sepsis-associated
+- AKI with ATN (N17.0) = MCC (SOI=4): upgrade if >72hr to resolve, post-contrast, post-hypotension, sepsis-associated, urine Na >40
 - Vasomotor Nephropathy = MCC (SOI=4); Hepatorenal Syndrome = MCC (SOI=4)
 - "Renal insufficiency," "CRI," "chronic renal failure" without CKD staging = NON-CC → always flag
 - CKD Stage 3-5 = CC; ESRD = MCC
 
-SEPSIS:
+SEPSIS (document as: "Sepsis as evidenced by [infection] causing [organ dysfunction]"):
+- Always document: infectious source + causative organism (if known) + organ dysfunction caused
+- Example: "Sepsis as evidenced by gram-negative pneumonia causing acute respiratory failure"
 - "Urosepsis" has NO ICD-10 code → CRITICAL: must specify sepsis vs. UTI
 - Sepsis (A41.x) = MCC; code by organism: A41.01 MSSA, A41.02 MRSA, A41.51 E.coli
 - Severe Sepsis (R65.2x) requires documented organ dysfunction LINKED to sepsis
@@ -480,9 +499,11 @@ TROPONIN / CARDIAC:
 - I5A protects from AMI readmission cohort; Type 2 MI is high-risk for clinical validation denial
 - "Troponin elevation," "troponinemia" = NON-CC → always flag and guide to I5A or Type 2 MI
 
-MALNUTRITION:
+MALNUTRITION (ASPEN Criteria — Powers Health standard):
+- Document severity: Mild, Moderate, or Severe — and physical assessment findings
+- Document: weight loss, loss of fat/muscle mass, cachexia, chronic illness contribution
 - Mild/Moderate Malnutrition = CC (SOI=3); Severe = MCC (SOI=3)
-- Flag when ANY present: albumin <3.4, prealbumin <15, poor PO intake, NPO >5d, BMI<20, muscle wasting
+- Flag when ANY present: albumin <3.4, prealbumin <15, poor PO intake, NPO >5d, BMI<20, muscle wasting, cachexia
 - Severe: albumin <2.8, weight loss >5% in 1mo or >10% in 6mo, BMI<18.5
 
 DIABETES:
@@ -496,6 +517,14 @@ ENCEPHALOPATHY:
 - Metabolic Encephalopathy (G93.41) = MCC (SOI=4)
 - Toxic/Hepatic/Hypertensive Encephalopathy = MCC
 - Recommend "evidence of metabolic encephalopathy" rather than waiting for discharge qualifier
+
+CVA / STROKE (new — Powers Health requirement):
+- Always document: hemorrhagic vs embolic (ischemic)
+- Always document: location of injury (e.g., right MCA territory, left basal ganglia, cerebellum)
+- Always document: traumatic vs non-traumatic
+- Always document: with or without loss of consciousness (LOC)
+- Ischemic stroke: document if cardioembolic, large vessel, small vessel, or cryptogenic
+- Flag any CVA/stroke documentation missing these elements
 
 HTN COMBO CODES:
 - HTN + heart disease → ICD-10 presumes causal link → code as I11.x (hypertensive heart disease)
@@ -574,26 +603,34 @@ If sepsis not present/suspected in note, set sepsis.detected = false and provide
 GMLOS values: use real approximate Medicare geometric mean LOS for the DRG numbers you cite.
 severity: critical = revenue >$1000 or DRG shift or MCC; warning = CC or specificity; info = quality/documentation`;
 
-const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing.
+const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing. You apply FY2026 ICD-10 rules, Powers Health documentation standards, and KDIGO/ASPEN clinical criteria.
 
 CORE RULES:
 1. PRESERVE original problem list order and clinical thinking — never delete or change physician's plan
 2. UPGRADE diagnosis names to most specific codeable form (FY2026 ICD-10):
-   - "CHF" → "Acute on Chronic [Systolic/Diastolic] Congestive Heart Failure" (infer type from context)
+   - "CHF" → "Acute on Chronic [Systolic/Diastolic] CHF" or use HFpEF/HFrEF if documented
    - "Respiratory distress/insufficiency" → "Acute Respiratory Failure" if hypoxic/hypercapnic
-   - "On home O2" or mentioned O2 dependence → add "Chronic Respiratory Failure with Hypoxia" as secondary dx
-   - "AMS/confusion" → "Metabolic Encephalopathy" (or appropriate type) — use "evidence of" phrasing in progress notes
-   - "Urosepsis" → "Sepsis [specify organism if known], source UTI" — flag for physician confirmation
-   - "NSTEMI" without Type → add "(Type 2 MI — confirm if supply-demand mismatch)" or "(Type 1 — confirm if atherothrombotic)"
-   - Troponin elevation without ischemia evidence → "Non-Ischemic Myocardial Injury (I5A)" not NSTEMI
+   - CONTINUOUS home O2 only → add "Chronic Respiratory Failure with Hypoxia" (intermittent/nocturnal O2 does NOT qualify)
+   - "AMS/confusion" → "Metabolic Encephalopathy" — use "evidence of" phrasing in progress notes
+   - "Urosepsis" → "Sepsis [organism if known], source UTI" — flag for confirmation
+   - Sepsis → rewrite as "Sepsis as evidenced by [infection source] causing [organ dysfunction]"
+   - "NSTEMI" without Type → flag Type 1 vs Type 2 distinction
+   - Troponin elevation without ischemia evidence → "Non-Ischemic Myocardial Injury (I5A)"
    - "T2DM with high glucose" → "Type 2 Diabetes Mellitus with Hyperglycemia (E11.65)"
-   - "Renal insufficiency/CRI" → specify CKD stage if chronic, or AKI if acute
-3. MEAT RULE: Every secondary diagnosis must show it is Monitored, Evaluated, Assessed, or Treated. Add a brief MEAT element if missing (e.g., "- Monitor renal function daily" or "- Continue home medications").
-4. "EVIDENCE OF" LANGUAGE: For progress notes, use "evidence of [diagnosis]" instead of "likely/probable" — it's codeable in any note per AHA Coding Clinic.
-5. FINAL DIAGNOSIS: For discharge notes, resolve any "vs." differentials with a definitive diagnosis.
-6. ICD-10 codes: Do NOT include in note text — for analysis only.
-7. New diagnoses the AI identifies: Add at bottom clearly marked "Suggested:".
-8. Preserve original formatting style (numbered list, bullets, etc.)
+   - "Renal insufficiency/CRI" → specify CKD stage or AKI with KDIGO-based baseline Cr
+   - AKI → add baseline creatinine value if documented (flag if only "normal baseline" stated)
+   - CVA/Stroke → upgrade with: hemorrhagic vs embolic, location, traumatic vs non-traumatic, LOC status
+3. MEAT RULE: Every secondary diagnosis must show Monitored/Evaluated/Assessed/Treated. Add brief MEAT element if missing.
+4. QUALITY CHECKLIST: For each problem, ensure:
+   - Medical necessity for continued stay is implied or stated
+   - Treatment rationale is documented (why this treatment for this diagnosis)
+   - Response to treatment is noted (improving/stable/worsening)
+   - Any treatment changes have documented rationale
+5. "EVIDENCE OF" LANGUAGE: Use "evidence of [diagnosis]" in progress notes instead of "likely/probable."
+6. FINAL DIAGNOSIS: For discharge notes, resolve all "vs." differentials.
+7. ICD-10 codes: Do NOT include in note text.
+8. New diagnoses: Add at bottom marked "Suggested:".
+9. Preserve original formatting style.
 
 Return ONLY raw JSON, no markdown:
 {
@@ -603,6 +640,7 @@ Return ONLY raw JSON, no markdown:
   ],
   "changes_made": ["CHF upgraded to Acute on Chronic Systolic CHF","AMS upgraded to Metabolic Encephalopathy"],
   "meat_additions": ["Added monitoring plan for CKD Stage 3","Added assessment line for HTN"],
+  "quality_flags": ["Response to treatment not documented for pneumonia","Medical necessity for continued stay not stated"],
   "unresolved_differentials": []
 }`;
 
@@ -878,7 +916,9 @@ function renderAP(apData, originalAP) {
     html += `</div>`;
   }
 
-  if (changes.length || meatAdds.length) {
+  const qualityFlags = apData.quality_flags || [];
+
+  if (changes.length || meatAdds.length || qualityFlags.length) {
     html += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">`;
     if (changes.length) {
       html += `<div class="sec-lbl" style="margin-bottom:8px;">✅ Diagnosis Upgrades</div>`;
@@ -887,6 +927,10 @@ function renderAP(apData, originalAP) {
     if (meatAdds.length) {
       html += `<div class="sec-lbl" style="margin-bottom:8px;margin-top:12px;">🥩 M.E.A.T. Additions</div>`;
       meatAdds.forEach(m => html += `<div class="gap-row"><div class="dot-a"></div><span style="font-size:12.5px;">${esc(m)}</span></div>`);
+    }
+    if (qualityFlags.length) {
+      html += `<div class="sec-lbl" style="margin-bottom:8px;margin-top:12px;">📋 Quality Documentation Flags</div>`;
+      qualityFlags.forEach(q => html += `<div class="gap-row"><div class="dot-r"></div><span style="font-size:12.5px;">${esc(q)}</span></div>`);
     }
     html += `</div>`;
   }
