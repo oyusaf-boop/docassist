@@ -197,6 +197,22 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 ::-webkit-scrollbar { width:5px; }
 ::-webkit-scrollbar-thumb { background:var(--border); border-radius:5px; }
 
+/* COPY BTN SMALL */
+.copy-btn-sm { padding:5px 12px; background:var(--bg3,#f4f1ec); border:1.5px solid var(--border); border-radius:6px; font-size:11px; color:var(--text2); cursor:pointer; font-family:inherit; transition:all 0.15s; }
+.copy-btn-sm:hover { border-color:var(--navy2); color:var(--navy); }
+.copy-btn-sm.copied { background:var(--green-light,#d1e7dd); border-color:#a8d8b8; color:var(--green,#0f5132); }
+
+/* DC SUMMARY */
+#dc-course-text { font-size:13.5px; line-height:1.9; color:var(--text); font-style:italic; border-left:3px solid var(--navy2,#1a4a6b); padding-left:16px; white-space:pre-wrap; }
+.dc-dx-list { list-style:none; padding:0; }
+.dc-dx-item { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.dc-dx-item:last-child { border-bottom:none; }
+.dc-dx-num { font-size:11px; font-weight:700; color:white; background:var(--navy); border-radius:5px; padding:2px 7px; flex-shrink:0; margin-top:1px; font-family:monospace; }
+.dc-dx-num.principal { background:var(--navy2,#1a4a6b); }
+.dc-dx-name { font-weight:600; color:var(--text); }
+.dc-dx-cc { display:inline-block; font-size:9.5px; font-weight:800; padding:1px 6px; border-radius:4px; margin-left:6px; text-transform:uppercase; vertical-align:middle; }
+.dc-dx-note { font-size:11.5px; color:var(--text2,#5a5450); margin-top:2px; }
+
 /* LOGIN OVERLAY */
 #login-overlay { position:fixed; inset:0; background:#0f2d48; z-index:1000; display:flex; align-items:center; justify-content:center; }
 #login-overlay.hidden { display:none; }
@@ -237,6 +253,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
       <button class="ntab on" onclick="setTab(this,'hp')">Initial H&P</button>
       <button class="ntab"    onclick="setTab(this,'progress')">Progress Note</button>
       <button class="ntab"    onclick="setTab(this,'discharge')">Discharge</button>
+      <button class="ntab"    onclick="setTab(this,'dcsummary')">DC Builder</button>
     </div>
     <div id="input-card">
       <!-- H&P -->
@@ -281,10 +298,28 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
         </div>
       </div>
 
+      <!-- DC Summary Builder -->
+      <div id="inputs-dcsummary" style="display:none">
+        <div class="input-section">
+          <div class="inp-label"><span>1️⃣</span> Initial H&P<span class="lbl-hint">paste from MT</span></div>
+          <textarea id="dc2-hp" class="inp-area" placeholder="Paste the admitting H&P here..."></textarea>
+        </div>
+        <div class="connector"></div>
+        <div class="input-section">
+          <div class="inp-label"><span>2️⃣</span> Consult Note(s) <span class="lbl-hint">optional</span></div>
+          <textarea id="dc2-consult" class="inp-area" placeholder="Paste any relevant consult notes here (cardiology, nephrology, etc.)..."></textarea>
+        </div>
+        <div class="connector"></div>
+        <div class="input-section">
+          <div class="inp-label"><span>3️⃣</span> Last Progress Note<span class="lbl-hint">paste from MT</span></div>
+          <textarea id="dc2-progress" class="inp-area tall" placeholder="Paste the most recent progress note here..."></textarea>
+        </div>
+      </div>
+
       <div class="assumption-note"><strong>Assumed documented:</strong> Physical exam, PMH/PSH, medications, allergies, ROS, social history.</div>
 
       <div id="btn-row">
-        <button id="analyze-btn" onclick="analyze()"><span>⚡</span> Analyze Note</button>
+        <button id="analyze-btn" onclick="handleAnalyze()"><span>⚡</span> <span id="analyze-btn-label">Analyze Note</span></button>
         <button id="clear-btn" onclick="clearAll()">Clear</button>
       </div>
       <div id="prog"><div id="prog-bg"><div id="prog-fill"></div></div><div id="prog-txt"></div></div>
@@ -312,6 +347,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
         <button class="otab on"  onclick="setOutTab(this,'analysis')">📊 Analysis</button>
         <button class="otab"     onclick="setOutTab(this,'sepsis')" id="sepsis-tab-btn">🦠 Sepsis Criteria</button>
         <button class="otab"     onclick="setOutTab(this,'ap')" id="ap-tab-btn">✏️ Optimized A&P</button>
+        <button class="otab"     onclick="setOutTab(this,'dcsummary')" id="dcsummary-tab-btn" style="display:none">🏥 DC Summary</button>
       </div>
 
       <!-- ANALYSIS PANEL -->
@@ -354,6 +390,34 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
         </div>
       </div>
 
+      <!-- DC SUMMARY BUILDER PANEL -->
+      <div id="panel-dcsummary" class="out-panel">
+        <div class="card card-first">
+          <div class="card-hdr">
+            <span class="card-title">🏥 Hospital Course</span>
+            <button id="copy-course-btn" class="copy-btn-sm" onclick="copySection('dc-course-text', this)" style="display:none">📋 Copy</button>
+          </div>
+          <div class="card-body" id="dc-course-body">
+            <div class="empty"><div class="empty-ico">🏥</div><div class="empty-ttl">Hospital Course</div><div class="empty-sub">Paste source notes on the left and click Generate DC Summary</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">📋 Discharge Diagnoses</span>
+            <button id="copy-dx-btn" class="copy-btn-sm" onclick="copySection('dc-dx-text', this)" style="display:none">📋 Copy</button>
+          </div>
+          <div class="card-body" id="dc-dx-body">
+            <div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">Discharge Diagnoses</div><div class="empty-sub">CDI-optimized diagnosis list appears here</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">⚡ CDI Flags</span><span style="font-size:11px;color:var(--text3)">Final documentation check</span></div>
+          <div class="card-body" id="dc-cdi-body">
+            <div class="empty"><div class="empty-ico">⚡</div><div class="empty-ttl">CDI Flags</div><div class="empty-sub">Last-chance documentation opportunities appear here</div></div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -366,15 +430,21 @@ function setTab(btn, tab) {
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   currentTab = tab;
-  ['hp','progress','discharge'].forEach(t => {
+  ['hp','progress','discharge','dcsummary'].forEach(t => {
     document.getElementById('inputs-'+t).style.display = t===tab ? 'block' : 'none';
   });
+  // Update analyze button label
+  const lbl = document.getElementById('analyze-btn-label');
+  if (lbl) lbl.textContent = tab==='dcsummary' ? 'Generate DC Summary' : 'Analyze Note';
+  // Show/hide DC output tab
+  const dcOutTab = document.getElementById('dcsummary-tab-btn');
+  if (dcOutTab) dcOutTab.style.display = tab==='dcsummary' ? 'inline-block' : 'none';
 }
 
 function setOutTab(btn, tab) {
   document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
-  ['analysis','sepsis','ap'].forEach(t => {
+  ['analysis','sepsis','ap','dcsummary'].forEach(t => {
     document.getElementById('panel-'+t).classList.toggle('on', t===tab);
   });
 }
@@ -382,6 +452,7 @@ function setOutTab(btn, tab) {
 function getInputs() {
   if (currentTab==='hp') return { hpi:v('hp-hpi'), labs:v('hp-labs'), ap:v('hp-ap'), type:'Initial H&P' };
   if (currentTab==='progress') return { hpi:'', labs:v('pn-labs'), ap:v('pn-ap'), type:'Subsequent Progress Note' };
+  if (currentTab==='dcsummary') return { hpi:v('dc2-hp'), consult:v('dc2-consult'), progress:v('dc2-progress'), type:'DC Summary Builder' };
   return { hpi:'', labs:v('dc-labs'), ap:v('dc-ap'), type:'Discharge Summary' };
 }
 function v(id) { const el=document.getElementById(id); return el ? el.value.trim() : ''; }
@@ -981,19 +1052,215 @@ function resetOutputs() {
   apPlainText = '';
   document.getElementById('ap-tab-btn').innerHTML = '✏️ Optimized A&P';
   document.getElementById('sepsis-tab-btn').innerHTML = '🦠 Sepsis Criteria';
+  const dcBtn = document.getElementById('copy-course-btn'); if (dcBtn) dcBtn.style.display='none';
+  const dxBtn = document.getElementById('copy-dx-btn'); if (dxBtn) dxBtn.style.display='none';
 }
 
 function clearAll() {
-  ['hp-hpi','hp-labs','hp-ap','pn-labs','pn-ap','dc-labs','dc-ap'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['hp-hpi','hp-labs','hp-ap','pn-labs','pn-ap','dc-labs','dc-ap','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   resetOutputs(); prog(false);
   document.getElementById('em-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">E&M Level Analysis</div><div class="empty-sub">Paste your note and click Analyze</div></div>';
   document.getElementById('cdi-body').innerHTML='<div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div>';
   document.getElementById('drg-body').innerHTML='<div class="empty"><div class="empty-ico">💰</div><div class="empty-ttl">DRG & ICD-10 Analysis</div><div class="empty-sub">DRG comparison, GMLOS, and ICD-10 codes appear here</div></div>';
   document.getElementById('sepsis-body').innerHTML='<div class="empty"><div class="empty-ico">🦠</div><div class="empty-ttl">Sepsis Criteria</div><div class="empty-sub">Run analysis first — sepsis criteria will be evaluated based on your note data</div></div>';
   document.getElementById('ap-body').innerHTML='<div class="empty"><div class="empty-ico">✏️</div><div class="empty-ttl">Optimized A&P</div><div class="empty-sub">Run analysis first — your CDI-optimized note appears here ready to paste into MT</div></div>';
+  document.getElementById('dc-course-body').innerHTML='<div class="empty"><div class="empty-ico">🏥</div><div class="empty-ttl">Hospital Course</div><div class="empty-sub">Paste source notes on the left and click Generate DC Summary</div></div>';
+  document.getElementById('dc-dx-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">Discharge Diagnoses</div><div class="empty-sub">CDI-optimized diagnosis list appears here</div></div>';
+  document.getElementById('dc-cdi-body').innerHTML='<div class="empty"><div class="empty-ico">⚡</div><div class="empty-ttl">CDI Flags</div><div class="empty-sub">Last-chance documentation opportunities appear here</div></div>';
+  const lbl = document.getElementById('analyze-btn-label'); if (lbl) lbl.textContent='Analyze Note';
 }
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── DC SUMMARY BUILDER ──
+const SYSTEM_DC_SUMMARY = `You are a senior hospitalist physician and CDI specialist generating a discharge summary from source notes.
+
+PRIVACY: Never use patient name or MRN. Use age/sex only (e.g. "78-year-old male").
+
+HOSPITAL COURSE (narrative paragraph):
+Write a single cohesive narrative paragraph in formal clinical prose. Cover:
+- Age, sex, chief complaint, and reason for admission
+- Key findings on admission (relevant labs, imaging, exam)
+- Important events during the hospital stay (procedures, clinical changes, consultant involvement and recommendations)
+- Response to treatment and clinical trajectory
+- Condition and status at time of discharge
+Write in past tense. Be concise but complete. Do NOT use bullet points. 3-6 sentences.
+
+DISCHARGE DIAGNOSES (FY2026 ICD-10 optimized):
+Generate the full discharge diagnosis list with maximum CDI specificity.
+- First diagnosis = Principal Diagnosis (what brought the patient in / bought the bed)
+- Remaining = Secondary diagnoses in order of clinical significance
+- Apply ALL FY2026 CDI rules:
+  * CHF → must include acuity (Acute/Acute-on-Chronic/Chronic) AND type (Systolic/Diastolic/Combined) or HFpEF/HFrEF
+  * AKI → must include KDIGO-based baseline Cr; note if ATN criteria met
+  * Sepsis → "Sepsis as evidenced by [source] causing [organ dysfunction]"; specify organism
+  * Respiratory failure → specify Acute/Acute-on-Chronic/Chronic and Hypoxic/Hypercapnic
+  * AMS → Metabolic/Toxic/Hepatic/Hypertensive Encephalopathy (not "AMS")
+  * Malnutrition → specify Mild/Moderate/Severe per ASPEN criteria
+  * NSTEMI → specify Type 1 or Type 2; troponin elevation without ischemia = Non-Ischemic Myocardial Injury (I5A)
+  * CVA → specify hemorrhagic vs embolic, location, traumatic vs non-traumatic
+  * T2DM → add organ involvement or hyperglycemia qualifier
+  * Continuous home O2 → Chronic Respiratory Failure with Hypoxia
+  * HTN + heart disease → Hypertensive Heart Disease
+  * HTN + CKD → Hypertensive CKD
+- For each diagnosis: CC or MCC classification if applicable
+- Flag any diagnosis still needing physician clarification
+
+CDI FLAGS (final documentation check):
+Any last-chance documentation opportunities before signing. Focus on:
+- Diagnoses still lacking required specificity
+- Missing linkage statements (e.g., sepsis not linked to organ dysfunction)
+- MEAT gaps for secondary diagnoses
+- Unresolved differentials that should be finalized
+- POA status questions for complications
+
+Return ONLY raw JSON, no markdown, no backticks:
+{
+  "hospital_course": "78-year-old male admitted with...",
+  "discharge_diagnoses": [
+    {
+      "number": 1,
+      "name": "Acute on Chronic Systolic Congestive Heart Failure",
+      "type": "principal",
+      "cc_mcc": "MCC",
+      "note": ""
+    },
+    {
+      "number": 2,
+      "name": "Acute Kidney Injury, KDIGO Stage 2 (baseline Cr 1.2, peak Cr 2.8)",
+      "type": "secondary",
+      "cc_mcc": "CC",
+      "note": "Consider ATN if Cr does not return to baseline within 72hr"
+    }
+  ],
+  "cdi_flags": [
+    {
+      "severity": "critical",
+      "title": "Sepsis linkage missing",
+      "body": "Sepsis documented but organ dysfunction not explicitly linked",
+      "action": "Add: Sepsis as evidenced by [source] causing [organ dysfunction]"
+    }
+  ]
+}`;
+
+async function generateDCSummary() {
+  const inputs = getInputs();
+  if (!inputs.progress && !inputs.hpi) {
+    alert('Please paste at least the last progress note or initial H&P.');
+    return;
+  }
+
+  setBusy(true);
+  prog(true, 0, 'Reading source notes...');
+
+  // Show DC Summary panel and spinner
+  const dcOutTab = document.getElementById('dcsummary-tab-btn');
+  if (dcOutTab) { dcOutTab.style.display='inline-block'; }
+  // Switch to DC output tab
+  document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
+  if (dcOutTab) dcOutTab.classList.add('on');
+  ['analysis','sepsis','ap','dcsummary'].forEach(t => {
+    document.getElementById('panel-'+t).classList.toggle('on', t==='dcsummary');
+  });
+
+  ['dc-course-body','dc-dx-body','dc-cdi-body'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="spin-wrap"><div class="spin"></div>Generating...</div>';
+  });
+
+  const context = [
+    'TASK: Generate discharge summary from the following source notes.',
+    inputs.hpi      ? `\nINITIAL H&P:\n${inputs.hpi}` : '',
+    inputs.consult  ? `\nCONSULT NOTE(S):\n${inputs.consult}` : '',
+    inputs.progress ? `\nLAST PROGRESS NOTE:\n${inputs.progress}` : '',
+  ].filter(Boolean).join('');
+
+  try {
+    prog(true, 30, 'Synthesizing hospital course and diagnoses...');
+    const raw = await callAPI(SYSTEM_DC_SUMMARY, context, 3000);
+    prog(true, 85, 'Rendering discharge summary...');
+
+    let data;
+    try { data = parseJSON(raw); } catch(e) { throw new Error('Parse error: ' + raw.slice(0,300)); }
+
+    renderDCSummary(data);
+    prog(true, 100, 'DC Summary ready ✓');
+    setTimeout(() => prog(false), 1200);
+
+  } catch(err) {
+    document.getElementById('dc-course-body').innerHTML =
+      `<div style="background:#f8d7da;border:1px solid #f0a0a0;border-radius:8px;padding:12px;color:#842029;font-size:13px;">⚠️ ${esc(err.message)}</div>`;
+    prog(false);
+  }
+  setBusy(false);
+}
+
+function renderDCSummary(data) {
+  if (!data) return;
+
+  // Hospital Course
+  const courseText = data.hospital_course || '';
+  document.getElementById('dc-course-body').innerHTML =
+    `<div id="dc-course-text">${esc(courseText)}</div>`;
+  const copyCoursBtn = document.getElementById('copy-course-btn');
+  if (copyCoursBtn) copyCoursBtn.style.display = 'inline-flex';
+
+  // Discharge Diagnoses
+  const dx = data.discharge_diagnoses || [];
+  if (dx.length) {
+    let dxPlain = dx.map(d => `${d.number}. ${d.name}`).join('\n');
+    let dxHtml = `<div id="dc-dx-text" style="display:none">${esc(dxPlain)}</div><ul class="dc-dx-list">`;
+    dx.forEach(d => {
+      const isPrincipal = d.type === 'principal' || d.number === 1;
+      const ccCls = d.cc_mcc==='MCC' ? 'b-mcc' : d.cc_mcc==='CC' ? 'b-cc' : '';
+      dxHtml += `<li class="dc-dx-item">
+        <span class="dc-dx-num ${isPrincipal?'principal':''}">${d.number}</span>
+        <div>
+          <div class="dc-dx-name">${esc(d.name)}
+            ${ccCls ? `<span class="badge ${ccCls} dc-dx-cc">${esc(d.cc_mcc)}</span>` : ''}
+            ${isPrincipal ? '<span style="font-size:10px;color:var(--navy2);margin-left:6px;font-weight:700;">PRINCIPAL</span>' : ''}
+          </div>
+          ${d.note ? `<div class="dc-dx-note">⚠️ ${esc(d.note)}</div>` : ''}
+        </div>
+      </li>`;
+    });
+    dxHtml += '</ul>';
+    document.getElementById('dc-dx-body').innerHTML = dxHtml;
+    const copyDxBtn = document.getElementById('copy-dx-btn');
+    if (copyDxBtn) copyDxBtn.style.display = 'inline-flex';
+  }
+
+  // CDI Flags
+  const flags = data.cdi_flags || [];
+  if (flags.length) {
+    let fHtml = '';
+    flags.forEach(f => {
+      const cls = f.severity==='critical'?'a-red':f.severity==='warning'?'a-amber':'a-blue';
+      const ico = f.severity==='critical'?'🔴':f.severity==='warning'?'🟡':'🔵';
+      fHtml += `<div class="alert-block ${cls}"><div class="alert-title">${ico} ${esc(f.title)}</div><div>${esc(f.body)}</div>${f.action?`<div class="alert-action">→ ${esc(f.action)}</div>`:''}</div>`;
+    });
+    document.getElementById('dc-cdi-body').innerHTML = fHtml;
+  } else {
+    document.getElementById('dc-cdi-body').innerHTML = '<div class="empty"><div class="empty-ico">✅</div><div class="empty-ttl">No CDI flags</div><div class="empty-sub">Documentation looks complete</div></div>';
+  }
+}
+
+function copySection(textId, btn) {
+  const el = document.getElementById(textId);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent || el.innerText).then(() => {
+    btn.textContent = '✅ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = '📋 Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function handleAnalyze() {
+  if (currentTab === 'dcsummary') {
+    generateDCSummary();
+  } else {
+    analyze();
+  }
+}
 
 // ── AUTH ──
 function checkSession() {
