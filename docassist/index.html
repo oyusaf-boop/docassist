@@ -243,7 +243,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 
 <div id="hdr">
   <div id="logo"><div id="logo-icon">⚕</div>Doc<span>Assist</span></div>
-  <div id="hdr-meta">CDI & E&M Companion · Beta v5.0</div>
+  <div id="hdr-meta">CDI & E&M Companion · Beta v6.0</div>
 </div>
 
 <div id="wrap">
@@ -259,30 +259,15 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
       <!-- H&P -->
       <div id="inputs-hp">
         <div class="input-section">
-          <div class="inp-label"><span>1️⃣</span> History of Present Illness<span class="lbl-hint">paste from MT</span></div>
-          <textarea id="hp-hpi" class="inp-area" placeholder="Paste your HPI here..."></textarea>
-        </div>
-        <div class="connector"></div>
-        <div class="input-section">
-          <div class="inp-label"><span>2️⃣</span> Labs & Diagnostic Data<span class="lbl-hint">paste from MT</span></div>
-          <textarea id="hp-labs" class="inp-area" placeholder="Paste labs and diagnostic data here..."></textarea>
-        </div>
-        <div class="connector"></div>
-        <div class="input-section">
-          <div class="inp-label"><span>3️⃣</span> Assessment & Plan (A&P)<span class="lbl-hint">paste from MT</span></div>
-          <textarea id="hp-ap" class="inp-area tall" placeholder="Paste your A&P here..."></textarea>
+          <div class="inp-label"><span>📋</span> Paste Anything<span class="lbl-hint">ER note · HPI · labs · consults · A&P · any order</span></div>
+          <textarea id="hp-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste anything from the chart here — ER physician note, HPI, labs, imaging, consult notes, A&P. Paste multiple items one after another. No labeling needed. AI will sort it out."></textarea>
         </div>
       </div>
       <!-- Progress -->
       <div id="inputs-progress" style="display:none">
         <div class="input-section">
-          <div class="inp-label"><span>1️⃣</span> Labs & Diagnostic Data<span class="lbl-hint">paste from MT</span></div>
-          <textarea id="pn-labs" class="inp-area" placeholder="Paste today's labs and data here..."></textarea>
-        </div>
-        <div class="connector"></div>
-        <div class="input-section">
-          <div class="inp-label"><span>2️⃣</span> Assessment & Plan (A&P)<span class="lbl-hint">paste from MT</span></div>
-          <textarea id="pn-ap" class="inp-area tall" placeholder="Paste today's A&P here..."></textarea>
+          <div class="inp-label"><span>📋</span> Paste Anything<span class="lbl-hint">labs · progress note · consult updates · any order</span></div>
+          <textarea id="pn-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste anything from today's chart — labs, today's progress note, consultant updates, imaging results. Paste multiple items one after another. No labeling needed."></textarea>
         </div>
       </div>
       <!-- Discharge -->
@@ -316,7 +301,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
         </div>
       </div>
 
-      <div class="assumption-note"><strong>Assumed documented:</strong> Physical exam, PMH/PSH, medications, allergies, ROS, social history.</div>
+      <div class="assumption-note"><strong>Tip:</strong> Paste in any order — ER note, HPI, labs, consult notes, A&P. Multiple pastes are fine. AI classifies everything automatically.</div>
 
       <div id="btn-row">
         <button id="analyze-btn" onclick="handleAnalyze()"><span>⚡</span> <span id="analyze-btn-label">Analyze Note</span></button>
@@ -450,8 +435,8 @@ function setOutTab(btn, tab) {
 }
 
 function getInputs() {
-  if (currentTab==='hp') return { hpi:v('hp-hpi'), labs:v('hp-labs'), ap:v('hp-ap'), type:'Initial H&P' };
-  if (currentTab==='progress') return { hpi:'', labs:v('pn-labs'), ap:v('pn-ap'), type:'Subsequent Progress Note' };
+  if (currentTab==='hp') return { freeform:v('hp-freeform'), type:'Initial H&P' };
+  if (currentTab==='progress') return { freeform:v('pn-freeform'), type:'Subsequent Progress Note' };
   if (currentTab==='dcsummary') return { hpi:v('dc2-hp'), consult:v('dc2-consult'), progress:v('dc2-progress'), type:'DC Summary Builder' };
   return { hpi:'', labs:v('dc-labs'), ap:v('dc-ap'), type:'Discharge Summary' };
 }
@@ -478,6 +463,39 @@ function parseJSON(raw) {
 // ═══════════════════════════════════════════════
 
 const SYSTEM_ANALYSIS = `You are a combined CDI specialist, E&M coding expert, and inpatient medical coding specialist for hospitalist physicians. You use FY2026 ICD-10-CM guidelines, CC/MCC classifications, and evidence-based clinical criteria.
+
+════════════════════════════════
+STEP 1 — CLASSIFY THE FREE-FORM INPUT
+════════════════════════════════
+The physician may paste raw chart content in any order — ER physician note, HPI, labs, imaging, consult notes (cardiology, nephrology, etc.), A&P sections. Multiple notes may be pasted together without labels.
+
+Your FIRST task before any CDI analysis is to mentally organize what you are reading:
+
+IDENTIFY NOTE TYPES PRESENT:
+- ER/ED physician note: look for triage vitals, initial presentation, ER differential, early labs, EMS narrative, disposition decision
+- Admitting H&P: look for HPI, full problem history, admission A&P
+- Consultant notes: identified by specialty-specific language, "Thank you for the consult", recommendations section
+- Progress notes: look for daily subjective/objective/assessment/plan structure
+- Lab/data dump: raw lab values, imaging reports, vital sign trends
+
+EXTRACT EARLY BASELINES (critical for CDI accuracy):
+- ER creatinine = true baseline for KDIGO AKI criteria (not admission Cr)
+- Initial O2 saturation and FiO2 in ER = supports respiratory failure documentation
+- First lactate value = supports sepsis severity
+- Initial troponin = establishes rise/fall pattern for MI vs myocardial injury
+- Arrival vital signs = supports shock, sepsis, hypertensive emergency documentation
+
+DELTA DIAGNOSIS DETECTION:
+- Compare ER physician differential/working diagnoses vs A&P diagnoses
+- If ER note documents "concern for sepsis, started empiric antibiotics, lactate 3.2" but A&P only says "UTI" → flag sepsis opportunity
+- If ER note documents "hypoxic, O2 sat 82% on RA" but A&P says "respiratory distress" → flag acute respiratory failure
+- If ER note documents "found down, altered" but A&P says "AMS" → flag metabolic encephalopathy
+- Any diagnosis the ER physician considered but that is absent from the A&P should be flagged
+
+CONSULTANT INTELLIGENCE:
+- Extract consultant recommendations that may not yet be acted on
+- Note if consultant used more specific diagnosis language than the admitting note (e.g., cardiologist says "acute decompensated HFrEF" but A&P says "CHF")
+- Flag consultant diagnosis upgrades the physician should incorporate
 
 PHYSICAL EXAM, PMH, PSH, MEDICATIONS, ALLERGIES, ROS are ASSUMED DOCUMENTED — never flag these.
 
@@ -736,6 +754,9 @@ severity: critical = revenue >$1000 or DRG shift or MCC; warning = CC or specifi
 
 const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing. You apply FY2026 ICD-10 rules, Powers Health documentation standards, and KDIGO/ASPEN clinical criteria.
 
+FREEFORM INPUT HANDLING:
+If given free-form chart content (not a labeled A&P), first identify the A&P section(s) within the pasted content. Use the ER physician note, labs, and other context to inform your CDI upgrades — especially for baseline values (ER creatinine for AKI, initial O2 sat for respiratory failure, early troponin for cardiac diagnoses). Extract the most recent A&P as the primary document to rewrite.
+
 CORE RULES:
 1. PRESERVE original problem list order and clinical thinking — never delete or change physician's plan
 2. UPGRADE diagnosis names to most specific codeable form (FY2026 ICD-10):
@@ -780,19 +801,31 @@ Return ONLY raw JSON, no markdown:
 // ═══════════════════════════════════════════════
 async function analyze() {
   const inputs = getInputs();
-  if (!inputs.ap) { alert('Please paste your A&P — it is required for analysis.'); return; }
+  const hasContent = inputs.freeform || inputs.ap;
+  if (!hasContent) { alert('Please paste chart content first.'); return; }
 
   setBusy(true); setSpinners(true); resetOutputs();
   prog(true, 0, 'Starting analysis...');
 
-  const context = [
-    `Note Type: ${inputs.type}`,
-    inputs.hpi  ? `\nHISTORY OF PRESENT ILLNESS:\n${inputs.hpi}` : '',
-    inputs.labs ? `\nLABS & DIAGNOSTIC DATA:\n${inputs.labs}` : '',
-    `\nASSESSMENT & PLAN:\n${inputs.ap}`,
-    '\n\nASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergies, ROS, social history.',
-    `\nNote context: This is a ${currentTab==='discharge'?'DISCHARGE note — flag any unresolved differentials':'progress/admission note'}.`
-  ].filter(Boolean).join('');
+  // Build context — freeform tabs pass raw paste; structured tabs (discharge) pass labeled sections
+  let context;
+  if (inputs.freeform !== undefined) {
+    context = `Note Type: ${inputs.type}
+
+CHART CONTENT (free-form paste — may include ER note, HPI, labs, consult notes, A&P in any order):
+${inputs.freeform}
+
+ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergies, ROS, social history.`;
+  } else {
+    context = [
+      `Note Type: ${inputs.type}`,
+      inputs.hpi  ? `\nHISTORY OF PRESENT ILLNESS:\n${inputs.hpi}` : '',
+      inputs.labs ? `\nLABS & DIAGNOSTIC DATA:\n${inputs.labs}` : '',
+      `\nASSESSMENT & PLAN:\n${inputs.ap}`,
+      '\n\nASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergies, ROS, social history.',
+      `\nNote context: This is a ${currentTab==='discharge'?'DISCHARGE note — flag any unresolved differentials':'progress/admission note'}.`
+    ].filter(Boolean).join('');
+  }
 
   try {
     prog(true, 15, 'Running CDI analysis and optimizing A&P in parallel...');
@@ -800,7 +833,9 @@ async function analyze() {
     const [analysisRaw, apRaw] = await Promise.all([
       callAPI(SYSTEM_ANALYSIS, context, 3000),
       callAPI(SYSTEM_AP,
-        `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
+        inputs.freeform
+          ? `NOTE TYPE: ${inputs.type}\n\nCHART CONTENT (free-form — extract A&P and context from this):\n${inputs.freeform}\n\nIs this a discharge note? NO`
+          : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
         2500)
     ]);
 
@@ -1117,7 +1152,7 @@ function resetOutputs() {
 }
 
 function clearAll() {
-  ['hp-hpi','hp-labs','hp-ap','pn-labs','pn-ap','dc-labs','dc-ap','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['hp-freeform','pn-freeform','dc-labs','dc-ap','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   resetOutputs(); prog(false);
   document.getElementById('em-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">E&M Level Analysis</div><div class="empty-sub">Paste your note and click Analyze</div></div>';
   document.getElementById('cdi-body').innerHTML='<div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div>';
