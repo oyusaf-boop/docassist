@@ -243,7 +243,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 
 <div id="hdr">
   <div id="logo"><div id="logo-icon">⚕</div>Doc<span>Assist</span></div>
-  <div id="hdr-meta">CDI & E&M Companion · Beta v4.0</div>
+  <div id="hdr-meta">CDI & E&M Companion · Beta v5.0</div>
 </div>
 
 <div id="wrap">
@@ -603,6 +603,66 @@ HTN COMBO CODES:
 - Hypertensive Emergency (I16.1) = CC (SOI=3)
 
 PRESSURE ULCERS: Stage 3-4 = MCC; Stage 1-2 = NON-CC. Document stage and POA.
+
+════════════════════════════════
+PHSI ADDITIONAL CC/MCC — FY2026 VERIFIED (Powers Health Reference)
+════════════════════════════════
+
+HIGH-YIELD MCC CONDITIONS (often underdocumented):
+- Aspiration Pneumonia = MCC (SOI=4) — higher weight than standard pneumonia; always specify aspiration if applicable
+- Pneumonia GR-VE (gram-negative) = MCC (SOI=3); Pneumonia MRSA = MCC (SOI=3); Pneumonia COVID = MCC (SOI=4)
+- Acute Pancreatitis = MCC (SOI=3) — flag if documented as "pancreatitis" without acuity
+- Brain Effusion / Cerebral Edema = MCC (SOI=4) — document if present on imaging
+- Arterial Embolism = MCC — distinguish from venous thrombosis
+- Critical Illness Myopathy = MCC (SOI=4) — document in prolonged ICU stays with weakness
+- Renal Tubular Stasis = MCC (SOI=4) — flag when present
+- Retroperitoneal Infection / Inflammation = MCC (SOI=3)
+- Peritoneal Infection / Inflammation / Irritation / Peritonitis = MCC (SOI=3)
+- Necrotizing Enterocolitis = MCC (SOI=4)
+- Pancreas Cyst / Pseudocyst = MCC (SOI=3)
+- Pulmonary Edema Acute = MCC (SOI=3) — distinguish from chronic (SOI=2, CC)
+- PE or Infarct without Acute Cor Pulmonale = MCC (SOI=4)
+- Cor Pulmonale Acute with PE = MCC (SOI=4)
+- Protein Deficiency Severe = MCC (SOI=3)
+- Pancytopenia = MCC (SOI=3) — specify if drug-induced (also MCC)
+- Complete Immobility Due to Frailty = MCC (SOI=3) — document in frail elderly patients
+- COVID-19 = MCC (SOI=3) — document if active COVID contributing to admission
+- ARDS = MCC (SOI=4) — must distinguish from simple respiratory failure
+- Peptic Ulcer with GI Bleed = MCC (SOI=3)
+- Appendicitis with Peritonitis = MCC (SOI=3)
+- Aneurysm of Aorta (Arch/Descending/Ascending) = MCC (SOI=3-4)
+
+CC CONDITIONS (commonly missed):
+- Acute Cholecystitis = CC (SOI=3) — specify acute vs chronic
+- Cholangitis = CC (SOI=2)
+- Pericarditis = CC (SOI=2)
+- Afib (Chronic/Permanent/Longstanding/Persistent) = CC (SOI=2) — always document as secondary dx
+- Rhabdomyolysis = CC (SOI=2) — flag elevated CK with muscle injury etiology
+- COPD with Exacerbation = CC (SOI=2) — must specify "with exacerbation"
+- Pleural Effusion = CC (SOI=2)
+- Pulmonary Edema Chronic = CC (SOI=2)
+- Pressure Ulcer Stage III = CC (SOI=2); Stage IV = MCC (SOI=3)
+- Non-Ischemic Myocardial Injury Non-Traumatic (I5A) = CC (SOI=2)* — new FY2026 code
+
+════════════════════════════════
+PHSI NON-CC LIST — HIGH SOI BUT NOT CC/MCC (FY2026 Verified)
+════════════════════════════════
+CRITICAL: The following diagnoses have SOI ≥2 but are NOT CC or MCC. Do NOT flag these as CC/MCC opportunities:
+- Hyperkalemia, Hypermagnesemia, Hypercalcemia, Hypocalcemia = NON-CC (SOI=1-2)
+- Oliguria / Anuria = NON-CC (SOI=2) — document but does not move DRG
+- Thrombocytopenia = NON-CC (SOI=2) — document cause/severity but not CC
+- Failure to Thrive = NON-CC (SOI=2)
+- Emphysema = NON-CC (SOI=1-2) — use COPD WITH EXACERBATION for CC credit
+- Morbid Obesity alone = NON-CC (SOI=1-2) — document BMI but no DRG impact without complications
+- Cor Pulmonale Chronic = NON-CC (SOI=2) — distinguish from Acute Cor Pulmonale w/ PE (MCC)
+- Electrolyte/Fluid Disorder unspecified = NON-CC (SOI=1-2) — specify the electrolyte
+- Cerebral Aneurysm Unruptured = NON-CC (SOI=3) — high SOI but no DRG impact
+- DM with Renal/Neuro/Circulatory complications = NON-CC (SOI=1-2) — use hyperglycemia or specific organ complication for CC
+- Neutropenia = NON-CC (SOI=2)
+- Thrombocytopenia = NON-CC (SOI=2)
+- Parkinson's Disease = NON-CC (SOI=1-2) — document but no CC credit
+- Sickle Cell Disease = NON-CC (SOI=2)
+When these are present: document accurately but redirect CDI focus to other more impactful diagnoses
 
 POA (Present on Admission): Document timing of complications clearly. Conditions developing AFTER admission cannot be principal dx and affect quality metrics differently.
 
@@ -1105,6 +1165,7 @@ Generate the full discharge diagnosis list with maximum CDI specificity.
   * HTN + CKD → Hypertensive CKD
 - For each diagnosis: CC or MCC classification if applicable
 - Flag any diagnosis still needing physician clarification
+- NOTE: The following are NOT CC/MCC despite high SOI — document accurately but note they don't move DRG: hyperkalemia, hypermagnesemia, hypocalcemia, oliguria/anuria, thrombocytopenia, failure to thrive, emphysema alone, morbid obesity alone, cor pulmonale chronic, electrolyte disorder unspecified, thrombocytopenia, neutropenia
 
 CDI FLAGS (final documentation check):
 Any last-chance documentation opportunities before signing. Focus on:
