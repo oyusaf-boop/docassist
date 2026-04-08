@@ -1475,13 +1475,13 @@ async function generateAPB() {
 
     // Render with monospace styling matching physician note feel
     document.getElementById('apb-body').innerHTML =
-      \`<div style="font-family:'SF Mono',ui-monospace,monospace;font-size:13px;line-height:1.9;color:var(--text);white-space:pre-wrap;word-break:break-word;">\${esc(apbText)}</div>\`;
+      '<div style="font-family:monospace;font-size:13px;line-height:1.9;color:var(--text);white-space:pre-wrap;word-break:break-word;">' + esc(apbText) + '</div>';
 
     setTimeout(() => prog(false), 1000);
 
   } catch(err) {
     document.getElementById('apb-body').innerHTML =
-      \`<div style="background:#f8d7da;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#842029;font-size:13px;">⚠️ \${esc(err.message)}</div>\`;
+      '<div style="background:#f8d7da;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#842029;font-size:13px;">⚠️ ' + esc(err.message) + '</div>';
     prog(false);
   }
   setBusy(false);
