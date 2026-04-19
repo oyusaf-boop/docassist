@@ -1486,8 +1486,7 @@ async function generateNoteBuilder() {
     // Render A&P with bold support
     const rendered = nbText
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/
-/g, '<br>');
+      .replace(/\n/g, '<br>');
 
     document.getElementById('nb-body').innerHTML =
       '<div style="font-size:13.5px;line-height:1.9;color:var(--text);">' + rendered + '</div>';
