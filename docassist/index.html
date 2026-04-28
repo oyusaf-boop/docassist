@@ -305,6 +305,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
       <button class="ntab"    onclick="setTab(this,'progress')">Progress Note</button>
       <button class="ntab"    onclick="setTab(this,'apbuilder')">A&P Builder</button>
       <button class="ntab"    onclick="setTab(this,'dcsummary')">DC Builder</button>
+      <button class="ntab"    onclick="setTab(this,'notebuilder')">Note Builder ✨</button>
     </div>
     <div id="input-card">
       <!-- H&P -->
@@ -347,6 +348,14 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
         </div>
       </div>
 
+      <!-- Note Builder (v8 scenario detection: A=fresh, B=upgrade draft, C=fill gaps) -->
+      <div id="inputs-notebuilder" style="display:none">
+        <div class="input-section">
+          <div class="inp-label"><span>📋</span> Paste Anything<span class="lbl-hint">ER · overnight H&P · partner notes · consults · your draft A&P</span></div>
+          <textarea id="nb-freeform" class="inp-area tall" style="min-height:420px;" placeholder="Paste everything you have — ER note, overnight H&P, partner progress note, consult notes, labs, your own draft A&P. Any order, any amount. AI auto-detects scenario: A) build fresh, B) upgrade your draft, or C) fill gaps."></textarea>
+        </div>
+      </div>
+
       <div class="assumption-note"><strong>Tip:</strong> Paste in any order — ER note, HPI, labs, consult notes, A&P. Multiple pastes are fine. AI classifies everything automatically.</div>
 
       <div id="btn-row">
@@ -380,6 +389,10 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
         <button class="otab"     onclick="setOutTab(this,'ap')" id="ap-tab-btn">✏️ Optimized A&P</button>
         <button class="otab"     onclick="setOutTab(this,'dcsummary')" id="dcsummary-tab-btn" style="display:none">🏥 DC Summary</button>
         <button class="otab"     onclick="setOutTab(this,'apbuilder')" id="apbuilder-tab-btn" style="display:none">✍️ My A&P</button>
+<<<<<<< HEAD
+=======
+        <button class="otab"     onclick="setOutTab(this,'notebuilder')" id="notebuilder-tab-btn" style="display:none">✨ My Note</button>
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
         <button class="otab"     onclick="setOutTab(this,'metrics')" id="metrics-tab-btn">📈 Metrics</button>
       </div>
 
@@ -460,9 +473,61 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
               <div style="font-size:11px;color:var(--text3);">CDI-optimized · your style · ready to paste into MT</div>
             </div>
             <button id="copy-apb-btn" onclick="copyAPB()" style="padding:8px 16px;background:var(--navy);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background 0.15s;">📋 Copy A&P</button>
+<<<<<<< HEAD
           </div>
           <div id="apb-body" style="padding:20px;">
             <div class="empty"><div class="empty-ico">✍️</div><div class="empty-ttl">A&P Builder</div><div class="empty-sub">Paste overnight H&P, ER note, and consult notes on the left — your progress note A&P appears here ready to paste into MT</div></div>
+=======
+          </div>
+          <div id="apb-body" style="padding:20px;">
+            <div class="empty"><div class="empty-ico">✍️</div><div class="empty-ttl">A&P Builder</div><div class="empty-sub">Paste overnight H&P, ER note, and consult notes on the left — your progress note A&P appears here ready to paste into MT</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTE BUILDER PANEL (v8 scenario detection) -->
+      <div id="panel-notebuilder" class="out-panel">
+        <div id="nb-card" style="background:white;border-radius:0 14px 14px 14px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;">
+          <div style="padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#faf8f5;">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.9px;">My Note <span id="nb-scenario-badge" style="display:none;background:var(--navy);color:white;padding:2px 8px;border-radius:10px;font-size:10px;margin-left:6px;"></span></div>
+              <div style="font-size:11px;color:var(--text3);">Auto-detects scenario · CDI-upgraded · ready to paste into MT</div>
+            </div>
+            <button id="copy-nb-btn" onclick="copyNB()" style="padding:8px 16px;background:var(--navy);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background 0.15s;">📋 Copy A&P</button>
+          </div>
+          <div id="nb-body" style="padding:20px;">
+            <div class="empty"><div class="empty-ico">✨</div><div class="empty-ttl">Note Builder</div><div class="empty-sub">Paste anything on the left — AI detects scenario A (build fresh), B (upgrade your draft), or C (fill gaps)</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- METRICS PANEL -->
+      <div id="panel-metrics" class="out-panel">
+        <div class="met-pitch-banner">
+          <div class="met-pitch-ico">📊</div>
+          <div class="met-pitch-text">
+            <strong>Documentation Gap Identification — Aggregate, De-identified.</strong>
+            No PHI stored. Tracks revenue opportunity surfaced for ROI pitch to health system leadership.
+          </div>
+        </div>
+        <div class="met-toolbar">
+          <div class="met-filter" id="met-filter">
+            <button class="met-fbtn on" onclick="setMetFilter(this,'all')">All time</button>
+            <button class="met-fbtn" onclick="setMetFilter(this,'90')">90 days</button>
+            <button class="met-fbtn" onclick="setMetFilter(this,'30')">30 days</button>
+            <button class="met-fbtn" onclick="setMetFilter(this,'7')">7 days</button>
+          </div>
+          <div class="met-spacer"></div>
+          <button class="met-action primary" onclick="exportMetricsCSV()">⬇ Export CSV</button>
+          <button class="met-action" onclick="exportMetricsPDF()">📄 PDF Snapshot</button>
+          <button class="met-action danger" onclick="clearMetrics()">🗑 Reset</button>
+        </div>
+        <div id="met-body">
+          <div class="met-empty">
+            <div class="met-empty-ico">📈</div>
+            <div class="met-empty-ttl">No metrics yet</div>
+            <div class="met-empty-sub">Run an analysis to start capturing efficacy data</div>
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
           </div>
         </div>
       </div>
@@ -509,7 +574,11 @@ function setTab(btn, tab) {
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   currentTab = tab;
+<<<<<<< HEAD
   ['hp','progress','apbuilder','dcsummary'].forEach(t => {
+=======
+  ['hp','progress','apbuilder','dcsummary','notebuilder'].forEach(t => {
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
     document.getElementById('inputs-'+t).style.display = t===tab ? 'block' : 'none';
   });
   // Update analyze button label
@@ -517,6 +586,10 @@ function setTab(btn, tab) {
   if (lbl) {
     if (tab==='dcsummary') lbl.textContent = 'Generate DC Summary';
     else if (tab==='apbuilder') lbl.textContent = 'Build My A&P';
+<<<<<<< HEAD
+=======
+    else if (tab==='notebuilder') lbl.textContent = 'Build Note ✨';
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
     else lbl.textContent = 'Analyze Note';
   }
   // Show/hide DC output tab
@@ -525,12 +598,22 @@ function setTab(btn, tab) {
   // Show/hide A&P Builder output tab
   const apbOutTab = document.getElementById('apbuilder-tab-btn');
   if (apbOutTab) apbOutTab.style.display = tab==='apbuilder' ? 'inline-block' : 'none';
+<<<<<<< HEAD
+=======
+  // Show/hide Note Builder output tab
+  const nbOutTab = document.getElementById('notebuilder-tab-btn');
+  if (nbOutTab) nbOutTab.style.display = tab==='notebuilder' ? 'inline-block' : 'none';
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
 }
 
 function setOutTab(btn, tab) {
   document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
+<<<<<<< HEAD
   ['analysis','sepsis','ap','dcsummary','apbuilder','metrics'].forEach(t => {
+=======
+  ['analysis','sepsis','ap','dcsummary','apbuilder','notebuilder','metrics'].forEach(t => {
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
     document.getElementById('panel-'+t).classList.toggle('on', t===tab);
   });
   if (tab === 'metrics') renderMetrics();
@@ -540,6 +623,10 @@ function getInputs() {
   if (currentTab==='hp') return { freeform:v('hp-freeform'), type:'Initial H&P' };
   if (currentTab==='progress') return { freeform:v('pn-freeform'), type:'Subsequent Progress Note' };
   if (currentTab==='apbuilder') return { freeform:v('apb-freeform'), type:'A&P Builder' };
+<<<<<<< HEAD
+=======
+  if (currentTab==='notebuilder') return { freeform:v('nb-freeform'), type:'Note Builder' };
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
   if (currentTab==='dcsummary') return { hpi:v('dc2-hp'), consult:v('dc2-consult'), progress:v('dc2-progress'), type:'DC Summary Builder' };
   return { freeform:v('apb-freeform'), type:'A&P Builder' }; // fallback
 }
@@ -626,7 +713,7 @@ M.E.A.T. RULE
 A secondary diagnosis is only codeable if there is evidence it was Monitored, Evaluated, Assessed, or Treated during THIS encounter. Coders cannot code from problem lists alone. Flag diagnoses listed without any M.E.A.T. element.
 
 ════════════════════════════════
-QUALITY OF CARE DOCUMENTATION (Powers Health Framework)
+QUALITY OF CARE DOCUMENTATION (Prime Health Framework)
 ════════════════════════════════
 For every progress note, check and flag if missing:
 1. MEDICAL NECESSITY: Is the reason for continued inpatient stay clearly documented? Flag if the A&P does not justify why the patient still needs inpatient level of care.
@@ -664,7 +751,7 @@ RESPIRATORY:
 - Hypercapnic respiratory failure: document as "with hypercapnia" for specificity
 - Flag all CONTINUOUS O2-dependent patients without chronic respiratory failure documented
 
-AKI / RENAL (KDIGO Criteria — Powers Health standard):
+AKI / RENAL (KDIGO Criteria — Prime Health standard):
 - AKI diagnosis requires documented BASELINE creatinine — "normal baseline" is NOT acceptable per KDIGO
 - KDIGO AKI criteria: Cr increase ≥0.3 mg/dL within 48 hours OR ≥1.5x baseline within 7 days OR UO <0.5 mL/kg/hr x6hr
 - Always flag when baseline Cr is missing or documented as "normal" without a value
@@ -691,7 +778,7 @@ TROPONIN / CARDIAC:
 - I5A protects from AMI readmission cohort; Type 2 MI is high-risk for clinical validation denial
 - "Troponin elevation," "troponinemia" = NON-CC → always flag and guide to I5A or Type 2 MI
 
-MALNUTRITION (ASPEN Criteria — Powers Health standard):
+MALNUTRITION (ASPEN Criteria — Prime Health standard):
 - Document severity: Mild, Moderate, or Severe — and physical assessment findings
 - Document: weight loss, loss of fat/muscle mass, cachexia, chronic illness contribution
 - Mild/Moderate Malnutrition = CC (SOI=3); Severe = MCC (SOI=3)
@@ -710,7 +797,7 @@ ENCEPHALOPATHY:
 - Toxic/Hepatic/Hypertensive Encephalopathy = MCC
 - Recommend "evidence of metabolic encephalopathy" rather than waiting for discharge qualifier
 
-CVA / STROKE (new — Powers Health requirement):
+CVA / STROKE (new — Prime Health requirement):
 - Always document: hemorrhagic vs embolic (ischemic)
 - Always document: location of injury (e.g., right MCA territory, left basal ganglia, cerebellum)
 - Always document: traumatic vs non-traumatic
@@ -726,7 +813,7 @@ HTN COMBO CODES:
 PRESSURE ULCERS: Stage 3-4 = MCC; Stage 1-2 = NON-CC. Document stage and POA.
 
 ════════════════════════════════
-PHSI ADDITIONAL CC/MCC — FY2026 VERIFIED (Powers Health Reference)
+PHSI ADDITIONAL CC/MCC — FY2026 VERIFIED (Prime Health Reference)
 ════════════════════════════════
 
 HIGH-YIELD MCC CONDITIONS (often underdocumented):
@@ -855,7 +942,7 @@ If sepsis not present/suspected in note, set sepsis.detected = false and provide
 GMLOS values: use real approximate Medicare geometric mean LOS for the DRG numbers you cite.
 severity: critical = revenue >$1000 or DRG shift or MCC; warning = CC or specificity; info = quality/documentation`;
 
-const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing. You apply FY2026 ICD-10 rules, Powers Health documentation standards, and KDIGO/ASPEN clinical criteria.
+const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing. You apply FY2026 ICD-10 rules, Prime Health documentation standards, and KDIGO/ASPEN clinical criteria.
 
 FREEFORM INPUT HANDLING:
 If given free-form chart content (not a labeled A&P), first identify the A&P section(s) within the pasted content. Use the ER physician note, labs, and other context to inform your CDI upgrades — especially for baseline values (ER creatinine for AKI, initial O2 sat for respiratory failure, early troponin for cardiac diagnoses). Extract the most recent A&P as the primary document to rewrite.
@@ -955,6 +1042,7 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     renderRevBar(analysis.summary);
     renderSepsis(analysis.sepsis);
     renderAP(apData, inputs.ap);
+    captureMetrics(analysis);
 
     // Capture de-identified metrics for ROI tracking
     captureMetrics(analysis);
@@ -1260,7 +1348,11 @@ function resetOutputs() {
 }
 
 function clearAll() {
+<<<<<<< HEAD
   ['hp-freeform','pn-freeform','apb-freeform','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+=======
+  ['hp-freeform','pn-freeform','apb-freeform','nb-freeform','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
   resetOutputs(); prog(false);
   document.getElementById('em-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">E&M Level Analysis</div><div class="empty-sub">Paste your note and click Analyze</div></div>';
   document.getElementById('cdi-body').innerHTML='<div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div>';
@@ -1271,6 +1363,9 @@ function clearAll() {
   document.getElementById('dc-dx-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">Discharge Diagnoses</div><div class="empty-sub">CDI-optimized diagnosis list appears here</div></div>';
   document.getElementById('dc-cdi-body').innerHTML='<div class="empty"><div class="empty-ico">⚡</div><div class="empty-ttl">CDI Flags</div><div class="empty-sub">Last-chance documentation opportunities appear here</div></div>';
   document.getElementById('apb-body').innerHTML='<div class="empty"><div class="empty-ico">✍️</div><div class="empty-ttl">A&P Builder</div><div class="empty-sub">Paste overnight H&P, ER note, and consult notes on the left — your progress note A&P appears here ready to paste into MT</div></div>';
+  const nbBody = document.getElementById('nb-body');
+  if (nbBody) nbBody.innerHTML='<div class="empty"><div class="empty-ico">✨</div><div class="empty-ttl">Note Builder</div><div class="empty-sub">Paste anything on the left — AI detects scenario A (build fresh), B (upgrade your draft), or C (fill gaps)</div></div>';
+  const nbBadge = document.getElementById('nb-scenario-badge'); if (nbBadge) nbBadge.style.display='none';
   const lbl = document.getElementById('analyze-btn-label'); if (lbl) lbl.textContent='Analyze Note';
 }
 
@@ -1464,6 +1559,11 @@ function handleAnalyze() {
     generateDCSummary();
   } else if (currentTab === 'apbuilder') {
     generateAPB();
+<<<<<<< HEAD
+=======
+  } else if (currentTab === 'notebuilder') {
+    generateNoteBuilder();
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
   } else {
     analyze();
   }
@@ -1471,6 +1571,8 @@ function handleAnalyze() {
 
 // ── A&P BUILDER ──
 const SYSTEM_AP_BUILDER = `You are a hospitalist physician generating a progress note Assessment & Plan in the physician's personal style.
+<<<<<<< HEAD
+=======
 
 SOURCE MATERIAL: You will receive a free-form paste that may include any combination of: overnight H&P A&P written by another physician, ER physician note, cardiology/nephrology/other consultant notes. Extract all relevant clinical information from all sources.
 
@@ -1577,6 +1679,248 @@ function copyAPB() {
   if (!apbText) return;
   navigator.clipboard.writeText(apbText).then(() => {
     const btn = document.getElementById('copy-apb-btn');
+    btn.textContent = '✅ Copied!';
+    btn.style.background = '#0f5132';
+    setTimeout(() => { btn.innerHTML = '📋 Copy A&P'; btn.style.background = ''; }, 2000);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// ── NOTE BUILDER (v8 scenario detection) ──
+// ═══════════════════════════════════════════════
+const SYSTEM_NOTE_BUILDER = `You are a senior hospitalist physician at Prime Health. You receive raw chart content pasted from MEDITECH which may include any mix of: ER physician notes, overnight H&P, partner progress notes, consultant notes, lab results, imaging reports, the physician's own draft A&P. Content arrives in any order with no labels.
+
+STEP 1 — DETECT SCENARIO:
+A) Source notes from other physicians only — no physician's own A&P present: Generate fresh A&P from scratch in physician style.
+B) Physician's own A&P detected (no other source notes): Bold the diagnosis names, apply CDI upgrades to names only, leave plan text exactly as written.
+C) Mixed — physician draft PLUS source notes: Fill gaps in draft using source notes, preserve existing plan text, add CDI upgrades to diagnosis names.
+
+STEP 2 — EXTRACT AND CLASSIFY:
+- Patient age and sex only (never name or MRN)
+- All active clinical problems
+- ER labs as baselines: ER creatinine for KDIGO, initial O2 sat for respiratory failure, first lactate for sepsis, troponin trajectory
+- Consultant recommendations to incorporate
+- ER physician differential vs A&P — flag gaps
+
+MEDICATION HALLUCINATION PREVENTION — CRITICAL:
+- Arixtra, Lovenox SQ, heparin SQ = DVT PROPHYLAXIS only — never infer Afib, PE, or DVT from these alone
+- Every suggested diagnosis must cite specific evidence: lab value, vital sign, symptom, imaging, or explicit physician language
+- A medication alone is NEVER sufficient to suggest a diagnosis
+
+STEP 3 — OUTPUT FORMAT:
+[Age] YO [male/female] with:
+
+**[CDI-Upgraded Diagnosis]:** Narrative plan weaving in data, status, and plan.
+
+STYLE: Bold diagnosis + colon + prose narrative. No bullet points. Data inline. Active voice. Status always noted (improving/stable/worsening). Consult recommendations incorporated.
+
+PROBLEM ORDER: Most acute first. Prophylaxis and stable chronics last.
+
+CDI UPGRADES (FY2026):
+- CHF must include acuity (Acute/Acute-on-Chronic) AND type (Systolic/Diastolic/HFrEF/HFpEF)
+- AMS becomes Metabolic Encephalopathy
+- Respiratory distress becomes Acute Hypoxemic Respiratory Failure if O2 required
+- AKI includes KDIGO stage and baseline Cr
+- Sepsis as evidenced by [source] causing [organ dysfunction]
+- NSTEMI specify Type 1 or 2
+- Troponin elevation without ischemia evidence = Non-Ischemic Myocardial Injury (I5A)
+- T2DM with high glucose → Type 2 DM with Hyperglycemia (E11.65)
+- "Renal insufficiency" → specify CKD stage or AKI
+- CVA → hemorrhagic vs embolic, location, traumatic vs non-traumatic
+
+Return ONLY raw JSON, no markdown, no backticks:
+{
+  "scenario": "A",
+  "scenario_label": "Built fresh from source notes",
+  "ap_text": "[Age] YO [sex] with:\\n\\n**Diagnosis:** Plan narrative...\\n\\n**Diagnosis 2:** Plan...",
+  "cdi_flags": [
+    {"severity":"critical","title":"...","body":"...","action":"..."}
+  ],
+  "sepsis_detected": false,
+  "gaps": ["..."]
+}`;
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
+
+SOURCE MATERIAL: You will receive a free-form paste that may include any combination of: overnight H&P A&P written by another physician, ER physician note, cardiology/nephrology/other consultant notes. Extract all relevant clinical information from all sources.
+
+OUTPUT FORMAT — follow this exactly:
+[Age] [sex] with:
+
+1. [CDI-Upgraded Diagnosis Name] - [Narrative plan sentence(s) weaving in relevant clinical data, current status, and plan]
+
+2. [CDI-Upgraded Diagnosis Name] - [Narrative plan sentence(s)]
+
+(continue for all problems)
+
+STYLE RULES — match this physician's voice precisely:
+- Header line: "[Age] YO [male/female] with:" — use age/sex from notes, never use patient name
+- Each problem: number + period + space + diagnosis + space + dash + space + narrative
+- Narrative is flowing prose, NOT bullet points — everything on one line per problem
+- Weave data inline naturally: "O2 sat now 96% on 2L NC", "creatinine 2.1 up from baseline 1.0", "rate controlled at 88 on telemetry"
+- Include: current status, relevant today's data, and plan — all in one sentence or two
+- Rationale brief but present: "given afib and immobilization risk", "in setting of CHF exacerbation"
+- Active voice: "Will continue", "Monitor", "Start", "Hold", "Consult"
+- Status always noted: "improving", "stable", "no acute issues today", "worsening"
+- Concise but complete — match complexity to problem acuity
+
+PROBLEM ORDERING:
+1. Primary/most acute diagnosis first (reason for admission)
+2. Active complications and secondary acute problems
+3. Active chronic problems being monitored/managed
+4. Prophylaxis and chronic stable conditions last (DVT ppx, hypothyroidism, dyslipidemia, etc.)
+
+CDI RULES — upgrade all diagnosis names:
+- "CHF" → "Acute on Chronic [Systolic/Diastolic] Congestive Heart Failure" (use HFpEF/HFrEF if documented)
+- "AMS/confusion" → "Metabolic Encephalopathy" — use "evidence of" in progress notes
+- "Respiratory distress/insufficiency" → "Acute Hypoxemic Respiratory Failure" if O2 required
+- Continuous home O2 → add "Chronic Respiratory Failure with Hypoxia" as separate problem
+- "AKI" → include KDIGO stage and baseline Cr: "AKI KDIGO Stage X (baseline Cr X.X, current X.X)"
+- "Urosepsis" → "Sepsis due to [organism if known], source UTI"
+- Sepsis → "Sepsis as evidenced by [source] causing [organ dysfunction]"
+- "NSTEMI" without type → flag as Type 1 or Type 2 in narrative
+- Troponin elevation without ischemia → "Non-Ischemic Myocardial Injury"
+- "T2DM" → "Type 2 Diabetes Mellitus with Hyperglycemia" if glucose elevated
+- CVA → specify hemorrhagic vs ischemic, territory, LOC
+- "Pneumonia" → specify type if possible (aspiration, gram-negative, MRSA, community-acquired)
+- "Renal insufficiency/CRI" → specify CKD stage
+- Malnutrition → specify mild/moderate/severe per ASPEN
+- Always apply PHSI CC/MCC upgrades from your training
+
+CONSULTANT INTEGRATION:
+- Incorporate consultant recommendations into the relevant problem plan
+- Use more specific diagnosis language if consultant was more specific than admitting note
+- Note if consultant recommended specific tests, treatments, or follow-up
+
+ER NOTE INTEGRATION:
+- Use ER vitals and initial data to establish baselines
+- Incorporate ER differential if it identified something not in the A&P
+- Use initial labs from ER for KDIGO, troponin trajectory, lactate
+
+PRIVACY: Never use patient name. Age and sex only.
+
+Return ONLY the formatted A&P text — no JSON, no markdown, no explanation. Just the note starting with the header line.`;
+
+let apbText = '';
+
+async function generateAPB() {
+  const notes = v('apb-freeform');
+  if (!notes) { alert('Please paste source notes first.'); return; }
+
+  setBusy(true);
+  prog(true, 0, 'Reading source notes...');
+
+<<<<<<< HEAD
+  // Switch to A&P Builder output tab
+  const apbOutTab = document.getElementById('apbuilder-tab-btn');
+  if (apbOutTab) { apbOutTab.style.display='inline-block'; }
+  document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
+  if (apbOutTab) apbOutTab.classList.add('on');
+  ['analysis','sepsis','ap','dcsummary','apbuilder'].forEach(t => {
+    document.getElementById('panel-'+t).classList.toggle('on', t==='apbuilder');
+  });
+
+  document.getElementById('apb-body').innerHTML = '<div class="spin-wrap"><div class="spin"></div>Generating your A&P...</div>';
+
+  try {
+    prog(true, 40, 'Synthesizing problems and generating A&P in your style...');
+
+    const raw = await callAPI(SYSTEM_AP_BUILDER, notes, 3000);
+=======
+  // Switch to Note Builder output tab
+  const nbOutTab = document.getElementById('notebuilder-tab-btn');
+  if (nbOutTab) { nbOutTab.style.display='inline-block'; }
+  document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
+  if (nbOutTab) nbOutTab.classList.add('on');
+  ['analysis','sepsis','ap','dcsummary','apbuilder','notebuilder'].forEach(t => {
+    document.getElementById('panel-'+t).classList.toggle('on', t==='notebuilder');
+  });
+
+  document.getElementById('nb-body').innerHTML = '<div class="spin-wrap"><div class="spin"></div>Detecting scenario and building your note...</div>';
+  const nbBadge = document.getElementById('nb-scenario-badge');
+  if (nbBadge) nbBadge.style.display='none';
+
+  try {
+    prog(true, 40, 'Detecting scenario, applying CDI upgrades...');
+    const raw = await callAPI(SYSTEM_NOTE_BUILDER, notes, 3000);
+    prog(true, 90, 'Rendering...');
+
+    let data;
+    try { data = parseJSON(raw); } catch(e) { throw new Error('Parse error: ' + raw.slice(0,300)); }
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
+
+    prog(true, 90, 'Done ✓');
+    apbText = raw.trim();
+
+<<<<<<< HEAD
+    // Render with monospace styling matching physician note feel
+    document.getElementById('apb-body').innerHTML =
+      '<div style="font-family:monospace;font-size:13px;line-height:1.9;color:var(--text);white-space:pre-wrap;word-break:break-word;">' + esc(apbText) + '</div>';
+
+    setTimeout(() => prog(false), 1000);
+
+  } catch(err) {
+    document.getElementById('apb-body').innerHTML =
+=======
+    // Show scenario badge
+    if (nbBadge && data.scenario) {
+      const labels = {
+        'A': '✨ Scenario A · Built Fresh',
+        'B': '✏️ Scenario B · Upgraded Your Draft',
+        'C': '🔀 Scenario C · Filled Gaps'
+      };
+      nbBadge.textContent = labels[data.scenario] || ('Scenario ' + data.scenario);
+      nbBadge.style.display='inline-block';
+    }
+
+    // Render note body — bold markdown ** ** to <strong>
+    const rendered = esc(nbText).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g,'<br>');
+    let bodyHtml = '<div style="font-size:13.5px;line-height:1.9;color:var(--text);">' + rendered + '</div>';
+
+    // Append CDI flags inline
+    const flags = data.cdi_flags || [];
+    if (flags.length) {
+      bodyHtml += '<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text3);letter-spacing:0.7px;margin-bottom:8px;">⚡ CDI Flags</div>';
+      flags.forEach(f => {
+        const cls = f.severity==='critical'?'a-red':f.severity==='warning'?'a-amber':'a-blue';
+        const ico = f.severity==='critical'?'🔴':f.severity==='warning'?'🟡':'🔵';
+        bodyHtml += '<div class="alert-block ' + cls + '"><div class="alert-title">' + ico + ' ' + esc(f.title||'') + '</div><div>' + esc(f.body||'') + '</div>' + (f.action ? '<div class="alert-action">→ ' + esc(f.action) + '</div>' : '') + '</div>';
+      });
+      bodyHtml += '</div>';
+    }
+
+    // Append data gaps
+    const gaps = data.gaps || [];
+    if (gaps.length) {
+      bodyHtml += '<div style="margin-top:14px;padding:12px 14px;background:var(--amber-light);border-radius:8px;border-left:3px solid #e0a020;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#5a3800;margin-bottom:6px;letter-spacing:0.5px;">⚠️ Data Gaps</div>';
+      gaps.forEach(g => bodyHtml += '<div style="font-size:12.5px;color:#5a3800;padding:3px 0;">• ' + esc(g) + '</div>');
+      bodyHtml += '</div>';
+    }
+
+    document.getElementById('nb-body').innerHTML = bodyHtml;
+    setTimeout(() => prog(false), 1000);
+
+  } catch(err) {
+    document.getElementById('nb-body').innerHTML =
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
+      '<div style="background:#f8d7da;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#842029;font-size:13px;">⚠️ ' + esc(err.message) + '</div>';
+    prog(false);
+  }
+  setBusy(false);
+}
+
+<<<<<<< HEAD
+function copyAPB() {
+  if (!apbText) return;
+  navigator.clipboard.writeText(apbText).then(() => {
+    const btn = document.getElementById('copy-apb-btn');
+=======
+function copyNB() {
+  if (!nbText) return;
+  // Strip ** for clean paste into MT
+  const plain = nbText.replace(/\*\*/g, '');
+  navigator.clipboard.writeText(plain).then(() => {
+    const btn = document.getElementById('copy-nb-btn');
+>>>>>>> 18db7ccd420df064e70d366ea06959344a593d51
     btn.textContent = '✅ Copied!';
     btn.style.background = '#0f5132';
     setTimeout(() => { btn.innerHTML = '📋 Copy A&P'; btn.style.background = ''; }, 2000);
