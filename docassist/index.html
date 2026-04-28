@@ -226,6 +226,57 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 #login-btn:hover:not(:disabled) { background:#163d5e; }
 #login-btn:disabled { background:#9ab0c4; cursor:not-allowed; }
 #login-error { font-size:12px; color:#c0392b; margin-top:10px; min-height:18px; }
+
+/* METRICS DASHBOARD */
+.met-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:14px; }
+.met-card { background:white; border:1px solid var(--border); border-radius:10px; padding:14px 16px; box-shadow:var(--shadow); }
+.met-card.hero { background:var(--navy); color:white; border:none; }
+.met-card.green { background:var(--green-light); border-color:#a3cfb5; }
+.met-card.amber { background:var(--amber-light); border-color:#e0c97a; }
+.met-card.blue { background:var(--blue-light); border-color:var(--blue-mid); }
+.met-lbl { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.7px; margin-bottom:5px; }
+.met-card.hero .met-lbl { color:rgba(255,255,255,0.55); }
+.met-val { font-size:22px; font-weight:800; color:var(--navy); letter-spacing:-0.5px; line-height:1.1; }
+.met-card.hero .met-val { color:white; font-size:26px; }
+.met-card.green .met-val { color:var(--green); }
+.met-card.amber .met-val { color:var(--amber); }
+.met-card.blue .met-val { color:var(--navy2); }
+.met-sub { font-size:10px; color:var(--text3); margin-top:4px; }
+.met-card.hero .met-sub { color:rgba(255,255,255,0.5); }
+.met-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+.met-filter { display:flex; gap:0; }
+.met-fbtn { padding:6px 12px; border:1.5px solid var(--border); background:white; color:var(--text2); font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; }
+.met-fbtn:first-child { border-radius:8px 0 0 8px; }
+.met-fbtn:last-child { border-radius:0 8px 8px 0; }
+.met-fbtn:not(:first-child) { border-left:none; }
+.met-fbtn.on { background:var(--navy); color:white; border-color:var(--navy); }
+.met-action { padding:6px 12px; background:white; border:1.5px solid var(--border); border-radius:8px; font-size:11px; font-weight:600; color:var(--text2); cursor:pointer; font-family:inherit; }
+.met-action:hover { background:#f4f1ec; }
+.met-action.danger { color:#c0392b; border-color:#f0a0a0; }
+.met-action.danger:hover { background:#fde; }
+.met-action.primary { background:var(--navy); color:white; border-color:var(--navy); }
+.met-action.primary:hover { background:#163d5e; }
+.met-spacer { flex:1; }
+.met-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:7px; font-size:12px; }
+.met-bar-lbl { width:180px; flex-shrink:0; color:var(--text); font-weight:600; font-size:12px; }
+.met-bar-track { flex:1; height:18px; background:#f4f1ec; border-radius:4px; overflow:hidden; }
+.met-bar-fill { height:100%; background:linear-gradient(90deg, var(--navy2), var(--navy)); border-radius:4px; transition:width 0.4s; }
+.met-bar-val { width:90px; text-align:right; font-size:11px; color:var(--text2); font-weight:600; flex-shrink:0; }
+.met-table { width:100%; border-collapse:collapse; font-size:12px; }
+.met-table th { text-align:left; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text3); font-weight:700; background:#faf8f5; border-bottom:1.5px solid var(--border); }
+.met-table td { padding:8px 10px; border-bottom:1px solid var(--border); color:var(--text); }
+.met-table tr:hover td { background:#faf8f5; }
+.met-table .tnum { font-family:'SF Mono',ui-monospace,monospace; font-size:11px; }
+.met-table .tg { color:var(--green); font-weight:700; }
+.met-empty { text-align:center; padding:48px 20px; color:var(--text3); }
+.met-empty-ico { font-size:32px; margin-bottom:10px; }
+.met-empty-ttl { font-size:14px; font-weight:700; color:var(--text2); margin-bottom:4px; }
+.met-empty-sub { font-size:12px; }
+.met-pitch-banner { background:linear-gradient(135deg, var(--navy), var(--navy2)); color:white; border-radius:12px; padding:14px 18px; margin-bottom:14px; display:flex; align-items:center; gap:14px; }
+.met-pitch-ico { font-size:22px; }
+.met-pitch-text { flex:1; font-size:12px; line-height:1.5; color:rgba(255,255,255,0.92); }
+.met-pitch-text strong { color:white; font-weight:800; }
+@media (max-width: 1100px) { .met-grid { grid-template-columns:repeat(2, 1fr); } }
 </style>
 </head>
 <body>
@@ -243,7 +294,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 
 <div id="hdr">
   <div id="logo"><div id="logo-icon">⚕</div>Doc<span>Assist</span></div>
-  <div id="hdr-meta">CDI & E&M Companion · Beta v8.0</div>
+  <div id="hdr-meta">CDI & E&M Companion · Beta v9.0</div>
 </div>
 
 <div id="wrap">
@@ -251,7 +302,8 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
   <div id="left">
     <div class="type-tabs">
       <button class="ntab on" onclick="setTab(this,'hp')">Initial H&P</button>
-      <button class="ntab"    onclick="setTab(this,'notebuilder')">Note Builder</button>
+      <button class="ntab"    onclick="setTab(this,'progress')">Progress Note</button>
+      <button class="ntab"    onclick="setTab(this,'apbuilder')">A&P Builder</button>
       <button class="ntab"    onclick="setTab(this,'dcsummary')">DC Builder</button>
     </div>
     <div id="input-card">
@@ -262,11 +314,18 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
           <textarea id="hp-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste anything from the chart here — ER physician note, HPI, labs, imaging, consult notes, A&P. Paste multiple items one after another. No labeling needed. AI will sort it out."></textarea>
         </div>
       </div>
-      <!-- Note Builder -->
-      <div id="inputs-notebuilder" style="display:none">
+      <!-- Progress -->
+      <div id="inputs-progress" style="display:none">
         <div class="input-section">
-          <div class="inp-label"><span>📋</span> Paste Anything<span class="lbl-hint">ER note · overnight H&P · consults · your draft · labs · any order</span></div>
-          <textarea id="nb-freeform" class="inp-area tall" style="min-height:420px;" placeholder="Paste everything you have — ER note, overnight H&amp;P, partner progress note, consult notes, labs, your own draft A&amp;P. Any order, any amount. AI figures out the rest."></textarea>
+          <div class="inp-label"><span>📋</span> Paste Anything<span class="lbl-hint">labs · progress note · consult updates · any order</span></div>
+          <textarea id="pn-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste anything from today's chart — labs, today's progress note, consultant updates, imaging results. Paste multiple items one after another. No labeling needed."></textarea>
+        </div>
+      </div>
+      <!-- A&P Builder -->
+      <div id="inputs-apbuilder" style="display:none">
+        <div class="input-section">
+          <div class="inp-label"><span>📋</span> Paste Source Notes<span class="lbl-hint">overnight H&P · ER note · consults · any order</span></div>
+          <textarea id="apb-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste any combination of: overnight physician A&P, ER note, cardiology/nephrology/other consult notes. Any order, no labeling needed. AI will generate your A&P in your style."></textarea>
         </div>
       </div>
 
@@ -320,7 +379,8 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
         <button class="otab"     onclick="setOutTab(this,'sepsis')" id="sepsis-tab-btn">🦠 Sepsis Criteria</button>
         <button class="otab"     onclick="setOutTab(this,'ap')" id="ap-tab-btn">✏️ Optimized A&P</button>
         <button class="otab"     onclick="setOutTab(this,'dcsummary')" id="dcsummary-tab-btn" style="display:none">🏥 DC Summary</button>
-        <button class="otab"     onclick="setOutTab(this,'notebuilder')" id="notebuilder-tab-btn" style="display:none">✍️ My Note</button>
+        <button class="otab"     onclick="setOutTab(this,'apbuilder')" id="apbuilder-tab-btn" style="display:none">✍️ My A&P</button>
+        <button class="otab"     onclick="setOutTab(this,'metrics')" id="metrics-tab-btn">📈 Metrics</button>
       </div>
 
       <!-- ANALYSIS PANEL -->
@@ -392,17 +452,47 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
       </div>
 
       <!-- A&P BUILDER PANEL -->
-      <div id="panel-notebuilder" class="out-panel">
-        <div id="nb-card" style="background:white;border-radius:0 14px 14px 14px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;">
+      <div id="panel-apbuilder" class="out-panel">
+        <div id="apb-card" style="background:white;border-radius:0 14px 14px 14px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;">
           <div style="padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#faf8f5;">
             <div>
               <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.9px;">My Progress Note A&P</div>
               <div style="font-size:11px;color:var(--text3);">CDI-optimized · your style · ready to paste into MT</div>
             </div>
-            <button id="copy-nb-btn" onclick="copyNB()" style="padding:8px 16px;background:var(--navy);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background 0.15s;">📋 Copy A&P</button>
+            <button id="copy-apb-btn" onclick="copyAPB()" style="padding:8px 16px;background:var(--navy);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background 0.15s;">📋 Copy A&P</button>
           </div>
-          <div id="nb-body" style="padding:20px;">
+          <div id="apb-body" style="padding:20px;">
             <div class="empty"><div class="empty-ico">✍️</div><div class="empty-ttl">A&P Builder</div><div class="empty-sub">Paste overnight H&P, ER note, and consult notes on the left — your progress note A&P appears here ready to paste into MT</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- METRICS PANEL -->
+      <div id="panel-metrics" class="out-panel">
+        <div class="met-pitch-banner">
+          <div class="met-pitch-ico">📊</div>
+          <div class="met-pitch-text">
+            <strong>Documentation Gap Identification — Aggregate, De-identified.</strong>
+            No PHI stored. Tracks revenue opportunity surfaced for ROI pitch to health system leadership.
+          </div>
+        </div>
+        <div class="met-toolbar">
+          <div class="met-filter" id="met-filter">
+            <button class="met-fbtn on" onclick="setMetFilter(this,'all')">All time</button>
+            <button class="met-fbtn" onclick="setMetFilter(this,'90')">90 days</button>
+            <button class="met-fbtn" onclick="setMetFilter(this,'30')">30 days</button>
+            <button class="met-fbtn" onclick="setMetFilter(this,'7')">7 days</button>
+          </div>
+          <div class="met-spacer"></div>
+          <button class="met-action primary" onclick="exportMetricsCSV()">⬇ Export CSV</button>
+          <button class="met-action" onclick="exportMetricsPDF()">📄 PDF Snapshot</button>
+          <button class="met-action danger" onclick="clearMetrics()">🗑 Reset</button>
+        </div>
+        <div id="met-body">
+          <div class="met-empty">
+            <div class="met-empty-ico">📈</div>
+            <div class="met-empty-ttl">No metrics yet</div>
+            <div class="met-empty-sub">Run an analysis to start capturing efficacy data</div>
           </div>
         </div>
       </div>
@@ -419,35 +509,37 @@ function setTab(btn, tab) {
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   currentTab = tab;
-  ['hp','notebuilder','dcsummary'].forEach(t => {
+  ['hp','progress','apbuilder','dcsummary'].forEach(t => {
     document.getElementById('inputs-'+t).style.display = t===tab ? 'block' : 'none';
   });
   // Update analyze button label
   const lbl = document.getElementById('analyze-btn-label');
   if (lbl) {
     if (tab==='dcsummary') lbl.textContent = 'Generate DC Summary';
-    else if (tab==='notebuilder') lbl.textContent = 'Build Note';
+    else if (tab==='apbuilder') lbl.textContent = 'Build My A&P';
     else lbl.textContent = 'Analyze Note';
   }
   // Show/hide DC output tab
   const dcOutTab = document.getElementById('dcsummary-tab-btn');
   if (dcOutTab) dcOutTab.style.display = tab==='dcsummary' ? 'inline-block' : 'none';
   // Show/hide A&P Builder output tab
-  const apbOutTab = document.getElementById('notebuilder-tab-btn');
-  if (apbOutTab) apbOutTab.style.display = tab==='notebuilder' ? 'inline-block' : 'none';
+  const apbOutTab = document.getElementById('apbuilder-tab-btn');
+  if (apbOutTab) apbOutTab.style.display = tab==='apbuilder' ? 'inline-block' : 'none';
 }
 
 function setOutTab(btn, tab) {
   document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
-  ['analysis','sepsis','ap','dcsummary','notebuilder'].forEach(t => {
+  ['analysis','sepsis','ap','dcsummary','apbuilder','metrics'].forEach(t => {
     document.getElementById('panel-'+t).classList.toggle('on', t===tab);
   });
+  if (tab === 'metrics') renderMetrics();
 }
 
 function getInputs() {
   if (currentTab==='hp') return { freeform:v('hp-freeform'), type:'Initial H&P' };
-  if (currentTab==='notebuilder') return { freeform:v('nb-freeform'), type:'Note Builder' };
+  if (currentTab==='progress') return { freeform:v('pn-freeform'), type:'Subsequent Progress Note' };
+  if (currentTab==='apbuilder') return { freeform:v('apb-freeform'), type:'A&P Builder' };
   if (currentTab==='dcsummary') return { hpi:v('dc2-hp'), consult:v('dc2-consult'), progress:v('dc2-progress'), type:'DC Summary Builder' };
   return { freeform:v('apb-freeform'), type:'A&P Builder' }; // fallback
 }
@@ -592,7 +684,6 @@ SEPSIS (document as: "Sepsis as evidenced by [infection] causing [organ dysfunct
 - Septic Shock (R65.21): SBP<90 unresponsive to fluids OR vasopressors required
 
 TROPONIN / CARDIAC:
-- INSTITUTION-SPECIFIC: Normal troponin at this institution = 0-20 pg/mL. Do NOT flag troponin as elevated or suggest any cardiac diagnosis (Type 2 MI, Non-Ischemic Myocardial Injury, NSTEMI) unless troponin value explicitly exceeds 20 pg/mL. A troponin of 7, 10, 15, or any value 20 or below is NORMAL - do not flag it.
 - "NSTEMI" without Type specification → flag: may be miscoded as I21.4 (triggers AMI readmission cohort)
 - Type 2 MI (I21.A1) = MCC: supply-demand mismatch + BOTH criteria met (troponin rise/fall AND ischemia evidence)
 - Ischemia evidence = symptoms, EKG changes, Q waves, or imaging wall motion abnormality
@@ -864,6 +955,9 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     renderRevBar(analysis.summary);
     renderSepsis(analysis.sepsis);
     renderAP(apData, inputs.ap);
+
+    // Capture de-identified metrics for ROI tracking
+    captureMetrics(analysis);
 
     // Update tab badges
     const alertCount = (analysis.cdi_alerts||[]).length;
@@ -1162,19 +1256,17 @@ function resetOutputs() {
   document.getElementById('sepsis-tab-btn').innerHTML = '🦠 Sepsis Criteria';
   const dcBtn = document.getElementById('copy-course-btn'); if (dcBtn) dcBtn.style.display='none';
   const dxBtn = document.getElementById('copy-dx-btn'); if (dxBtn) dxBtn.style.display='none';
-  const nbOutTab = document.getElementById('notebuilder-tab-btn'); if (nbOutTab) nbOutTab.style.display='none';
+  const apbOutTab = document.getElementById('apbuilder-tab-btn'); if (apbOutTab) apbOutTab.style.display='none';
 }
 
 function clearAll() {
-  ['hp-freeform','nb-freeform','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['hp-freeform','pn-freeform','apb-freeform','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   resetOutputs(); prog(false);
   document.getElementById('em-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">E&M Level Analysis</div><div class="empty-sub">Paste your note and click Analyze</div></div>';
   document.getElementById('cdi-body').innerHTML='<div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div>';
   document.getElementById('drg-body').innerHTML='<div class="empty"><div class="empty-ico">💰</div><div class="empty-ttl">DRG & ICD-10 Analysis</div><div class="empty-sub">DRG comparison, GMLOS, and ICD-10 codes appear here</div></div>';
   document.getElementById('sepsis-body').innerHTML='<div class="empty"><div class="empty-ico">🦠</div><div class="empty-ttl">Sepsis Criteria</div><div class="empty-sub">Run analysis first — sepsis criteria will be evaluated based on your note data</div></div>';
   document.getElementById('ap-body').innerHTML='<div class="empty"><div class="empty-ico">✏️</div><div class="empty-ttl">Optimized A&P</div><div class="empty-sub">Run analysis first — your CDI-optimized note appears here ready to paste into MT</div></div>';
-  document.getElementById('nb-body').innerHTML='<div class="empty"><div class="empty-ico">&#x270D;</div><div class="empty-ttl">Note Builder</div><div class="empty-sub">Paste anything on the left - AI builds your note</div></div>';
-  const nbCdiEl = document.getElementById('nb-cdi-body'); if(nbCdiEl) nbCdiEl.innerHTML='<div class="empty"><div class="empty-ico">&#x26A1;</div><div class="empty-ttl">CDI Flags</div><div class="empty-sub">Documentation opportunities appear here</div></div>';
   document.getElementById('dc-course-body').innerHTML='<div class="empty"><div class="empty-ico">🏥</div><div class="empty-ttl">Hospital Course</div><div class="empty-sub">Paste source notes on the left and click Generate DC Summary</div></div>';
   document.getElementById('dc-dx-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">Discharge Diagnoses</div><div class="empty-sub">CDI-optimized diagnosis list appears here</div></div>';
   document.getElementById('dc-cdi-body').innerHTML='<div class="empty"><div class="empty-ico">⚡</div><div class="empty-ttl">CDI Flags</div><div class="empty-sub">Last-chance documentation opportunities appear here</div></div>';
@@ -1370,95 +1462,124 @@ function copySection(textId, btn) {
 function handleAnalyze() {
   if (currentTab === 'dcsummary') {
     generateDCSummary();
-  } else if (currentTab === 'notebuilder') {
-    generateNoteBuilder();
+  } else if (currentTab === 'apbuilder') {
+    generateAPB();
   } else {
     analyze();
   }
 }
 
-// ── NOTE BUILDER ──
-const SYSTEM_NOTE_BUILDER = 'You are a senior hospitalist physician. You receive raw chart content pasted from MEDITECH which may include any mix of: ER physician notes, overnight H&P, partner progress notes, consultant notes, lab results, imaging reports, the physician own draft A&P. Content arrives in any order with no labels.\n\nSTEP 1 - DETECT SCENARIO:\nA) Source notes from other physicians only - no physician own A&P: Generate fresh A&P from scratch in physician style.\nB) Physician own A&P detected: Bold the diagnosis names, apply CDI upgrades to names only, leave plan text exactly as written.\nC) Mixed - physician draft plus source notes: Fill gaps in draft using source notes, preserve existing plan text.\n\nSTEP 2 - EXTRACT AND CLASSIFY:\n- Patient age and sex only (never name or MRN)\n- All active clinical problems\n- ER labs as baselines: ER creatinine for KDIGO, initial O2 sat for respiratory failure, first lactate for sepsis, troponin trajectory\n- Consultant recommendations to incorporate\n- ER physician differential vs A&P - flag gaps\n\nMEDICATION HALLUCINATION PREVENTION - CRITICAL:\n- Arixtra, Lovenox SQ, heparin SQ = DVT PROPHYLAXIS only - never infer Afib, PE, or DVT from these alone\n- Every suggested diagnosis must cite specific evidence: lab value, vital sign, symptom, imaging, or explicit physician language\n- A medication alone is NEVER sufficient to suggest a diagnosis\n\nSTEP 3 - OUTPUT FORMAT:\n[Age] YO [male/female] with:\n\n**[CDI-Upgraded Diagnosis]:** Narrative plan weaving in data, status, and plan.\n\nSTYLE: Bold diagnosis + colon + prose narrative. No bullet points. Data inline. Active voice. Status always noted. Consult recommendations incorporated.\n\nPROBLEM ORDER: Most acute first. Prophylaxis and stable chronics last.\n\nCDI UPGRADES: CHF must include acuity and type. AMS becomes Metabolic Encephalopathy. Respiratory distress becomes Acute Hypoxemic Respiratory Failure if O2 required. AKI includes KDIGO stage and baseline Cr. Sepsis as evidenced by [source] causing [organ dysfunction]. NSTEMI specify Type 1 or 2. Troponin without ischemia = Non-Ischemic Myocardial Injury.\n\nReturn ONLY raw JSON:\n{"scenario":"A","ap_text":"[Age] YO with:\n\n**Diagnosis:** Plan...","cdi_flags":[{"severity":"critical","title":"...","body":"...","action":"..."}],"sepsis_detected":false,"gaps":[]}';
+// ── A&P BUILDER ──
+const SYSTEM_AP_BUILDER = `You are a hospitalist physician generating a progress note Assessment & Plan in the physician's personal style.
 
-let nbText = '';
+SOURCE MATERIAL: You will receive a free-form paste that may include any combination of: overnight H&P A&P written by another physician, ER physician note, cardiology/nephrology/other consultant notes. Extract all relevant clinical information from all sources.
 
-async function generateNoteBuilder() {
-  const notes = v('nb-freeform');
-  if (!notes) { alert('Please paste chart content first.'); return; }
+OUTPUT FORMAT — follow this exactly:
+[Age] [sex] with:
+
+1. [CDI-Upgraded Diagnosis Name] - [Narrative plan sentence(s) weaving in relevant clinical data, current status, and plan]
+
+2. [CDI-Upgraded Diagnosis Name] - [Narrative plan sentence(s)]
+
+(continue for all problems)
+
+STYLE RULES — match this physician's voice precisely:
+- Header line: "[Age] YO [male/female] with:" — use age/sex from notes, never use patient name
+- Each problem: number + period + space + diagnosis + space + dash + space + narrative
+- Narrative is flowing prose, NOT bullet points — everything on one line per problem
+- Weave data inline naturally: "O2 sat now 96% on 2L NC", "creatinine 2.1 up from baseline 1.0", "rate controlled at 88 on telemetry"
+- Include: current status, relevant today's data, and plan — all in one sentence or two
+- Rationale brief but present: "given afib and immobilization risk", "in setting of CHF exacerbation"
+- Active voice: "Will continue", "Monitor", "Start", "Hold", "Consult"
+- Status always noted: "improving", "stable", "no acute issues today", "worsening"
+- Concise but complete — match complexity to problem acuity
+
+PROBLEM ORDERING:
+1. Primary/most acute diagnosis first (reason for admission)
+2. Active complications and secondary acute problems
+3. Active chronic problems being monitored/managed
+4. Prophylaxis and chronic stable conditions last (DVT ppx, hypothyroidism, dyslipidemia, etc.)
+
+CDI RULES — upgrade all diagnosis names:
+- "CHF" → "Acute on Chronic [Systolic/Diastolic] Congestive Heart Failure" (use HFpEF/HFrEF if documented)
+- "AMS/confusion" → "Metabolic Encephalopathy" — use "evidence of" in progress notes
+- "Respiratory distress/insufficiency" → "Acute Hypoxemic Respiratory Failure" if O2 required
+- Continuous home O2 → add "Chronic Respiratory Failure with Hypoxia" as separate problem
+- "AKI" → include KDIGO stage and baseline Cr: "AKI KDIGO Stage X (baseline Cr X.X, current X.X)"
+- "Urosepsis" → "Sepsis due to [organism if known], source UTI"
+- Sepsis → "Sepsis as evidenced by [source] causing [organ dysfunction]"
+- "NSTEMI" without type → flag as Type 1 or Type 2 in narrative
+- Troponin elevation without ischemia → "Non-Ischemic Myocardial Injury"
+- "T2DM" → "Type 2 Diabetes Mellitus with Hyperglycemia" if glucose elevated
+- CVA → specify hemorrhagic vs ischemic, territory, LOC
+- "Pneumonia" → specify type if possible (aspiration, gram-negative, MRSA, community-acquired)
+- "Renal insufficiency/CRI" → specify CKD stage
+- Malnutrition → specify mild/moderate/severe per ASPEN
+- Always apply PHSI CC/MCC upgrades from your training
+
+CONSULTANT INTEGRATION:
+- Incorporate consultant recommendations into the relevant problem plan
+- Use more specific diagnosis language if consultant was more specific than admitting note
+- Note if consultant recommended specific tests, treatments, or follow-up
+
+ER NOTE INTEGRATION:
+- Use ER vitals and initial data to establish baselines
+- Incorporate ER differential if it identified something not in the A&P
+- Use initial labs from ER for KDIGO, troponin trajectory, lactate
+
+PRIVACY: Never use patient name. Age and sex only.
+
+Return ONLY the formatted A&P text — no JSON, no markdown, no explanation. Just the note starting with the header line.`;
+
+let apbText = '';
+
+async function generateAPB() {
+  const notes = v('apb-freeform');
+  if (!notes) { alert('Please paste source notes first.'); return; }
 
   setBusy(true);
-  prog(true, 0, 'Reading chart content...');
+  prog(true, 0, 'Reading source notes...');
 
-  const nbOutTab = document.getElementById('notebuilder-tab-btn');
-  if (nbOutTab) { nbOutTab.style.display='inline-block'; }
-  document.querySelectorAll('.otab').forEach(function(b) { b.classList.remove('on'); });
-  if (nbOutTab) nbOutTab.classList.add('on');
-  ['analysis','sepsis','ap','dcsummary','notebuilder'].forEach(function(t) {
-    document.getElementById('panel-'+t).classList.toggle('on', t==='notebuilder');
+  // Switch to A&P Builder output tab
+  const apbOutTab = document.getElementById('apbuilder-tab-btn');
+  if (apbOutTab) { apbOutTab.style.display='inline-block'; }
+  document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
+  if (apbOutTab) apbOutTab.classList.add('on');
+  ['analysis','sepsis','ap','dcsummary','apbuilder'].forEach(t => {
+    document.getElementById('panel-'+t).classList.toggle('on', t==='apbuilder');
   });
 
-  document.getElementById('nb-body').innerHTML = '<div class="spin-wrap"><div class="spin"></div>Building your note...</div>';
+  document.getElementById('apb-body').innerHTML = '<div class="spin-wrap"><div class="spin"></div>Generating your A&P...</div>';
 
   try {
-    prog(true, 35, 'Analyzing chart and generating A&P...');
-    const raw = await callAPI(SYSTEM_NOTE_BUILDER, notes, 3500);
-    prog(true, 85, 'Rendering...');
+    prog(true, 40, 'Synthesizing problems and generating A&P in your style...');
 
-    let data;
-    try { data = parseJSON(raw); }
-    catch(e) { throw new Error('Parse error: ' + raw.slice(0,300)); }
+    const raw = await callAPI(SYSTEM_AP_BUILDER, notes, 3000);
 
-    nbText = (data.ap_text || '').trim();
+    prog(true, 90, 'Done ✓');
+    apbText = raw.trim();
 
-    const rendered = nbText.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').split('\n').join('<br>');
-    document.getElementById('nb-body').innerHTML = '<div style="font-size:13.5px;line-height:1.9;color:var(--text);">' + rendered + '</div>';
+    // Render with monospace styling matching physician note feel
+    document.getElementById('apb-body').innerHTML =
+      '<div style="font-family:monospace;font-size:13px;line-height:1.9;color:var(--text);white-space:pre-wrap;word-break:break-word;">' + esc(apbText) + '</div>';
 
-    renderNBFlags(data.cdi_flags);
-
-    if (data.sepsis_detected) {
-      document.getElementById('sepsis-tab-btn').innerHTML = '&#x1F9A0; Sepsis Criteria <span class="otab-badge">!</span>';
-    }
-
-    if (data.gaps && data.gaps.length) {
-      const gapHtml = data.gaps.map(function(g) { return '<div class="gap-row"><div class="gap-dot"></div><span>' + esc(g) + '</span></div>'; }).join('');
-      document.getElementById('nb-body').innerHTML += '<div style="margin-top:16px;padding:12px 14px;background:var(--amber-light);border-radius:8px;border-left:3px solid #e0a020;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--amber);margin-bottom:6px;">Data Gaps</div>' + gapHtml + '</div>';
-    }
-
-    prog(true, 100, 'Done');
-    setTimeout(function() { prog(false); }, 1000);
+    setTimeout(() => prog(false), 1000);
 
   } catch(err) {
-    document.getElementById('nb-body').innerHTML = '<div style="background:#f8d7da;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#842029;font-size:13px;">Error: ' + esc(err.message) + '</div>';
+    document.getElementById('apb-body').innerHTML =
+      '<div style="background:#f8d7da;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#842029;font-size:13px;">⚠️ ' + esc(err.message) + '</div>';
     prog(false);
   }
   setBusy(false);
 }
 
-function renderNBFlags(flags) {
-  const el = document.getElementById('nb-cdi-body');
-  if (!el) return;
-  if (!flags || !flags.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-ico">&#x2705;</div><div class="empty-ttl">No CDI flags</div><div class="empty-sub">Documentation looks solid</div></div>';
-    return;
-  }
-  let h = '';
-  flags.forEach(function(f) {
-    const cls = f.severity==='critical' ? 'a-red' : f.severity==='warning' ? 'a-amber' : 'a-blue';
-    const ico = f.severity==='critical' ? '[CRIT]' : f.severity==='warning' ? '[WARN]' : '[INFO]';
-    h += '<div class="alert-block ' + cls + '"><div class="alert-title">' + ico + ' ' + esc(f.title) + '</div><div>' + esc(f.body) + '</div>' + (f.action ? '<div class="alert-action">-&gt; ' + esc(f.action) + '</div>' : '') + '</div>';
-  });
-  el.innerHTML = h;
-}
-
-function copyNB() {
-  if (!nbText) return;
-  const plain = nbText.replace(/\*\*([^*]+)\*\*/g, '$1');
-  navigator.clipboard.writeText(plain).then(function() {
-    const btn = document.getElementById('copy-nb-btn');
-    if (!btn) return;
-    btn.textContent = 'Copied!';
+function copyAPB() {
+  if (!apbText) return;
+  navigator.clipboard.writeText(apbText).then(() => {
+    const btn = document.getElementById('copy-apb-btn');
+    btn.textContent = '✅ Copied!';
     btn.style.background = '#0f5132';
-    setTimeout(function() { btn.innerHTML = '&#x1F4CB; Copy Note'; btn.style.background = ''; }, 2000);
+    setTimeout(() => { btn.innerHTML = '📋 Copy A&P'; btn.style.background = ''; }, 2000);
   });
 }
 
@@ -1491,6 +1612,336 @@ async function doLogin() {
   }
   btn.disabled = false; btn.textContent = 'Access DocAssist';
 }
+
+// ═══════════════════════════════════════════════
+// METRICS — De-identified efficacy tracking (no PHI)
+// ═══════════════════════════════════════════════
+const METRICS_KEY = 'docassist_metrics_v1';
+let metFilter = 'all';
+
+function _parseDollars(s) {
+  if (s === null || s === undefined) return 0;
+  const m = String(s).match(/-?[\d,]+(?:\.\d+)?/);
+  return m ? Math.round(parseFloat(m[0].replace(/,/g, ''))) : 0;
+}
+
+function _parseFloatLoose(s) {
+  if (s === null || s === undefined) return null;
+  const m = String(s).match(/-?[\d,]+(?:\.\d+)?/);
+  return m ? parseFloat(m[0].replace(/,/g, '')) : null;
+}
+
+function _categorize(title) {
+  const t = (title || '').toLowerCase();
+  if (/heart failure|chf|hfref|hfpef|systolic|diastolic/.test(t)) return 'Heart Failure Specificity';
+  if (/respiratory failure|hypoxia|hypercapn/.test(t)) return 'Respiratory Failure';
+  if (/sepsis|sirs|sofa/.test(t)) return 'Sepsis';
+  if (/aki|acute kidney|kdigo|atn/.test(t)) return 'AKI / Renal';
+  if (/encephalopath|altered mental|\bams\b/.test(t)) return 'Encephalopathy';
+  if (/malnutrit|aspen/.test(t)) return 'Malnutrition';
+  if (/pneumonia|aspiration/.test(t)) return 'Pneumonia';
+  if (/diabetes|hyperglycem|dka|hhs/.test(t)) return 'Diabetes Specificity';
+  if (/cva|stroke|cerebr/.test(t)) return 'CVA / Stroke';
+  if (/troponin|nstemi|stemi|myocardial|i5a/.test(t)) return 'Cardiac Injury';
+  if (/poa|present on admission/.test(t)) return 'POA Documentation';
+  if (/uncertain|evidence of|probable|suspected/.test(t)) return 'Uncertain Dx Language';
+  if (/pressure ulcer/.test(t)) return 'Pressure Ulcer Stage';
+  if (/\bem\b|e&m|99[0-9]{3}|mdm/.test(t)) return 'E&M Level';
+  if (/\bdrg\b/.test(t)) return 'DRG Optimization';
+  return 'Other Specificity';
+}
+
+function captureMetrics(analysis) {
+  if (!analysis) return;
+  try {
+    const drg = analysis.drg || {};
+    const em = analysis.em || {};
+    const summary = analysis.summary || {};
+    const alerts = analysis.cdi_alerts || [];
+    const sepsis = analysis.sepsis || {};
+
+    let mcc = 0, cc = 0;
+    const mccMatch = String(summary.mcc_cc_count || '').match(/(\d+)\s*MCC/i);
+    const ccMatch = String(summary.mcc_cc_count || '').match(/(\d+)\s*CC(?!\w)/i);
+    if (mccMatch) mcc = parseInt(mccMatch[1], 10);
+    if (ccMatch) cc = parseInt(ccMatch[1], 10);
+
+    const drgRev = drg.impact_available ? _parseDollars(drg.revenue_impact) : 0;
+    const emRev = em.upgrade_available ? _parseDollars(em.revenue_gap_per_note) : 0;
+    const drgShifted = !!(drg.impact_available && drg.current_number && drg.optimized_number && drg.current_number !== drg.optimized_number);
+
+    const gmlosCur = _parseFloatLoose(drg.current_gmlos);
+    const gmlosOpt = _parseFloatLoose(drg.optimized_gmlos);
+    const gmlosDelta = (gmlosCur !== null && gmlosOpt !== null) ? +(gmlosOpt - gmlosCur).toFixed(2) : null;
+
+    const categories = alerts.map(a => _categorize(a.title)).filter(Boolean);
+    const critCount = alerts.filter(a => a.severity === 'critical').length;
+
+    const record = {
+      id: 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+      ts: new Date().toISOString(),
+      drg_current: drg.current_number || null,
+      drg_optimized: drg.optimized_number || null,
+      drg_shifted: drgShifted,
+      drg_revenue_dollars: drgRev,
+      gmlos_current_days: gmlosCur,
+      gmlos_optimized_days: gmlosOpt,
+      gmlos_delta_days: gmlosDelta,
+      em_upgrade: !!em.upgrade_available,
+      em_dollars_per_note: emRev,
+      em_from: em.current_likely_code || null,
+      em_to: em.justified_code || null,
+      cc_count: cc,
+      mcc_count: mcc,
+      alert_count: alerts.length,
+      critical_alert_count: critCount,
+      sepsis_detected: !!sepsis.detected,
+      upgrade_categories: categories,
+      total_opportunity_dollars: drgRev + emRev
+    };
+
+    const existing = _loadMetrics();
+    existing.push(record);
+    localStorage.setItem(METRICS_KEY, JSON.stringify(existing));
+    _bumpMetricsBadge();
+  } catch(e) {
+    console.warn('Metrics capture failed:', e);
+  }
+}
+
+function _loadMetrics() {
+  try { return JSON.parse(localStorage.getItem(METRICS_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+
+function _filteredMetrics() {
+  const all = _loadMetrics();
+  if (metFilter === 'all') return all;
+  const days = parseInt(metFilter, 10);
+  const cutoff = Date.now() - days * 86400000;
+  return all.filter(r => new Date(r.ts).getTime() >= cutoff);
+}
+
+function _bumpMetricsBadge() {
+  const btn = document.getElementById('metrics-tab-btn');
+  if (!btn) return;
+  const n = _loadMetrics().length;
+  btn.innerHTML = `📈 Metrics${n > 0 ? `<span class="otab-badge" style="background:#0f5132">${n}</span>` : ''}`;
+}
+
+function setMetFilter(btn, val) {
+  metFilter = val;
+  document.querySelectorAll('#met-filter .met-fbtn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderMetrics();
+}
+
+function renderMetrics() {
+  const recs = _filteredMetrics();
+  const body = document.getElementById('met-body');
+  if (!body) return;
+
+  if (!recs.length) {
+    body.innerHTML = `<div class="met-empty">
+      <div class="met-empty-ico">📈</div>
+      <div class="met-empty-ttl">No data for this range</div>
+      <div class="met-empty-sub">Run an analysis or expand the date range</div>
+    </div>`;
+    return;
+  }
+
+  const n = recs.length;
+  const totalDrgRev = recs.reduce((a,r) => a + (r.drg_revenue_dollars || 0), 0);
+  const totalEmRev = recs.reduce((a,r) => a + (r.em_dollars_per_note || 0), 0);
+  const totalRev = totalDrgRev + totalEmRev;
+  const avgPerNote = n ? Math.round(totalRev / n) : 0;
+  const drgShifts = recs.filter(r => r.drg_shifted).length;
+  const emUpgrades = recs.filter(r => r.em_upgrade).length;
+  const totalCC = recs.reduce((a,r) => a + (r.cc_count || 0), 0);
+  const totalMCC = recs.reduce((a,r) => a + (r.mcc_count || 0), 0);
+  const sepsisCount = recs.filter(r => r.sepsis_detected).length;
+  const critAlerts = recs.reduce((a,r) => a + (r.critical_alert_count || 0), 0);
+
+  const gmlosDeltas = recs.map(r => r.gmlos_delta_days).filter(v => typeof v === 'number');
+  const avgGmlosDelta = gmlosDeltas.length ? +(gmlosDeltas.reduce((a,b)=>a+b,0) / gmlosDeltas.length).toFixed(2) : null;
+
+  const catCount = {};
+  recs.forEach(r => (r.upgrade_categories || []).forEach(c => {
+    catCount[c] = (catCount[c] || 0) + 1;
+  }));
+  const topCats = Object.entries(catCount).sort((a,b) => b[1]-a[1]).slice(0, 8);
+  const maxCat = topCats.length ? topCats[0][1] : 1;
+
+  const fmt$ = v => '$' + Math.round(v).toLocaleString();
+
+  let h = '';
+
+  h += `<div class="met-grid">
+    <div class="met-card hero">
+      <div class="met-lbl">Total $ Opportunity Surfaced</div>
+      <div class="met-val">${fmt$(totalRev)}</div>
+      <div class="met-sub">Across ${n} note${n===1?'':'s'} analyzed</div>
+    </div>
+    <div class="met-card green">
+      <div class="met-lbl">Avg $ / Note</div>
+      <div class="met-val">${fmt$(avgPerNote)}</div>
+      <div class="met-sub">DRG + E&M opportunity</div>
+    </div>
+    <div class="met-card blue">
+      <div class="met-lbl">DRG Shifts Available</div>
+      <div class="met-val">${drgShifts}</div>
+      <div class="met-sub">${n ? Math.round(drgShifts/n*100) : 0}% of cases</div>
+    </div>
+    <div class="met-card amber">
+      <div class="met-lbl">Critical Gaps</div>
+      <div class="met-val">${critAlerts}</div>
+      <div class="met-sub">High-severity CDI alerts</div>
+    </div>
+  </div>`;
+
+  h += `<div class="met-grid">
+    <div class="met-card">
+      <div class="met-lbl">CC Opportunities</div>
+      <div class="met-val">${totalCC}</div>
+      <div class="met-sub">Comorbid conditions surfaced</div>
+    </div>
+    <div class="met-card">
+      <div class="met-lbl">MCC Opportunities</div>
+      <div class="met-val">${totalMCC}</div>
+      <div class="met-sub">Major CCs surfaced</div>
+    </div>
+    <div class="met-card">
+      <div class="met-lbl">E&M Upgrades</div>
+      <div class="met-val">${emUpgrades}</div>
+      <div class="met-sub">${fmt$(totalEmRev)} total</div>
+    </div>
+    <div class="met-card">
+      <div class="met-lbl">Sepsis Cases Flagged</div>
+      <div class="met-val">${sepsisCount}</div>
+      <div class="met-sub">SIRS/SOFA criteria evaluated</div>
+    </div>
+  </div>`;
+
+  if (avgGmlosDelta !== null) {
+    h += `<div class="card">
+      <div class="card-hdr"><span class="card-title">GMLOS Impact</span><span style="font-size:11px;color:var(--text3)">Length-of-stay alignment with severity</span></div>
+      <div class="card-body">
+        <div style="font-size:13px; color:var(--text); margin-bottom:6px;">
+          Avg GMLOS shift across DRG-optimized cases: <strong style="color:${avgGmlosDelta>0?'var(--green)':'var(--text)'};font-size:18px;">
+          ${avgGmlosDelta>0?'+':''}${avgGmlosDelta} days</strong>
+        </div>
+        <div style="font-size:11.5px; color:var(--text3); line-height:1.5;">
+          Higher optimized GMLOS = severity better aligned with documentation, justifying continued stay and reducing UR-denial risk.
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (topCats.length) {
+    h += `<div class="card">
+      <div class="card-hdr"><span class="card-title">Top Documentation Gap Categories</span><span style="font-size:11px;color:var(--text3)">De-identified · category-level only</span></div>
+      <div class="card-body">`;
+    topCats.forEach(([cat, ct]) => {
+      const pct = (ct / maxCat) * 100;
+      h += `<div class="met-bar-row">
+        <div class="met-bar-lbl">${esc(cat)}</div>
+        <div class="met-bar-track"><div class="met-bar-fill" style="width:${pct}%"></div></div>
+        <div class="met-bar-val">${ct} case${ct===1?'':'s'}</div>
+      </div>`;
+    });
+    h += `</div></div>`;
+  }
+
+  const recent = recs.slice(-10).reverse();
+  h += `<div class="card">
+    <div class="card-hdr"><span class="card-title">Recent Analyses (last 10)</span><span style="font-size:11px;color:var(--text3)">No PHI · timestamp + numeric only</span></div>
+    <div class="card-body" style="padding:0;">
+      <table class="met-table">
+        <thead><tr>
+          <th>When</th><th>DRG Shift</th><th>CC/MCC</th><th>E&M</th><th>Alerts</th><th>$ Opportunity</th>
+        </tr></thead>
+        <tbody>`;
+  recent.forEach(r => {
+    const dt = new Date(r.ts);
+    const when = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const drgCell = r.drg_shifted ? `<span class="tnum">${esc(r.drg_current||'')}→${esc(r.drg_optimized||'')}</span>` : '<span style="color:var(--text3)">—</span>';
+    const emCell = r.em_upgrade ? `<span class="tnum">${esc(r.em_from||'')}→${esc(r.em_to||'')}</span>` : '<span style="color:var(--text3)">—</span>';
+    const dollarCell = r.total_opportunity_dollars ? `<span class="tg">${fmt$(r.total_opportunity_dollars)}</span>` : '<span style="color:var(--text3)">—</span>';
+    h += `<tr>
+      <td class="tnum">${when}</td>
+      <td>${drgCell}</td>
+      <td><span class="tnum">${r.mcc_count}M / ${r.cc_count}C</span></td>
+      <td>${emCell}</td>
+      <td><span class="tnum">${r.alert_count}${r.critical_alert_count?` (${r.critical_alert_count}🔴)`:''}</span></td>
+      <td>${dollarCell}</td>
+    </tr>`;
+  });
+  h += `</tbody></table></div></div>`;
+
+  body.innerHTML = h;
+}
+
+function exportMetricsCSV() {
+  const recs = _filteredMetrics();
+  if (!recs.length) { alert('No metrics to export.'); return; }
+  const cols = ['ts','drg_current','drg_optimized','drg_shifted','drg_revenue_dollars',
+    'gmlos_current_days','gmlos_optimized_days','gmlos_delta_days',
+    'em_upgrade','em_from','em_to','em_dollars_per_note',
+    'cc_count','mcc_count','alert_count','critical_alert_count',
+    'sepsis_detected','total_opportunity_dollars','upgrade_categories'];
+  const csv = [cols.join(',')];
+  recs.forEach(r => {
+    const row = cols.map(c => {
+      let v = r[c];
+      if (Array.isArray(v)) v = '"' + v.join(';') + '"';
+      else if (v === null || v === undefined) v = '';
+      else if (typeof v === 'string' && (v.includes(',') || v.includes('"'))) v = '"' + v.replace(/"/g, '""') + '"';
+      return v;
+    });
+    csv.push(row.join(','));
+  });
+  const blob = new Blob([csv.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `docassist-metrics-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportMetricsPDF() {
+  const panel = document.getElementById('panel-metrics');
+  if (!panel) return;
+  const w = window.open('', '_blank');
+  if (!w) { alert('Popup blocked. Allow popups to export PDF.'); return; }
+  const css = Array.from(document.styleSheets).map(s => {
+    try { return Array.from(s.cssRules).map(r => r.cssText).join('\n'); }
+    catch(e) { return ''; }
+  }).join('\n');
+  w.document.write(`<!DOCTYPE html><html><head><title>DocAssist Metrics — ${new Date().toLocaleDateString()}</title>
+    <style>${css}
+    body{padding:24px;background:#eee9e2;font-family:system-ui,sans-serif;}
+    .met-toolbar,.otab-badge{display:none !important;}
+    .out-panel{display:flex !important; flex-direction:column; gap:16px;}
+    @media print{body{background:white;} .met-pitch-banner{break-inside:avoid;} .card{break-inside:avoid;}}
+    h2{margin-bottom:8px;color:#0f2d48;}
+    </style></head><body>
+    <h2>DocAssist — Documentation Gap Identification Metrics</h2>
+    <div style="font-size:12px;color:#9a9490;margin-bottom:18px;">Snapshot: ${new Date().toLocaleString()} · De-identified aggregate data · For Prime Health pitch</div>
+    ${panel.innerHTML}</body></html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 600);
+}
+
+function clearMetrics() {
+  if (!confirm('Reset all metrics? This cannot be undone.')) return;
+  localStorage.removeItem(METRICS_KEY);
+  _bumpMetricsBadge();
+  renderMetrics();
+}
+
+// Initialize badge on load
+_bumpMetricsBadge();
 
 checkSession();
 </script>
