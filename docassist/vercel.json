@@ -1,5 +1,2006 @@
 {
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
-  ]
+  "version": "FY2026",
+  "last_updated": "2026-04-28",
+  "scope": "Top 32 hospitalist diagnoses with deep specificity ladders + thin ICD-10 CC/MCC fallback table for everything else",
+  "global_rules": {
+    "evidence_binding": "Every suggested diagnosis must map to literal phrase/value in pasted note. No match = drop or move to soft-flag.",
+    "hard_rules_universal": [
+      "Medications alone never confirm a diagnosis (Arixtra/Lovenox SQ ≠ DVT/PE/AFib confirmed)",
+      "Lab values alone never confirm a diagnosis (troponin elevation alone ≠ MI; BNP alone ≠ HF)",
+      "Imaging findings without clinical correlation = ask, not assert",
+      "Prior records: pulled-forward dx must be tagged with date/source, never asserted as current",
+      "Institution-specific: troponin 0–20 pg/mL is normal — never flag ≤20 as elevated"
+    ],
+    "soft_flag_principle": "When evidence is suggestive but not confirmatory, surface as visible CDI suggestion with caveat — never as asserted A&P diagnosis",
+    "cdi_specificity_principle": "Permissive suggestion mode for specificity upgrades. Frame as query opportunity, never asserted in A&P."
+  },
+
+  "diagnoses": {
+
+    "AKI": {
+      "base_code": "N17.9",
+      "base_label": "Acute kidney injury, unspecified",
+      "cc_mcc": "CC",
+      "tags": {
+        "organ_system": "renal",
+        "severity": "variable",
+        "common_comorbidities": ["CKD", "sepsis", "HF", "cirrhosis", "dehydration"]
+      },
+      "specificity_ladder": [
+        {
+          "label": "AKI due to acute tubular necrosis (ATN)",
+          "code": "N17.0",
+          "cc_mcc": "MCC",
+          "evidence_required": ["ischemic insult", "nephrotoxin exposure", "muddy brown casts", "FENa >2%", "prolonged hypotension + sepsis"],
+          "query_trigger": "AKI documented + sepsis/hypotension/contrast/nephrotoxin without cause specified"
+        },
+        {
+          "label": "AKI due to acute cortical necrosis",
+          "code": "N17.1",
+          "cc_mcc": "MCC",
+          "evidence_required": ["imaging or biopsy confirmation"]
+        },
+        {
+          "label": "Prerenal AKI",
+          "code": "N17.9",
+          "cc_mcc": "CC",
+          "evidence_required": ["volume depletion", "FENa <1%", "BUN/Cr >20", "responsive to fluids"]
+        },
+        {
+          "label": "AKI on CKD",
+          "code": "N17.9 + N18.x",
+          "cc_mcc": "CC + varies by CKD stage",
+          "evidence_required": ["documented CKD baseline", "Cr above baseline"],
+          "query_trigger": "Cr elevated + prior records show CKD without acute-on-chronic language"
+        },
+        {
+          "label": "Hepatorenal syndrome",
+          "code": "K76.7",
+          "cc_mcc": "MCC",
+          "evidence_required": ["cirrhosis", "AKI unresponsive to volume", "no other cause", "low urine sodium"]
+        },
+        {
+          "label": "Cardiorenal syndrome",
+          "code": "I50.x + N17.9",
+          "cc_mcc": "varies",
+          "evidence_required": ["acute HF", "AKI temporally linked to HF or diuresis"]
+        },
+        {
+          "label": "Contrast-induced nephropathy",
+          "code": "N14.1",
+          "cc_mcc": "CC",
+          "evidence_required": ["contrast exposure 24–72h prior", "Cr rise meeting criteria"]
+        }
+      ],
+      "kdigo_staging": {
+        "stage_1": "Cr 1.5–1.9× baseline OR ≥0.3 mg/dL rise",
+        "stage_2": "Cr 2.0–2.9× baseline",
+        "stage_3": "Cr ≥3× baseline OR ≥4.0 mg/dL OR RRT initiated",
+        "documentation_value": "Stage does not change CC/MCC but supports severity"
+      },
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "linkage_flag_template": "⚠ AKI SPECIFICITY: Cause not specified. [Sepsis/hypotension/contrast/nephrotoxin] present — consider [ATN/HRS/cardiorenal/contrast-induced] (MCC where applicable).",
+        "rationale": "AKI unspecified = CC. ATN, HRS, and cortical necrosis = MCC. Cause specification is the moat."
+      },
+      "hard_rules": [
+        "Never infer ATN from Cr rise alone",
+        "Never assume AKI-on-CKD without documented CKD baseline",
+        "Never code HRS without cirrhosis documented"
+      ],
+      "common_misses": [
+        "AKI on CKD undocumented when both present",
+        "ATN unspecified when sepsis + hypotension clearly present",
+        "Cause not specified (default to N17.9 = lower specificity)"
+      ]
+    },
+
+    "Sepsis": {
+      "base_code": "A41.9",
+      "base_label": "Sepsis, unspecified organism",
+      "cc_mcc": "MCC",
+      "tags": {
+        "organ_system": "infectious/systemic",
+        "severity": "high",
+        "common_comorbidities": ["AKI", "encephalopathy", "acute resp failure", "shock", "lactic acidosis", "DIC"]
+      },
+      "specificity_ladder": [
+        {
+          "label": "Sepsis due to specified organism",
+          "code": "A41.x (organism-specific)",
+          "cc_mcc": "MCC",
+          "examples": {
+            "A41.01": "Sepsis due to MSSA",
+            "A41.02": "Sepsis due to MRSA",
+            "A41.51": "Sepsis due to E. coli",
+            "A41.52": "Sepsis due to Pseudomonas",
+            "A41.4": "Sepsis due to anaerobes",
+            "B37.7": "Candidal sepsis"
+          },
+          "evidence_required": ["positive blood culture with organism", "or clinical sepsis with identified source culture"],
+          "query_trigger": "Sepsis documented + culture positive but organism not linked to sepsis dx"
+        },
+        {
+          "label": "Severe sepsis (sepsis with acute organ dysfunction)",
+          "code": "R65.20",
+          "cc_mcc": "MCC",
+          "evidence_required": [
+            "sepsis documented",
+            "AND at least one acute organ dysfunction: AKI, acute resp failure, encephalopathy, acute liver dysfunction, DIC/thrombocytopenia, lactic acidosis >2, ileus"
+          ],
+          "query_trigger": "Sepsis + any acute organ dysfunction documented but 'severe sepsis' or explicit linkage not used",
+          "documentation_value": "R65.20 requires explicit linkage — physician must state 'sepsis with X' or 'severe sepsis' for capture"
+        },
+        {
+          "label": "Septic shock",
+          "code": "R65.21",
+          "cc_mcc": "MCC",
+          "evidence_required": [
+            "sepsis documented",
+            "vasopressor requirement OR persistent hypotension despite fluid resuscitation",
+            "AND/OR lactate >2 after resuscitation"
+          ],
+          "query_trigger": "Sepsis + vasopressors OR MAP <65 despite fluids OR lactate >2 post-resuscitation, but 'septic shock' not used",
+          "hard_rule": "Never code septic shock from hypotension alone without sepsis documented"
+        },
+        {
+          "label": "Sepsis with specified source",
+          "code": "varies (sepsis code + source code)",
+          "cc_mcc": "MCC",
+          "evidence_required": ["source identified: pneumonia, UTI, cellulitis, intra-abdominal, CLABSI, etc."],
+          "query_trigger": "Sepsis documented but source not stated when imaging/cultures/exam point to source",
+          "documentation_value": "'Urosepsis' alone is non-specific — requires 'sepsis due to UTI' linkage"
+        },
+        {
+          "label": "Bacteremia (NOT sepsis)",
+          "code": "R78.81",
+          "cc_mcc": "neither",
+          "evidence_required": ["positive blood culture WITHOUT clinical sepsis criteria"],
+          "hard_rule": "Bacteremia ≠ sepsis. Do not upgrade without SIRS/Sepsis-3 criteria",
+          "query_trigger": "Positive blood culture + clinical sepsis criteria present but only 'bacteremia' written"
+        },
+        {
+          "label": "SIRS due to non-infectious cause",
+          "code": "R65.10 / R65.11",
+          "cc_mcc": "CC (R65.11 with organ dysfunction = MCC)",
+          "evidence_required": ["SIRS criteria met", "non-infectious etiology: pancreatitis, trauma, burns"],
+          "hard_rule": "Do not code as sepsis if no infection source"
+        },
+        {
+          "label": "Post-procedural sepsis",
+          "code": "T81.44XA + sepsis code",
+          "cc_mcc": "MCC",
+          "evidence_required": ["sepsis temporally linked to recent procedure/surgery"],
+          "query_trigger": "Sepsis + recent procedure but procedural linkage not documented"
+        }
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGHEST",
+        "always_check_for_linkage": true,
+        "linkage_flag_template": "⚠ LINKAGE OPPORTUNITY: [organ dysfunction] documented with sepsis but not explicitly linked. Consider stating 'sepsis with acute [X] due to sepsis' to capture severe sepsis (R65.20, MCC).",
+        "rationale": "Severe sepsis (R65.20) and septic shock (R65.21) capture depends entirely on physician linkage language. Highest-yield CDI opportunity in hospital medicine."
+      },
+      "hard_rules": [
+        "Never code sepsis from positive blood culture alone — requires clinical sepsis criteria",
+        "Never code septic shock without sepsis + hemodynamic criteria",
+        "Never code 'urosepsis' as sepsis — requires explicit 'sepsis due to UTI' language",
+        "Severe sepsis (R65.20) requires explicit linkage of organ dysfunction to sepsis",
+        "SIRS without infection ≠ sepsis"
+      ],
+      "common_misses": [
+        "Sepsis with AKI/encephalopathy/resp failure documented but not linked → severe sepsis (R65.20) lost",
+        "Vasopressor use without 'septic shock' language → septic shock (R65.21) lost",
+        "Organism identified in cultures but sepsis remains 'unspecified'",
+        "Source not specified",
+        "'Urosepsis' written instead of 'sepsis due to UTI'"
+      ],
+      "documentation_pearls": [
+        "Use explicit linkage: 'sepsis with acute encephalopathy due to sepsis' not just 'sepsis. encephalopathy.'",
+        "State source: 'sepsis due to [pneumonia/UTI/cellulitis/etc.]'",
+        "If vasopressors or persistent hypotension → state 'septic shock'",
+        "If organism known → name it: 'sepsis due to E. coli'"
+      ]
+    },
+
+    "Heart failure": {
+      "base_code": "I50.9",
+      "base_label": "Heart failure, unspecified",
+      "cc_mcc": "neither (unspecified HF doesn't capture)",
+      "tags": {
+        "organ_system": "cardiovascular",
+        "severity": "variable",
+        "common_comorbidities": ["AKI", "AFib", "CKD", "COPD", "DM", "HTN", "CAD", "OSA"]
+      },
+      "specificity_ladder": [
+        {"label": "Acute systolic (HFrEF) heart failure", "code": "I50.21", "cc_mcc": "MCC",
+         "evidence_required": ["EF ≤40%", "acute decompensation: dyspnea, weight gain, edema, elevated BNP, IV diuresis"],
+         "query_trigger": "HF + EF ≤40% + acute symptoms but acuity/type not specified"},
+        {"label": "Acute on chronic systolic (HFrEF) heart failure", "code": "I50.23", "cc_mcc": "MCC",
+         "evidence_required": ["known HFrEF baseline", "acute decompensation"],
+         "query_trigger": "Prior records show HFrEF + current acute symptoms but only 'CHF exacerbation' written"},
+        {"label": "Chronic systolic (HFrEF) heart failure", "code": "I50.22", "cc_mcc": "CC",
+         "evidence_required": ["EF ≤40%", "stable, no acute decompensation"]},
+        {"label": "Acute diastolic (HFpEF) heart failure", "code": "I50.31", "cc_mcc": "MCC",
+         "evidence_required": ["EF ≥50%", "acute decompensation", "diastolic dysfunction evidence"],
+         "query_trigger": "HF + preserved EF + acute symptoms but 'diastolic'/'HFpEF' not stated"},
+        {"label": "Acute on chronic diastolic (HFpEF) heart failure", "code": "I50.33", "cc_mcc": "MCC",
+         "evidence_required": ["known HFpEF baseline", "acute decompensation"]},
+        {"label": "Chronic diastolic (HFpEF) heart failure", "code": "I50.32", "cc_mcc": "CC",
+         "evidence_required": ["EF ≥50%", "diastolic dysfunction documented", "stable"]},
+        {"label": "Acute combined systolic and diastolic (HFmrEF) heart failure", "code": "I50.41", "cc_mcc": "MCC",
+         "evidence_required": ["EF 41–49% OR documented combined dysfunction", "acute decompensation"],
+         "query_trigger": "EF 41–49% + acute HF — consider HFmrEF specificity"},
+        {"label": "Acute on chronic combined heart failure", "code": "I50.43", "cc_mcc": "MCC",
+         "evidence_required": ["known combined dysfunction baseline", "acute decompensation"]},
+        {"label": "Right heart failure, acute", "code": "I50.811", "cc_mcc": "MCC",
+         "evidence_required": ["RV dysfunction on echo", "elevated JVP, hepatic congestion, edema", "often pulmonary HTN, PE, RV infarct"],
+         "query_trigger": "RV dysfunction + acute symptoms but 'right heart failure' not stated"},
+        {"label": "Acute on chronic right heart failure", "code": "I50.813", "cc_mcc": "MCC"},
+        {"label": "High-output heart failure", "code": "I50.84", "cc_mcc": "MCC",
+         "evidence_required": ["high cardiac output state: severe anemia, hyperthyroidism, AV fistula, sepsis, beriberi"]},
+        {"label": "End-stage heart failure", "code": "I50.84", "cc_mcc": "MCC",
+         "evidence_required": ["NYHA Class IV", "refractory symptoms", "hospice/palliative, LVAD, transplant eval, inotrope-dependent"]}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "always_specify": ["acuity (acute/chronic/acute-on-chronic)", "type (HFrEF/HFpEF/HFmrEF/right)"],
+        "linkage_flag_template": "⚠ HF SPECIFICITY: 'CHF' alone codes to I50.9 (no CC/MCC). Specify acuity + type. EF [value] + [context] suggests [I50.XX].",
+        "rationale": "Unspecified HF (I50.9) captures NEITHER CC nor MCC. Every dimension matters: acuity + EF-based type + chronicity."
+      },
+      "hard_rules": [
+        "Never code 'CHF exacerbation' alone — always specify acuity + type",
+        "Never assume HFrEF without EF ≤40% documented",
+        "Never assume HFpEF without EF ≥50% + diastolic dysfunction evidence",
+        "Acute-on-chronic requires BOTH baseline HF documented AND acute decompensation",
+        "Never infer HF from BNP alone — BNP rises in AKI, sepsis, AFib without HF",
+        "Never infer HF from edema alone"
+      ],
+      "common_misses": [
+        "'CHF exacerbation' → I50.9 (no CC/MCC) instead of I50.23/I50.33/I50.43 (MCC)",
+        "Acuity not specified",
+        "Type not specified",
+        "EF documented in echo but not referenced in A&P",
+        "Right heart failure not separately coded"
+      ],
+      "documentation_pearls": [
+        "Format: '[Acute/Chronic/Acute on chronic] [systolic/diastolic/combined] heart failure'",
+        "Reference EF: 'HFrEF (EF 30%)' or 'HFpEF (EF 60%, grade II diastolic dysfunction)'",
+        "State precipitant: dietary, AFib RVR, ischemia, infection, non-adherence",
+        "Etiology: ischemic vs non-ischemic cardiomyopathy"
+      ],
+      "evidence_binding_specifics": {
+        "EF_required_for": ["HFrEF (≤40%)", "HFpEF (≥50%)", "HFmrEF (41–49%)"],
+        "acute_markers": ["IV diuresis", "weight gain", "new/worsened dyspnea", "elevated BNP/NT-proBNP above baseline", "new edema/JVD/rales", "imaging: pulmonary edema, effusions"]
+      },
+      "medication_triggers": [
+        {"medication": "Entresto (sacubitril/valsartan)", "specificity": "high — FDA-approved for HFrEF and HFpEF",
+         "query_trigger": "Entresto on home med list but HF not in problem list",
+         "suggestion_template": "⚠ MEDICATION FLAG: Patient on Entresto — FDA-approved for HF. Query HF history and EF documentation."},
+        {"medication": "Ivabradine (Corlanor)", "specificity": "very high — HFrEF only (EF ≤35%, NSR, HR ≥70)",
+         "query_trigger": "Ivabradine on home med list but HFrEF not documented",
+         "suggestion_template": "⚠ MEDICATION FLAG: Patient on Ivabradine — indicated for HFrEF (EF ≤35%). Query HFrEF and obtain EF."},
+        {"medication": "Hydralazine + isosorbide dinitrate combo", "specificity": "high — guideline HFrEF therapy",
+         "query_trigger": "Both hydralazine AND isosorbide on home med list but HF not documented",
+         "hard_rule": "Hydralazine alone is NOT specific. Both meds together = strong HF signal.",
+         "suggestion_template": "⚠ MEDICATION FLAG: Patient on hydralazine + isosorbide combo — HFrEF therapy. Query HFrEF history."}
+      ]
+    },
+
+    "Pneumonia": {
+      "base_code": "J18.9",
+      "base_label": "Pneumonia, unspecified organism",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "pulmonary/infectious", "severity": "variable",
+               "common_comorbidities": ["sepsis", "acute resp failure", "COPD", "HF", "aspiration risk", "immunocompromise"]},
+      "specificity_ladder": [
+        {"label": "Bacterial pneumonia, organism specified", "code": "J15.x", "cc_mcc": "MCC for most",
+         "examples": {"J15.211": "MSSA", "J15.212": "MRSA", "J15.0": "Klebsiella", "J15.1": "Pseudomonas",
+                      "J15.5": "E. coli", "J15.6": "Other gram-negative", "J15.7": "Mycoplasma (CC only)"},
+         "evidence_required": ["clinical pneumonia + organism on culture or clinically presumed"],
+         "query_trigger": "Pneumonia + organism on culture but not linked in dx"},
+        {"label": "Streptococcus pneumoniae pneumonia", "code": "J13", "cc_mcc": "CC",
+         "evidence_required": ["S. pneumoniae on culture or urine antigen"]},
+        {"label": "Aspiration pneumonia", "code": "J69.0", "cc_mcc": "MCC",
+         "evidence_required": ["witnessed aspiration OR risk factors (dysphagia, AMS, vomiting, NG, neuromuscular, stroke) + dependent-lobe consolidation"],
+         "query_trigger": "Pneumonia + aspiration risk (stroke, dementia, dysphagia, ETOH, post-extubation) but 'aspiration pneumonia' not stated",
+         "hard_rule": "Aspiration pneumonitis (J95.4, chemical) ≠ aspiration pneumonia (J69.0, infectious)"},
+        {"label": "Healthcare-associated/hospital-acquired pneumonia (HAP)", "code": "J18.x with organism", "cc_mcc": "varies",
+         "evidence_required": ["pneumonia ≥48h after admission OR within 90 days of healthcare exposure"],
+         "query_trigger": "Pneumonia onset during admission or healthcare-exposed but HAP not specified"},
+        {"label": "Ventilator-associated pneumonia (VAP)", "code": "J95.851", "cc_mcc": "MCC",
+         "evidence_required": ["pneumonia ≥48h after intubation"],
+         "query_trigger": "Intubated + new infiltrate ≥48h but VAP not stated"},
+        {"label": "Viral pneumonia (non-COVID)", "code": "J12.x / J10.0x / J11.0x", "cc_mcc": "MCC for most",
+         "examples": {"J12.1": "RSV", "J12.2": "Parainfluenza", "J10.0x": "Influenza A/B with PNA"},
+         "evidence_required": ["positive viral PCR + clinical pneumonia"]},
+        {"label": "COVID-19 pneumonia", "code": "U07.1 + J12.82", "cc_mcc": "MCC",
+         "evidence_required": ["COVID-19 confirmed + clinical pneumonia"],
+         "documentation_pearl": "Sequence U07.1 first; J12.82 secondary"},
+        {"label": "Fungal pneumonia", "code": "B37.1/B44.x/B45.0/B59", "cc_mcc": "MCC",
+         "evidence_required": ["fungal pathogen identified", "immunocompromise typical"]},
+        {"label": "Pneumonia, unspecified organism", "code": "J18.9", "cc_mcc": "CC",
+         "evidence_required": ["clinical pneumonia without organism"],
+         "documentation_pearl": "Always preferable to specify organism when known"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM-HIGH",
+        "linkage_flag_template": "⚠ PNEUMONIA SPECIFICITY: [organism/aspiration risk/hospital onset/VAP context] present but pneumonia coded as unspecified. Specify to capture MCC.",
+        "rationale": "Unspecified pneumonia (J18.9) = CC. Most gram-negative, staph, aspiration, viral, fungal, and HAP/VAP = MCC."
+      },
+      "hard_rules": [
+        "Never assume MRSA pneumonia from MRSA nasal swab alone",
+        "Aspiration pneumonia ≠ aspiration pneumonitis",
+        "Atelectasis on imaging ≠ pneumonia without clinical correlation",
+        "Tracheobronchitis ≠ pneumonia",
+        "Colonization ≠ infection",
+        "HAP/VAP requires ≥48h hospital/ventilator exposure"
+      ],
+      "common_misses": [
+        "Organism on culture but coded J18.9",
+        "Aspiration risk + dependent infiltrate but coded CAP",
+        "Hospital-onset same as community-acquired",
+        "Sepsis from pneumonia not linked"
+      ],
+      "documentation_pearls": [
+        "Format: '[Community/Hospital/Ventilator/Aspiration] pneumonia due to [organism]'",
+        "Link to sepsis: 'Sepsis due to pneumonia'",
+        "State imaging if culture-negative: lobar, multilobar, cavitary, necrotizing"
+      ],
+      "medication_triggers": [
+        {"medication": "Inhaled tobramycin/aztreonam (Cayston)/colistin", "specificity": "high — chronic Pseudomonas suppression",
+         "query_trigger": "Inhaled antipseudomonal on home med list + pneumonia → query Pseudomonas",
+         "suggestion_template": "⚠ MEDICATION FLAG: Patient on inhaled antipseudomonal therapy. Consider Pseudomonas pneumonia."}
+      ]
+    },
+
+    "COPD exacerbation": {
+      "base_code": "J44.1",
+      "base_label": "COPD with (acute) exacerbation",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "pulmonary", "severity": "variable",
+               "common_comorbidities": ["acute resp failure", "PNA", "HF", "PE", "OSA/OHS", "cor pulmonale", "tobacco"]},
+      "specificity_ladder": [
+        {"label": "COPD with acute exacerbation", "code": "J44.1", "cc_mcc": "CC",
+         "evidence_required": ["COPD baseline", "acute worsening dyspnea/cough/sputum", "treatment escalation: steroids, abx, NIV"],
+         "query_trigger": "COPD + acute symptoms + treatment escalation but 'acute exacerbation' not used"},
+        {"label": "COPD with acute lower respiratory infection", "code": "J44.0", "cc_mcc": "CC",
+         "evidence_required": ["COPD + LRTI: purulent sputum, fever, leukocytosis, infiltrate"],
+         "query_trigger": "COPD + LRTI + abx but coded as J44.1 only",
+         "documentation_pearl": "If pneumonia present, code BOTH J44.0 AND specific pneumonia code"},
+        {"label": "COPD exacerbation + acute respiratory failure", "code": "J44.1 + J96.0x/J96.2x", "cc_mcc": "MCC",
+         "evidence_required": ["COPD exacerbation + acute resp failure criteria (PaO2 <60, SpO2 <91%, PaCO2 >50 with pH <7.35, BiPAP)"],
+         "query_trigger": "COPD exacerbation + BiPAP OR ABG abnormal but acute resp failure not coded",
+         "hard_rule": "BiPAP for COPD exacerbation = strong indicator of acute hypercapnic resp failure"},
+        {"label": "COPD exacerbation + chronic respiratory failure", "code": "J44.1 + J96.1x/J96.2x", "cc_mcc": "varies",
+         "evidence_required": ["chronic resp failure baseline (home O2, home BiPAP for hypercapnia)", "current acute worsening"],
+         "query_trigger": "Home O2 or home BiPAP + COPD exacerbation but acute-on-chronic not specified"},
+        {"label": "End-stage COPD", "code": "J44.9", "cc_mcc": "CC",
+         "evidence_required": ["FEV1 <30%", "chronic O2 dependence", "frequent admissions", "cor pulmonale"]}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM-HIGH",
+        "linkage_flag_template": "⚠ COPD MCC OPPORTUNITY: COPD exacerbation alone = CC. Acute respiratory failure linkage captures MCC. Check ABG/SpO2/O2 device.",
+        "rationale": "COPD exacerbation alone = CC. MCC almost always comes from linked acute respiratory failure."
+      },
+      "hard_rules": [
+        "Never code COPD exacerbation without documented COPD baseline",
+        "Outpatient inhaler prescription alone doesn't establish COPD",
+        "Bronchitis without COPD ≠ COPD exacerbation",
+        "Asthma exacerbation ≠ COPD exacerbation",
+        "BiPAP for OSA alone ≠ chronic respiratory failure",
+        "Pneumonia with COPD requires separate pneumonia code"
+      ],
+      "common_misses": [
+        "Acute resp failure not coded when criteria met → MCC lost",
+        "Pneumonia not separately coded",
+        "Home O2 patient not coded as acute-on-chronic resp failure",
+        "ACO not recognized",
+        "Tobacco use not coded"
+      ],
+      "documentation_pearls": [
+        "Format: 'COPD with acute exacerbation'",
+        "If LRTI: 'COPD with acute exacerbation and acute lower respiratory infection'",
+        "If pneumonia: code both",
+        "Always assess resp failure: 'with acute hypercapnic respiratory failure'",
+        "Document GOLD stage when known",
+        "Code tobacco (F17.2x) or history (Z87.891)"
+      ],
+      "medication_triggers": [
+        {"medication": "Trelegy (fluticasone/umeclidinium/vilanterol)", "specificity": "high — COPD triple therapy (also asthma)",
+         "query_trigger": "Trelegy on home med list + respiratory presentation but COPD not documented",
+         "suggestion_template": "⚠ MEDICATION FLAG: Patient on Trelegy — query COPD or asthma history."},
+        {"medication": "Breztri (budesonide/glycopyrrolate/formoterol)", "specificity": "very high — COPD only",
+         "query_trigger": "Breztri on home med list but COPD not documented",
+         "suggestion_template": "⚠ MEDICATION FLAG: Patient on Breztri — COPD only. Query COPD history."},
+        {"medication": "Anoro/Stiolto (LAMA/LABA combos)", "specificity": "very high — COPD only",
+         "query_trigger": "Anoro or Stiolto on home med list but COPD not documented",
+         "suggestion_template": "⚠ MEDICATION FLAG: LAMA/LABA combo — COPD-specific. Query COPD."},
+        {"medication": "Daliresp (roflumilast)", "specificity": "very high — severe COPD with chronic bronchitis",
+         "query_trigger": "Roflumilast on home med list but severe COPD not documented",
+         "suggestion_template": "⚠ MEDICATION FLAG: Roflumilast — severe COPD with chronic bronchitis."}
+      ]
+    },
+
+    "Asthma exacerbation": {
+      "base_code": "J45.901",
+      "base_label": "Unspecified asthma with (acute) exacerbation",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "pulmonary", "severity": "variable",
+               "common_comorbidities": ["acute resp failure", "PNA", "viral URI", "GERD", "obesity"]},
+      "specificity_ladder": [
+        {"label": "Mild intermittent asthma with acute exacerbation", "code": "J45.21", "cc_mcc": "CC",
+         "evidence_required": ["mild intermittent baseline", "acute worsening"]},
+        {"label": "Mild persistent asthma with acute exacerbation", "code": "J45.31", "cc_mcc": "CC",
+         "evidence_required": ["mild persistent baseline", "acute worsening"]},
+        {"label": "Moderate persistent asthma with acute exacerbation", "code": "J45.41", "cc_mcc": "CC",
+         "evidence_required": ["moderate persistent baseline (daily symptoms, FEV1 60–80%)", "acute worsening"]},
+        {"label": "Severe persistent asthma with acute exacerbation", "code": "J45.51", "cc_mcc": "CC",
+         "evidence_required": ["severe persistent (continuous, FEV1 <60%, high-dose ICS+LABA, biologics)"],
+         "query_trigger": "Asthma exac + biologic OR high-dose ICS+LABA OR frequent admissions but severity not specified"},
+        {"label": "Status asthmaticus", "code": "J45.902", "cc_mcc": "MCC",
+         "evidence_required": ["severe asthma unresponsive to standard therapy", "ICU/intubation/NIV/IV mag/continuous nebs/ketamine/heliox"],
+         "query_trigger": "Asthma exac + ICU OR intubation OR continuous nebs OR IV mag OR refractory but 'status asthmaticus' not stated",
+         "documentation_pearl": "Status asthmaticus = MCC. Severe asthma exacerbation alone (J45.51) = CC only."},
+        {"label": "Asthma + acute respiratory failure", "code": "J45.x + J96.0x", "cc_mcc": "MCC",
+         "evidence_required": ["asthma exacerbation + resp failure criteria"],
+         "query_trigger": "Asthma exac + BiPAP/intubation/ABG abnormal but resp failure not coded"},
+        {"label": "Asthma-COPD overlap (ACO)", "code": "J45.x + J44.x", "cc_mcc": "varies",
+         "evidence_required": ["features of both: atopic + smoking history with chronic obstruction"],
+         "query_trigger": "Asthma + significant smoking + chronic obstruction → consider ACO"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM",
+        "linkage_flag_template": "⚠ ASTHMA MCC OPPORTUNITY: Asthma exacerbation alone = CC. Status asthmaticus (J45.902) OR linked acute respiratory failure captures MCC.",
+        "rationale": "MCC requires status asthmaticus or linked acute respiratory failure. Both common in admissions but frequently uncoded."
+      },
+      "hard_rules": [
+        "Never code asthma without documented diagnosis",
+        "COPD exacerbation ≠ asthma exacerbation",
+        "Wheeze alone ≠ asthma (HF, PE, anaphylaxis, FB, VCD wheeze)",
+        "Status asthmaticus requires refractoriness — not synonymous with severe",
+        "ICU alone doesn't establish status without refractoriness",
+        "Bronchospasm in non-asthma context ≠ asthma exacerbation"
+      ],
+      "common_misses": [
+        "Severe exacerbation with continuous nebs/IV mag/ICU but status asthmaticus not documented → MCC lost",
+        "Intubated asthma → resp failure not coded → MCC lost",
+        "Severity not specified → defaults to J45.901",
+        "ACO not recognized in smokers"
+      ],
+      "documentation_pearls": [
+        "Format: '[Severity] persistent asthma with acute exacerbation'",
+        "If refractory: 'Status asthmaticus' explicitly",
+        "Always assess resp failure",
+        "Document precipitant: viral URI, allergen, NSAIDs, GERD, non-adherence",
+        "Document phenotype if biologic: eosinophilic, allergic, T2-high"
+      ],
+      "medication_triggers": [
+        {"medication": "Asthma biologics (omalizumab/Xolair, mepolizumab/Nucala, benralizumab/Fasenra, dupilumab/Dupixent, tezepelumab/Tezspire, reslizumab/Cinqair)",
+         "specificity": "very high — severe persistent asthma",
+         "query_trigger": "On asthma biologic + respiratory admission but severe persistent asthma not documented",
+         "suggestion_template": "⚠ MEDICATION FLAG: On asthma biologic — severe persistent asthma. Query J45.51 classification and phenotype."}
+      ]
+    },
+
+    "Encephalopathy": {
+      "base_code": "G93.40",
+      "base_label": "Encephalopathy, unspecified",
+      "cc_mcc": "MCC",
+      "tags": {"organ_system": "neurologic", "severity": "high",
+               "common_comorbidities": ["sepsis", "AKI", "liver disease", "UTI", "PNA", "hypoxia", "hypercapnia", "lytes", "med toxicity", "dementia"]},
+      "specificity_ladder": [
+        {"label": "Toxic encephalopathy", "code": "G92.9", "cc_mcc": "MCC",
+         "evidence_required": ["AMS", "toxic exposure: opioids, benzos, anticholinergics, lithium, illicit drugs, alcohol, chemo"],
+         "query_trigger": "AMS + clear toxic precipitant but 'toxic encephalopathy' not stated"},
+        {"label": "Metabolic encephalopathy", "code": "G93.41", "cc_mcc": "MCC",
+         "evidence_required": ["AMS", "metabolic derangement: uremia, lytes, hypercalcemia, hypoglycemia, hyperammonemia, thyroid, hypoxia, hypercapnia"],
+         "query_trigger": "AMS + metabolic derangement but 'metabolic encephalopathy' not stated"},
+        {"label": "Toxic-metabolic encephalopathy", "code": "G92.9 + G93.41", "cc_mcc": "MCC",
+         "evidence_required": ["AMS + BOTH toxic AND metabolic precipitants"],
+         "query_trigger": "AMS + multifactorial but only one type specified"},
+        {"label": "Septic encephalopathy", "code": "G93.41 (linked to sepsis)", "cc_mcc": "MCC + drives R65.20",
+         "evidence_required": ["AMS + sepsis documented + no other clear cause"],
+         "query_trigger": "AMS + sepsis but encephalopathy not named OR not linked to sepsis",
+         "hard_rule": "Septic encephalopathy = highest-yield linkage for severe sepsis MCC capture",
+         "documentation_pearl": "Must explicitly link: 'acute encephalopathy due to sepsis'"},
+        {"label": "Hepatic encephalopathy", "code": "K72.90 / K72.91 (with coma)", "cc_mcc": "MCC",
+         "evidence_required": ["AMS", "cirrhosis or acute liver failure", "asterixis, elevated ammonia (supportive)", "responsive to lactulose/rifaximin"],
+         "query_trigger": "Cirrhosis + AMS + on lactulose/rifaximin but HE not stated",
+         "documentation_pearl": "Specify grade: West Haven I-IV. III-IV = with coma (K72.91)"},
+        {"label": "Hypertensive encephalopathy", "code": "I67.4", "cc_mcc": "MCC",
+         "evidence_required": ["BP >180/120", "AMS, HA, visual changes, seizures", "improvement with BP control", "may have PRES"],
+         "query_trigger": "AMS + BP >180/120 + neuro symptoms but 'hypertensive encephalopathy' not stated"},
+        {"label": "Hypoxic-ischemic encephalopathy (HIE)", "code": "G93.1", "cc_mcc": "MCC",
+         "evidence_required": ["cardiac arrest, severe hypoxia, prolonged hypotension", "post-event AMS or coma"],
+         "query_trigger": "Post-arrest with persistent AMS but HIE not documented"},
+        {"label": "Wernicke's encephalopathy", "code": "E51.2", "cc_mcc": "MCC",
+         "evidence_required": ["thiamine deficiency context", "triad (any): confusion, ophthalmoplegia, ataxia", "responsive to thiamine"],
+         "query_trigger": "AUD + AMS + thiamine ordered but Wernicke's not stated"},
+        {"label": "Acute encephalopathy, unspecified", "code": "G93.40", "cc_mcc": "MCC",
+         "evidence_required": ["AMS without clearly identified single etiology"],
+         "documentation_pearl": "Use only when cause truly unclear"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGHEST",
+        "linkage_flag_template": "⚠ ENCEPHALOPATHY OPPORTUNITY: AMS/confusion/delirium documented with [precipitant]. Consider 'acute [type] encephalopathy' to capture MCC. If sepsis present, link explicitly to capture severe sepsis (R65.20).",
+        "rationale": "Encephalopathy is the single most under-captured MCC in hospital medicine. AMS/confusion/delirium documented but encephalopathy not named."
+      },
+      "delirium_vs_encephalopathy_distinction": {
+        "rule": "Delirium (F05) = CC. Encephalopathy (G93.4x, G92, etc.) = MCC.",
+        "clinical_overlap": "Most ICU/floor delirium from medical illness IS encephalopathy",
+        "when_delirium": "Pure behavioral/perceptual disturbance without identified medical cause — rare in admissions",
+        "when_encephalopathy": "AMS with identifiable cause — almost always the case in hospitalized patients",
+        "documentation_strategy": "If both apply, lead with encephalopathy: 'acute metabolic encephalopathy with delirium'"
+      },
+      "hard_rules": [
+        "Never assume encephalopathy without AMS documented",
+        "Never code hepatic encephalopathy without cirrhosis or acute liver failure",
+        "Never code Wernicke's without thiamine deficiency context",
+        "Never code septic encephalopathy without sepsis",
+        "Dementia alone ≠ encephalopathy (chronic vs acute)",
+        "Post-anesthesia early confusion ≠ encephalopathy unless prolonged"
+      ],
+      "common_misses": [
+        "'AMS'/'confusion'/'delirium' written instead of 'encephalopathy'",
+        "Sepsis + AMS not linked → loses both encephalopathy MCC and severe sepsis MCC",
+        "Cirrhosis on lactulose for AMS but HE not stated",
+        "Multifactorial AMS coded with single etiology",
+        "Post-arrest AMS — HIE not documented"
+      ],
+      "documentation_pearls": [
+        "Format: 'Acute [type] encephalopathy due to [specific cause]'",
+        "If multifactorial: list all contributors",
+        "Link to sepsis explicitly",
+        "If hepatic: state grade",
+        "Differentiate from baseline dementia: 'acute encephalopathy superimposed on dementia'"
+      ]
+    },
+
+    "Acute respiratory failure": {
+      "base_code": "J96.90",
+      "base_label": "Respiratory failure, unspecified",
+      "cc_mcc": "MCC (when acute)",
+      "tags": {"organ_system": "pulmonary", "severity": "high",
+               "common_comorbidities": ["sepsis", "PNA", "COPD", "HF", "PE", "ARDS", "OSA/OHS"]},
+      "specificity_ladder": [
+        {"label": "Acute respiratory failure with hypoxia", "code": "J96.01", "cc_mcc": "MCC",
+         "evidence_required": ["PaO2 <60 OR SpO2 <91% RA OR new/increased O2 requirement", "acute onset"],
+         "query_trigger": "New O2 ≥2L OR SpO2 <91% RA OR PaO2 <60 but 'acute respiratory failure' not stated"},
+        {"label": "Acute respiratory failure with hypercapnia", "code": "J96.02", "cc_mcc": "MCC",
+         "evidence_required": ["PaCO2 >50 with pH <7.35", "acute onset"],
+         "query_trigger": "PaCO2 >50 + pH <7.35 OR BiPAP for hypercapnia but dx not documented"},
+        {"label": "Acute respiratory failure with both hypoxia and hypercapnia", "code": "J96.02", "cc_mcc": "MCC",
+         "evidence_required": ["both criteria met"],
+         "documentation_pearl": "Document both: 'acute hypoxic and hypercapnic respiratory failure'"},
+        {"label": "Acute on chronic respiratory failure with hypoxia", "code": "J96.21", "cc_mcc": "MCC",
+         "evidence_required": ["chronic hypoxic baseline (home O2)", "acute worsening"],
+         "query_trigger": "Home O2 + acute worsening but 'acute on chronic' not used"},
+        {"label": "Acute on chronic respiratory failure with hypercapnia", "code": "J96.22", "cc_mcc": "MCC",
+         "evidence_required": ["chronic hypercapnia baseline (COPD, OHS, neuromuscular, home BiPAP)", "acute worsening"],
+         "query_trigger": "Home BiPAP OR known CO2 retainer + acute worsening but 'acute on chronic' not stated"},
+        {"label": "Chronic respiratory failure", "code": "J96.10/J96.11/J96.12", "cc_mcc": "CC",
+         "evidence_required": ["stable chronic: home O2, chronic BiPAP, no acute change"]},
+        {"label": "ARDS", "code": "J80", "cc_mcc": "MCC",
+         "evidence_required": ["acute onset ≤1 week", "bilateral infiltrates not from HF", "PaO2/FiO2 ≤300 on PEEP ≥5", "Berlin criteria"],
+         "query_trigger": "Bilateral infiltrates + severe hypoxia + intubated + clinical insult but 'ARDS' not stated",
+         "documentation_pearl": "Specify severity: mild (200–300), moderate (100–200), severe (<100)"},
+        {"label": "Post-procedural respiratory failure", "code": "J95.821 / J95.822", "cc_mcc": "MCC",
+         "evidence_required": ["resp failure linked to recent procedure"]}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "linkage_flag_template": "⚠ RESP FAILURE SPECIFICITY: O2/ABG/BiPAP documented but 'acute respiratory failure' language not used. Specify acuity + hypoxic vs hypercapnic to capture MCC.",
+        "rationale": "One of the most under-captured MCCs. Physicians document treatment (O2, BiPAP, intubation) without naming the diagnosis."
+      },
+      "hard_rules": [
+        "Never code from O2 requirement alone — need objective criteria",
+        "Acute-on-chronic requires BOTH chronic baseline AND acute worsening",
+        "BiPAP for OSA alone (chronic, stable) ≠ respiratory failure",
+        "Never assume ARDS without Berlin criteria",
+        "Post-extubation desaturation ≠ acute resp failure unless meets criteria"
+      ],
+      "common_misses": [
+        "4L NC for new dyspnea but only 'hypoxia' written",
+        "BiPAP for COPD with hypercapnia but resp failure not stated",
+        "Home O2 with acute worsening coded as just 'hypoxia'",
+        "Intubated with bilateral infiltrates from sepsis — ARDS not named",
+        "Both hypoxia and hypercapnia present but only one specified"
+      ],
+      "documentation_pearls": [
+        "Format: 'Acute [hypoxic/hypercapnic/both] respiratory failure'",
+        "If chronic baseline: 'Acute on chronic [type] respiratory failure'",
+        "State precipitant: PNA, COPD exacerbation, HF, PE, sepsis, aspiration",
+        "If intubated: state ARDS if Berlin criteria met, with severity",
+        "Reference data: PaO2/PaCO2/SpO2/O2 device/pH"
+      ]
+    },
+
+    "Malnutrition": {
+      "base_code": "E46",
+      "base_label": "Unspecified protein-calorie malnutrition",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "nutritional", "severity": "variable",
+               "common_comorbidities": ["cancer", "cirrhosis", "CHF", "COPD", "CKD", "dementia", "depression", "alcohol use", "post-op"]},
+      "specificity_ladder": [
+        {"label": "Severe protein-calorie malnutrition", "code": "E43", "cc_mcc": "MCC",
+         "evidence_required": ["meets ≥2 ASPEN/AND criteria SEVERE: weight loss >5%/1mo or >7.5%/3mo or >10%/6mo, BMI <18.5 (acute) or <16 (chronic), severe muscle/fat loss, severe edema, reduced grip strength, energy intake <50% for ≥5 days (acute) or ≥1 month (chronic/social)"],
+         "query_trigger": "Significant weight loss OR low BMI OR severe muscle wasting OR poor PO documented + RD note suggests severe but only 'malnutrition' or no malnutrition coded",
+         "documentation_pearl": "Severe malnutrition (E43) is MCC. Moderate (E44.0) is CC. Specify severity always."},
+        {"label": "Moderate protein-calorie malnutrition", "code": "E44.0", "cc_mcc": "CC",
+         "evidence_required": ["meets ≥2 ASPEN/AND criteria MODERATE: weight loss 1–2%/wk or 5%/mo or 7.5%/3mo, mild-moderate muscle/fat loss, intake 50–75% for ≥1 wk (acute) or <75% for ≥1 mo"]},
+        {"label": "Mild protein-calorie malnutrition", "code": "E44.1", "cc_mcc": "CC"},
+        {"label": "Cachexia", "code": "R64", "cc_mcc": "MCC",
+         "evidence_required": ["chronic illness (cancer, HF, COPD, CKD, AIDS)", "involuntary weight loss >5% in 6 mo", "muscle wasting", "anorexia, fatigue, low albumin"],
+         "documentation_pearl": "Cachexia code links to underlying chronic disease"},
+        {"label": "Failure to thrive (adult)", "code": "R62.7", "cc_mcc": "neither",
+         "evidence_required": ["weight loss + functional decline + nutritional decline"],
+         "documentation_pearl": "Use specific malnutrition diagnosis (E43/E44.0) when criteria met instead"},
+        {"label": "Kwashiorkor", "code": "E40", "cc_mcc": "MCC",
+         "evidence_required": ["severe protein deficiency with edema, hypoalbuminemia"],
+         "documentation_pearl": "Rare in US adults; use with caution and dietitian support"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "linkage_flag_template": "⚠ MALNUTRITION OPPORTUNITY: Weight loss/low BMI/poor intake/muscle wasting documented. RD assessment recommended. Severe malnutrition (E43) = MCC; specify severity.",
+        "rationale": "Malnutrition is heavily under-coded. Severe (MCC) requires explicit ASPEN/AND criteria documentation. RD note alone insufficient — physician must concur in own dx."
+      },
+      "hard_rules": [
+        "Physician must independently document malnutrition dx — cannot rely solely on RD note",
+        "Must specify severity (mild/moderate/severe)",
+        "Low albumin alone ≠ malnutrition (acute phase reactant)",
+        "Weight loss must be involuntary, not from diuresis or intentional weight loss",
+        "Obesity does not preclude malnutrition (sarcopenic obesity, recent significant loss)",
+        "ASPEN/AND criteria require ≥2 of 6 to meet"
+      ],
+      "common_misses": [
+        "RD documents severe malnutrition but physician doesn't agree/document → MCC lost",
+        "'Poor PO intake' written without malnutrition assessment",
+        "Cachexia not coded in cancer/CHF/COPD patients",
+        "Severity not specified → defaults to E46 (CC only)",
+        "Weight loss from cancer, HIV, CHF — cachexia not captured"
+      ],
+      "documentation_pearls": [
+        "Format: '[Mild/Moderate/Severe] protein-calorie malnutrition due to [underlying cause]'",
+        "Reference ASPEN/AND criteria met",
+        "State weight loss percentage and timeframe",
+        "Document muscle/fat wasting on exam",
+        "Link to underlying disease",
+        "Document interventions: enteral nutrition, supplements, RD consult"
+      ],
+      "evidence_binding_specifics": {
+        "ASPEN_AND_criteria": [
+          "Weight loss percentage over time",
+          "BMI low for height",
+          "Muscle wasting on exam",
+          "Subcutaneous fat loss",
+          "Localized or generalized fluid accumulation masking weight loss",
+          "Reduced grip strength",
+          "Energy intake below requirements"
+        ],
+        "severe_thresholds": {
+          "acute (<3 mo)": "weight loss >2%/1wk or >5%/1mo or >7.5%/3mo, intake ≤50% for ≥5d, severe wasting",
+          "chronic (≥3 mo)": "BMI <18.5 (mild), <16 (severe), >10%/6mo, >20%/year"
+        }
+      }
+    },
+
+    "Pressure injury": {
+      "base_code": "L89.9",
+      "base_label": "Pressure ulcer of unspecified site, unspecified stage",
+      "cc_mcc": "varies by stage and POA",
+      "tags": {"organ_system": "integumentary", "severity": "variable",
+               "common_comorbidities": ["malnutrition", "immobility", "DM", "incontinence", "dementia", "spinal cord injury"]},
+      "specificity_ladder": [
+        {"label": "Stage 1 pressure injury", "code": "L89.x1", "cc_mcc": "neither",
+         "evidence_required": ["non-blanchable erythema, intact skin"]},
+        {"label": "Stage 2 pressure injury", "code": "L89.x2", "cc_mcc": "CC",
+         "evidence_required": ["partial-thickness loss of dermis, shallow open ulcer or blister"]},
+        {"label": "Stage 3 pressure injury", "code": "L89.x3", "cc_mcc": "MCC",
+         "evidence_required": ["full-thickness skin loss, subcutaneous fat visible, no exposed bone/tendon/muscle"],
+         "query_trigger": "Wound description suggests stage 3 (subq fat visible) but staged lower or unstaged"},
+        {"label": "Stage 4 pressure injury", "code": "L89.x4", "cc_mcc": "MCC",
+         "evidence_required": ["full-thickness with exposed bone, tendon, or muscle"]},
+        {"label": "Unstageable pressure injury", "code": "L89.x0", "cc_mcc": "MCC",
+         "evidence_required": ["full-thickness loss with eschar or slough obscuring depth"],
+         "documentation_pearl": "Often becomes stage 3 or 4 once debrided"},
+        {"label": "Deep tissue pressure injury (DTPI)", "code": "L89.x6", "cc_mcc": "MCC",
+         "evidence_required": ["intact or non-intact skin with persistent non-blanchable deep red, maroon, or purple discoloration; blood-filled blister"]}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "always_document": ["site (sacrum, heel, ischium, etc.)", "stage", "present-on-admission (POA) status", "measurements"],
+        "linkage_flag_template": "⚠ PRESSURE INJURY: Stage and POA status critical. Stage 3, 4, unstageable, DTPI = MCC. POA-N (hospital-acquired) = quality measure.",
+        "rationale": "Pressure injury staging and POA status drive both MCC capture and PSI/HAC quality measures. POA documentation must occur within 24h of admission with skin assessment."
+      },
+      "hard_rules": [
+        "Always document POA status (Y/N/U/W) — affects HAC penalties",
+        "Must document skin assessment within 24h of admission for POA accuracy",
+        "DTPI is distinct from stage 1 — purple/maroon discoloration vs red blanchable",
+        "Mucosal pressure ulcers are NOT staged (e.g., from NG tube, ETT)",
+        "Friction/shear injuries ≠ pressure injuries (different code)",
+        "Moisture-associated skin damage (MASD) ≠ pressure injury",
+        "Diabetic foot ulcers ≠ pressure ulcers (use L97.x)"
+      ],
+      "common_misses": [
+        "Stage not specified → defaults to unstaged (lower capture)",
+        "POA status not documented → HAC penalty risk",
+        "DTPI documented as stage 1",
+        "Wound described in nursing notes but not coded by physician",
+        "Multiple sites — only one coded"
+      ],
+      "documentation_pearls": [
+        "Format: '[Stage X] pressure injury, [site]' with POA",
+        "Always document on admission skin exam",
+        "Multiple sites: code each",
+        "If unstageable due to eschar: state explicitly",
+        "Reference wound team/RN assessment",
+        "Code malnutrition if present (drives healing)"
+      ]
+    },
+
+    "Delirium / AMS": {
+      "base_code": "F05 (delirium) / R41.82 (AMS)",
+      "base_label": "Delirium due to known physiological condition / Altered mental status, unspecified",
+      "cc_mcc": "F05 = CC; R41.82 = neither",
+      "tags": {"organ_system": "neurologic", "severity": "variable",
+               "common_comorbidities": ["dementia", "infection", "polypharmacy", "post-op", "alcohol/drug withdrawal"]},
+      "specificity_ladder": [
+        {"label": "PRIMARY MAPPING: Most 'delirium/AMS' should be coded as encephalopathy",
+         "see_ladder": "Encephalopathy (G93.4x, G92, K72.9x, etc.) — MCC",
+         "rationale": "Hospitalized patients with AMS almost always have an identifiable medical/metabolic/toxic/septic cause = encephalopathy. Encephalopathy = MCC. Delirium (F05) = CC only."},
+        {"label": "Delirium superimposed on dementia", "code": "F05 + dementia code", "cc_mcc": "CC",
+         "evidence_required": ["baseline dementia documented", "acute behavioral/perceptual disturbance"],
+         "query_trigger": "Dementia + acute confusion but 'delirium' not stated AND no encephalopathy etiology identified"},
+        {"label": "Delirium due to known physiological condition", "code": "F05", "cc_mcc": "CC",
+         "evidence_required": ["acute disturbance of attention/awareness", "from underlying medical condition"],
+         "documentation_pearl": "Prefer encephalopathy coding when underlying cause identified — MCC instead of CC"},
+        {"label": "Altered mental status, unspecified", "code": "R41.82", "cc_mcc": "neither",
+         "evidence_required": ["AMS without specified cause"],
+         "documentation_pearl": "Symptom code only — should always be replaced by specific diagnosis when identified"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGHEST",
+        "always_attempt_upgrade_to_encephalopathy": true,
+        "linkage_flag_template": "⚠ DELIRIUM/AMS UPGRADE OPPORTUNITY: 'Delirium' (F05) = CC only. 'AMS' (R41.82) = neither. If underlying cause identifiable (sepsis, metabolic derangement, toxic, hepatic, hypoxic), upgrade to specific encephalopathy (MCC). See encephalopathy ladder.",
+        "rationale": "Delirium and AMS are placeholder codes when better diagnoses exist. The financial and clinical accuracy gap between 'delirium' (CC) and 'metabolic encephalopathy' (MCC) is large and avoidable."
+      },
+      "hard_rules": [
+        "Always attempt to identify underlying cause and code as specific encephalopathy",
+        "F05 (delirium) coexists with dementia — both can be coded",
+        "R41.82 is a symptom code — least desirable; specify",
+        "Behavioral disturbance alone without physiological cause may be psychiatric — different ladder"
+      ],
+      "common_misses": [
+        "'Delirium' or 'AMS' written when encephalopathy applies → MCC lost",
+        "'Toxic-metabolic encephalopathy' opportunity missed",
+        "Septic encephalopathy linkage missed → severe sepsis (R65.20) lost too"
+      ],
+      "documentation_pearls": [
+        "If cause identifiable → use encephalopathy",
+        "If superimposed on dementia → state 'acute encephalopathy superimposed on dementia'",
+        "Avoid R41.82 unless truly no cause identified"
+      ]
+    },
+
+    "DKA / HHS": {
+      "base_code": "E10.10 (T1DM DKA) / E11.00 (T2DM HHS)",
+      "base_label": "Diabetes with ketoacidosis / hyperosmolar hyperglycemic state",
+      "cc_mcc": "MCC",
+      "tags": {"organ_system": "endocrine", "severity": "high",
+               "common_comorbidities": ["AKI", "infection", "sepsis", "non-adherence", "MI", "CVA"]},
+      "specificity_ladder": [
+        {"label": "Type 1 DM with ketoacidosis without coma", "code": "E10.10", "cc_mcc": "MCC",
+         "evidence_required": ["T1DM", "glucose typically >250", "anion gap acidosis (AG >12, pH <7.30, HCO3 <18)", "ketonemia/ketonuria"]},
+        {"label": "Type 1 DM with ketoacidosis with coma", "code": "E10.11", "cc_mcc": "MCC"},
+        {"label": "Type 2 DM with ketoacidosis without coma", "code": "E11.10", "cc_mcc": "MCC",
+         "evidence_required": ["T2DM with DKA criteria"],
+         "documentation_pearl": "T2DM can have DKA, especially with SGLT2 inhibitors (euglycemic DKA)"},
+        {"label": "Type 2 DM with ketoacidosis with coma", "code": "E11.11", "cc_mcc": "MCC"},
+        {"label": "Type 2 DM with hyperosmolar hyperglycemic state without coma", "code": "E11.00", "cc_mcc": "MCC",
+         "evidence_required": ["glucose typically >600", "serum osm >320", "minimal/no ketones", "no significant acidosis"]},
+        {"label": "Type 2 DM with hyperosmolar hyperglycemic state with coma", "code": "E11.01", "cc_mcc": "MCC"},
+        {"label": "Drug-induced DM with ketoacidosis", "code": "E09.10/E09.11", "cc_mcc": "MCC",
+         "evidence_required": ["DM caused by drug (steroids, immunotherapy, antipsychotics)"]},
+        {"label": "Mixed DKA/HHS", "code": "code both DKA and HHS for the DM type", "cc_mcc": "MCC",
+         "evidence_required": ["features of both: significant hyperglycemia + acidosis + hyperosmolarity"],
+         "documentation_pearl": "Increasingly recognized; document both"},
+        {"label": "Euglycemic DKA", "code": "E10.10/E11.10", "cc_mcc": "MCC",
+         "evidence_required": ["ketoacidosis with glucose <250", "often SGLT2i, pregnancy, alcohol, starvation"],
+         "query_trigger": "On SGLT2i + acidosis + ketones but glucose normal — consider euglycemic DKA",
+         "hard_rule": "SGLT2i can cause euglycemic DKA — don't dismiss DKA based on normal glucose"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "linkage_flag_template": "⚠ DM ACUTE COMPLICATION: Specify DM type (1/2/drug-induced/secondary), specific complication (DKA/HHS/mixed/euglycemic), and coma status. All combinations = MCC.",
+        "rationale": "DKA and HHS are both MCC. Distinction matters for clinical care; combined DM type + complication + coma status drives precise coding."
+      },
+      "hard_rules": [
+        "Differentiate T1DM (E10.x) from T2DM (E11.x) — drug regimen alone insufficient",
+        "DKA requires anion gap acidosis + ketones + hyperglycemia (or euglycemic context)",
+        "HHS requires significant hyperosmolarity (>320) without significant acidosis",
+        "Hyperglycemia alone ≠ DKA or HHS",
+        "Always identify and code precipitant: infection, MI, non-adherence, new dx",
+        "SGLT2 inhibitor + acidosis = consider euglycemic DKA even with normal glucose"
+      ],
+      "common_misses": [
+        "DKA in T2DM coded as T1DM (or vice versa)",
+        "Euglycemic DKA missed in SGLT2i patients",
+        "HHS coded as DKA when no significant acidosis",
+        "Mixed DKA/HHS not recognized",
+        "Precipitant (sepsis, MI) not coded as comorbidity"
+      ],
+      "documentation_pearls": [
+        "Format: 'Type [1/2] DM with [DKA/HHS/mixed], [with/without] coma'",
+        "State precipitant: infection, non-adherence, MI, new dx, drug-induced",
+        "Document AG, pH, HCO3, osm, ketones, glucose",
+        "If on SGLT2i, document explicitly"
+      ]
+    },
+
+    "Diabetes with complications": {
+      "base_code": "E11.9",
+      "base_label": "Type 2 diabetes mellitus without complications",
+      "cc_mcc": "neither",
+      "tags": {"organ_system": "endocrine/multisystem", "severity": "variable",
+               "common_comorbidities": ["CKD", "CAD", "PAD", "neuropathy", "retinopathy", "obesity"]},
+      "specificity_ladder": [
+        {"label": "DM with diabetic CKD", "code": "E11.22 + N18.x", "cc_mcc": "varies by CKD stage",
+         "evidence_required": ["DM + CKD documented", "linkage to DM (most CKD in diabetics is diabetic)"],
+         "query_trigger": "DM + CKD without 'diabetic CKD' or 'DM with CKD' linkage",
+         "documentation_pearl": "Linkage assumption: CKD in DM is presumed diabetic unless otherwise documented"},
+        {"label": "DM with diabetic neuropathy", "code": "E11.40/E11.41/E11.42", "cc_mcc": "CC",
+         "evidence_required": ["DM + neuropathy: peripheral, autonomic, mononeuropathy"],
+         "query_trigger": "DM + neuropathy/numbness/gabapentin but linkage not stated"},
+        {"label": "DM with retinopathy", "code": "E11.31x/E11.32x/E11.33x/E11.34x/E11.35x", "cc_mcc": "varies",
+         "evidence_required": ["DM + retinopathy: NPDR/PDR with/without macular edema"],
+         "examples": {"E11.319": "NPDR unspecified", "E11.359": "PDR unspecified", "E11.39": "other retinopathy"}},
+        {"label": "DM with foot ulcer", "code": "E11.621 + L97.x", "cc_mcc": "MCC if severe",
+         "evidence_required": ["DM + foot ulcer", "depth/severity"],
+         "documentation_pearl": "Code both DM with foot ulcer AND specific ulcer location/depth"},
+        {"label": "DM with PAD", "code": "E11.51 + I70.x", "cc_mcc": "varies",
+         "evidence_required": ["DM + PAD: claudication, rest pain, ulcer, gangrene"]},
+        {"label": "DM with gastroparesis", "code": "E11.43", "cc_mcc": "CC",
+         "evidence_required": ["DM + delayed gastric emptying confirmed or clinical"]},
+        {"label": "DM with hyperglycemia (no DKA/HHS)", "code": "E11.65", "cc_mcc": "CC",
+         "evidence_required": ["DM with significantly elevated glucose without DKA/HHS criteria"],
+         "query_trigger": "Glucose >300 + DM + insulin escalation but no specific complication coded"},
+        {"label": "DM with hypoglycemia", "code": "E11.649 (without coma) / E11.641 (with coma)", "cc_mcc": "CC",
+         "evidence_required": ["DM + symptomatic hypoglycemia"]},
+        {"label": "Secondary DM (drug, post-pancreatectomy, post-procedural)", "code": "E08.x/E09.x/E13.x",
+         "cc_mcc": "varies",
+         "examples": {"E09.x": "drug- or chemical-induced DM", "E13.x": "other specified DM (post-pancreatectomy, etc.)"}},
+        {"label": "Long-term insulin use status", "code": "Z79.4", "cc_mcc": "neither",
+         "documentation_pearl": "Code Z79.4 for any insulin-dependent patient (T1DM or T2DM on insulin)"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM",
+        "linkage_flag_template": "⚠ DM SPECIFICITY: 'DM uncomplicated' (E11.9) = no CC/MCC. Link complications (CKD, neuropathy, retinopathy, PAD, ulcer, hyper/hypoglycemia) to DM. Most complications in diabetic patients are presumed diabetic unless otherwise stated.",
+        "rationale": "Uncomplicated DM = no capture. Each linked complication adds CC/MCC value. Linkage between DM and complication is often missed."
+      },
+      "hard_rules": [
+        "Most CKD in diabetics is presumed diabetic CKD — linkage assumption applies",
+        "Neuropathy in diabetic without other cause is presumed diabetic neuropathy",
+        "Always specify DM type (T1, T2, secondary)",
+        "Code Z79.4 for chronic insulin use",
+        "Steroid-induced hyperglycemia in non-diabetic is E09.x (drug-induced), not E11.x",
+        "Document each complication separately with linkage"
+      ],
+      "common_misses": [
+        "DM + CKD without linkage → missed CC/MCC capture",
+        "Insulin-dependent T2DM not coded with Z79.4",
+        "Neuropathy not linked to DM",
+        "Foot ulcer in diabetic not coded as DM with foot ulcer",
+        "Hyperglycemia in DM not coded as E11.65 when significant"
+      ],
+      "documentation_pearls": [
+        "Format: 'Type [1/2] DM with [specific complication]'",
+        "Always assess and link: CKD, neuropathy, retinopathy, PAD, ulcers, gastroparesis",
+        "If on insulin: document Z79.4",
+        "If steroid- or drug-induced: use E09.x"
+      ],
+      "medication_triggers": [
+        {"medication": "Insulin (any form)", "specificity": "high — long-term insulin use status",
+         "query_trigger": "Insulin on home med list but Z79.4 not coded",
+         "suggestion_template": "⚠ MEDICATION FLAG: Patient on long-term insulin — code Z79.4 (long-term insulin use)."}
+      ]
+    },
+
+    "CKD": {
+      "base_code": "N18.9",
+      "base_label": "Chronic kidney disease, unspecified",
+      "cc_mcc": "neither (unspecified)",
+      "tags": {"organ_system": "renal", "severity": "variable",
+               "common_comorbidities": ["DM", "HTN", "CAD", "HF", "anemia", "hyperparathyroidism", "metabolic acidosis"]},
+      "specificity_ladder": [
+        {"label": "CKD Stage 1", "code": "N18.1", "cc_mcc": "neither",
+         "evidence_required": ["GFR ≥90 with kidney damage (proteinuria, structural)"]},
+        {"label": "CKD Stage 2", "code": "N18.2", "cc_mcc": "neither",
+         "evidence_required": ["GFR 60–89 with kidney damage"]},
+        {"label": "CKD Stage 3a", "code": "N18.31", "cc_mcc": "neither",
+         "evidence_required": ["GFR 45–59"]},
+        {"label": "CKD Stage 3b", "code": "N18.32", "cc_mcc": "CC",
+         "evidence_required": ["GFR 30–44"]},
+        {"label": "CKD Stage 4", "code": "N18.4", "cc_mcc": "CC",
+         "evidence_required": ["GFR 15–29"]},
+        {"label": "CKD Stage 5 (not on dialysis)", "code": "N18.5", "cc_mcc": "CC",
+         "evidence_required": ["GFR <15, not on RRT"]},
+        {"label": "End-stage renal disease (ESRD)", "code": "N18.6", "cc_mcc": "MCC",
+         "evidence_required": ["GFR <15 + on chronic dialysis OR transplant candidate"],
+         "documentation_pearl": "ESRD requires chronic dialysis. Code Z99.2 (dependence on renal dialysis) alongside."},
+        {"label": "Diabetic CKD (linked)", "code": "E11.22 + N18.x", "cc_mcc": "varies by stage",
+         "query_trigger": "DM + CKD without 'diabetic CKD' linkage",
+         "documentation_pearl": "Linkage assumption: CKD in diabetic presumed diabetic"},
+        {"label": "Hypertensive CKD", "code": "I12.x + N18.x", "cc_mcc": "varies",
+         "examples": {"I12.0": "HTN + CKD stage 5/ESRD", "I12.9": "HTN + CKD stages 1–4"},
+         "documentation_pearl": "Linkage assumption: CKD in HTN patient presumed hypertensive (in absence of DM)"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM",
+        "linkage_flag_template": "⚠ CKD SPECIFICITY: Specify stage (1–5/ESRD). Stage 3b+ captures CC; ESRD = MCC. Link to DM/HTN when applicable.",
+        "rationale": "Unspecified CKD = no capture. Stage and etiology drive CC/MCC."
+      },
+      "hard_rules": [
+        "Stage by GFR; document baseline GFR",
+        "ESRD requires chronic dialysis or transplant",
+        "Linkage assumptions apply: DM + CKD = diabetic CKD; HTN + CKD = hypertensive CKD",
+        "Acute kidney injury on chronic kidney disease — code BOTH N17.9 + N18.x",
+        "Don't code AKI when Cr returns to baseline matching CKD"
+      ],
+      "common_misses": [
+        "Stage not specified → N18.9 (no capture)",
+        "DM + CKD not linked",
+        "ESRD coded as Stage 5 without dialysis status",
+        "AKI on CKD coded as just CKD",
+        "Z99.2 not coded with ESRD"
+      ],
+      "documentation_pearls": [
+        "Format: 'CKD Stage [1–5/ESRD] due to [DM/HTN/etc.]'",
+        "Document GFR or Cr baseline",
+        "If on dialysis: code Z99.2",
+        "If transplant: Z94.0 (kidney transplant status)"
+      ],
+      "medication_triggers": [
+        {"medication": "Phosphate binders (sevelamer, calcium acetate, lanthanum, ferric citrate)",
+         "specificity": "high — CKD stages 4–5/ESRD",
+         "query_trigger": "Phosphate binder on home med list but CKD stage 4+/ESRD not documented",
+         "suggestion_template": "⚠ MEDICATION FLAG: On phosphate binder — implies advanced CKD. Query stage and etiology."},
+        {"medication": "Calcimimetics (cinacalcet, etelcalcetide)", "specificity": "very high — secondary hyperparathyroidism in ESRD",
+         "query_trigger": "Cinacalcet on home med list but ESRD/hyperparathyroidism not documented",
+         "suggestion_template": "⚠ MEDICATION FLAG: On calcimimetic — implies ESRD with secondary hyperparathyroidism."}
+      ]
+    },
+
+    "Atrial fibrillation": {
+      "base_code": "I48.91",
+      "base_label": "Unspecified atrial fibrillation",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "cardiovascular", "severity": "variable",
+               "common_comorbidities": ["HF", "HTN", "CAD", "OSA", "thyroid disease", "stroke", "cardiomyopathy"]},
+      "specificity_ladder": [
+        {"label": "Paroxysmal atrial fibrillation", "code": "I48.0", "cc_mcc": "CC",
+         "evidence_required": ["AFib episodes terminating spontaneously or with intervention within 7 days"]},
+        {"label": "Persistent atrial fibrillation", "code": "I48.1", "cc_mcc": "CC",
+         "evidence_required": ["AFib lasting >7 days or requiring cardioversion"]},
+        {"label": "Long-standing persistent atrial fibrillation", "code": "I48.11", "cc_mcc": "CC",
+         "evidence_required": ["continuous AFib >12 months"]},
+        {"label": "Permanent (chronic) atrial fibrillation", "code": "I48.21", "cc_mcc": "CC",
+         "evidence_required": ["AFib accepted as permanent; rhythm control abandoned"]},
+        {"label": "Atrial flutter, typical", "code": "I48.3", "cc_mcc": "CC"},
+        {"label": "Atypical atrial flutter", "code": "I48.4", "cc_mcc": "CC"},
+        {"label": "AFib with rapid ventricular response (RVR)", "code": "I48.x (use specific type)", "cc_mcc": "CC",
+         "documentation_pearl": "RVR is descriptive; specify AFib type"},
+        {"label": "Lone atrial fibrillation", "code": "I48.91 (default)", "cc_mcc": "CC",
+         "evidence_required": ["AFib without structural heart disease, age <60"]}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM",
+        "linkage_flag_template": "⚠ AFIB SPECIFICITY: Specify type (paroxysmal/persistent/permanent). Unspecified AFib still captures CC, but specificity supports clinical accuracy.",
+        "rationale": "AFib captures CC at baseline; type specification supports clinical care and quality measures."
+      },
+      "hard_rules": [
+        "Anticoagulation alone doesn't establish AFib — requires ECG/telemetry confirmation",
+        "AFib on telemetry/ECG = documented diagnosis",
+        "Must distinguish AFib from atrial flutter (different codes)",
+        "Sinus tachycardia or SVT ≠ AFib",
+        "If converted to NSR during admission, AFib still coded if documented"
+      ],
+      "common_misses": [
+        "Type not specified → defaults to I48.91",
+        "Anticoagulation on home meds without AFib documented in problem list (query opportunity)",
+        "Atrial flutter coded as AFib"
+      ],
+      "documentation_pearls": [
+        "Format: '[Paroxysmal/Persistent/Permanent] atrial fibrillation, [with RVR if applicable]'",
+        "Document anticoagulation status and CHA2DS2-VASc when relevant",
+        "Document precipitants when applicable: hyperthyroidism, sepsis, alcohol, post-op"
+      ],
+      "medication_triggers": [
+        {"medication": "DOACs (apixaban/Eliquis, rivaroxaban/Xarelto, dabigatran/Pradaxa, edoxaban/Savaysa)",
+         "specificity": "moderate — AFib most common, also VTE",
+         "query_trigger": "DOAC on home med list but no AFib or VTE documented in problem list",
+         "suggestion_template": "⚠ MEDICATION FLAG: Patient on DOAC — query AFib or VTE history."},
+        {"medication": "Warfarin", "specificity": "moderate — AFib, mechanical valve, VTE, antiphospholipid",
+         "query_trigger": "Warfarin on home med list + no clear indication documented",
+         "suggestion_template": "⚠ MEDICATION FLAG: Patient on warfarin — query indication (AFib/valve/VTE/APS)."}
+      ]
+    },
+
+    "NSTEMI / STEMI / Type 2 MI": {
+      "base_code": "I21.4 (NSTEMI) / I21.0–I21.3 (STEMI) / I21.A1 (Type 2 MI)",
+      "base_label": "Acute myocardial infarction",
+      "cc_mcc": "MCC",
+      "tags": {"organ_system": "cardiovascular", "severity": "high",
+               "common_comorbidities": ["CAD", "HF", "AKI", "AFib", "HTN", "DM", "shock"]},
+      "specificity_ladder": [
+        {"label": "STEMI, anterior wall", "code": "I21.0x", "cc_mcc": "MCC",
+         "examples": {"I21.01": "STEMI LAD", "I21.02": "STEMI other coronary artery anterior wall", "I21.09": "STEMI other anterior wall"}},
+        {"label": "STEMI, inferior wall", "code": "I21.1x", "cc_mcc": "MCC",
+         "examples": {"I21.11": "STEMI RCA", "I21.19": "STEMI other inferior wall"}},
+        {"label": "STEMI, other site", "code": "I21.2/I21.3", "cc_mcc": "MCC",
+         "examples": {"I21.21": "lateral wall STEMI", "I21.29": "other STEMI"}},
+        {"label": "Non-ST elevation myocardial infarction (NSTEMI)", "code": "I21.4", "cc_mcc": "MCC",
+         "evidence_required": ["troponin elevation above 99th percentile + clinical context (symptoms, ECG without STEMI, imaging)"],
+         "hard_rule": "Institution-specific: troponin 0–20 pg/mL is normal — never flag ≤20 as elevated. NSTEMI requires troponin ABOVE this threshold AND clinical context."},
+        {"label": "Type 2 MI (demand-supply mismatch)", "code": "I21.A1", "cc_mcc": "MCC",
+         "evidence_required": ["troponin elevation", "clinical context of demand-supply mismatch (sepsis, hypotension, severe anemia, tachyarrhythmia, hypoxemia)", "absence of acute plaque rupture"],
+         "query_trigger": "Troponin elevation + sepsis/anemia/tachyarrhythmia/hypoxemia + no acute plaque rupture but 'Type 2 MI' not stated",
+         "documentation_pearl": "Type 2 MI is increasingly recognized — distinct from Type 1 (atherosclerotic plaque rupture)"},
+        {"label": "Other type of MI (Type 3, 4, 5)", "code": "I21.A9", "cc_mcc": "MCC",
+         "evidence_required": ["Type 3 (sudden death), Type 4 (post-PCI), Type 5 (post-CABG)"]},
+        {"label": "Subsequent MI (within 28 days)", "code": "I22.x", "cc_mcc": "MCC",
+         "evidence_required": ["new MI within 28 days of prior MI"]},
+        {"label": "Old/healed MI", "code": "I25.2", "cc_mcc": "neither",
+         "evidence_required": ["history of MI > 28 days, no current acute features"],
+         "hard_rule": "Old MI is HISTORY only — not coded as acute MI"},
+        {"label": "Demand ischemia (not MI)", "code": "I24.8", "cc_mcc": "CC",
+         "evidence_required": ["ischemic symptoms or ECG changes WITHOUT troponin elevation meeting MI criteria"],
+         "documentation_pearl": "Distinct from Type 2 MI; demand ischemia lacks troponin rise"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "linkage_flag_template": "⚠ MI TYPE SPECIFICITY: Specify Type 1 (STEMI/NSTEMI) vs Type 2 (demand-supply). Type 2 MI is MCC and frequently missed in sepsis/anemia/tachyarrhythmia patients with troponin rise.",
+        "rationale": "Type 2 MI capture is a major CDI opportunity. Troponin rise + non-coronary precipitant + no plaque rupture = Type 2 MI (MCC) not just troponemia.",
+        "hard_rule": "Never suggest cardiac diagnosis from troponin alone — always require clinical context and explicit physician documentation."
+      },
+      "hard_rules": [
+        "Institution-specific: troponin 0–20 pg/mL is NORMAL. Never flag ≤20 as elevated.",
+        "Troponin elevation alone ≠ MI — requires clinical context (symptoms, ECG, imaging)",
+        "NSTEMI vs Type 2 MI distinction: plaque rupture context vs demand-supply",
+        "Demand ischemia ≠ MI (no troponin rise meeting criteria)",
+        "Old MI (I25.2) is history only — never coded as acute",
+        "Subsequent MI (I22.x) within 28 days of prior MI",
+        "Always document ECG findings, troponin trend, imaging, cath results"
+      ],
+      "common_misses": [
+        "Type 2 MI not recognized in sepsis/anemia/tachyarrhythmia — coded as troponin elevation only",
+        "STEMI location not specified",
+        "NSTEMI vs Type 2 MI confused",
+        "Old MI coded as acute",
+        "Demand ischemia coded as MI without troponin"
+      ],
+      "documentation_pearls": [
+        "Format: '[STEMI/NSTEMI/Type 2 MI/etc.] [with location/etiology]'",
+        "State precipitant for Type 2 MI: sepsis, anemia, tachyarrhythmia, hypoxemia",
+        "Document troponin trend with values",
+        "If post-PCI/CABG: Type 4/5 MI",
+        "Old MI: 'History of MI in [year]'"
+      ]
+    },
+
+    "PE / DVT": {
+      "base_code": "I26.99 (PE) / I82.4Z9 (DVT)",
+      "base_label": "Other pulmonary embolism without acute cor pulmonale / DVT, unspecified",
+      "cc_mcc": "MCC for PE; CC for DVT",
+      "tags": {"organ_system": "vascular/pulmonary", "severity": "variable",
+               "common_comorbidities": ["malignancy", "immobility", "post-op", "hypercoagulable", "prior VTE", "OCP/HRT"]},
+      "specificity_ladder": [
+        {"label": "Saddle pulmonary embolism", "code": "I26.92 (with cor pulmonale) / I26.93 (without)", "cc_mcc": "MCC",
+         "evidence_required": ["PE at bifurcation of main PA on imaging"]},
+        {"label": "PE with acute cor pulmonale", "code": "I26.0x", "cc_mcc": "MCC",
+         "evidence_required": ["PE + acute RV dysfunction (echo, elevated troponin/BNP, RV strain on ECG)"],
+         "query_trigger": "PE + RV dysfunction OR elevated troponin OR S1Q3T3 but cor pulmonale not coded"},
+        {"label": "Massive (high-risk) PE", "code": "I26.0x + R57.0", "cc_mcc": "MCC",
+         "evidence_required": ["PE + hemodynamic instability (SBP <90, vasopressors, arrest)"],
+         "documentation_pearl": "Massive PE = MCC + shock — code both; consider thrombolytics"},
+        {"label": "Submassive (intermediate-risk) PE", "code": "I26.92/I26.93", "cc_mcc": "MCC",
+         "evidence_required": ["PE + RV dysfunction OR elevated cardiac biomarkers but normotensive"]},
+        {"label": "Other pulmonary embolism", "code": "I26.99", "cc_mcc": "MCC"},
+        {"label": "Acute DVT, lower extremity, proximal", "code": "I82.4Z1–I82.4Z3", "cc_mcc": "CC",
+         "evidence_required": ["DVT in iliac, femoral, popliteal vein on imaging"]},
+        {"label": "Acute DVT, lower extremity, distal", "code": "I82.4Y1–I82.4Y9", "cc_mcc": "CC",
+         "evidence_required": ["DVT in calf veins"]},
+        {"label": "Acute DVT, upper extremity", "code": "I82.62x", "cc_mcc": "CC",
+         "evidence_required": ["DVT in subclavian, axillary, brachial"]},
+        {"label": "Chronic DVT", "code": "I82.50x", "cc_mcc": "neither"},
+        {"label": "Catheter-associated DVT", "code": "T80.218A + DVT code", "cc_mcc": "MCC",
+         "evidence_required": ["DVT temporally linked to central line/PICC"]},
+        {"label": "Post-thrombotic syndrome", "code": "I87.00x", "cc_mcc": "neither"},
+        {"label": "Personal history of VTE", "code": "Z86.718", "cc_mcc": "neither",
+         "documentation_pearl": "Use only when no current acute VTE"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "linkage_flag_template": "⚠ VTE SPECIFICITY: For PE — assess cor pulmonale, RV strain, hemodynamics. Saddle/cor pulmonale capture = MCC. For DVT — specify location and acuity. Always identify provoked vs unprovoked.",
+        "rationale": "PE specificity (cor pulmonale, saddle, hemodynamics) drives MCC. DVT location matters for clinical care and quality measures.",
+        "hard_rule": "Anticoagulation alone never confirms PE/DVT — requires imaging confirmation."
+      },
+      "hard_rules": [
+        "Anticoagulation alone (Lovenox, Arixtra, heparin SQ for prophylaxis) NEVER infers PE/DVT diagnosis",
+        "Therapeutic anticoagulation requires confirmed VTE on imaging",
+        "Never code PE without CTPA/VQ confirmation or strong clinical case (high-risk + treatment)",
+        "Never code DVT without ultrasound or CT confirmation",
+        "Distinguish provoked (transient risk: surgery, trauma, OCP) vs unprovoked (idiopathic or persistent risk)",
+        "Personal history of VTE (Z86.718) ≠ current VTE"
+      ],
+      "common_misses": [
+        "PE with RV strain/elevated troponin but cor pulmonale not coded",
+        "Saddle PE not specified",
+        "Massive PE with vasopressors but shock not coded",
+        "DVT location not specified",
+        "Catheter-associated DVT not linked to line"
+      ],
+      "documentation_pearls": [
+        "Format: '[Acute] [submassive/massive/saddle] pulmonary embolism, [with/without cor pulmonale]'",
+        "DVT: '[Acute] DVT, [location: iliofemoral/popliteal/calf/upper extremity]'",
+        "State provoking factors when applicable",
+        "Document imaging modality and findings",
+        "Document hemodynamics, RV function, biomarkers for PE"
+      ]
+    },
+
+    "GI bleed": {
+      "base_code": "K92.2",
+      "base_label": "Gastrointestinal hemorrhage, unspecified",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "GI", "severity": "variable",
+               "common_comorbidities": ["NSAID/antiplatelet/anticoagulant use", "cirrhosis", "PUD", "anemia", "shock"]},
+      "specificity_ladder": [
+        {"label": "Acute peptic ulcer with hemorrhage", "code": "K25.0/K25.4 (gastric) / K26.0/K26.4 (duodenal)",
+         "cc_mcc": "MCC",
+         "evidence_required": ["EGD-confirmed PUD with active or recent bleeding (Forrest classification)"],
+         "documentation_pearl": "Specify with/without obstruction; with/without perforation"},
+        {"label": "Esophageal varices with bleeding", "code": "I85.01 (primary) / I85.11 (secondary, e.g., portal HTN)",
+         "cc_mcc": "MCC",
+         "evidence_required": ["EGD-confirmed bleeding varices"],
+         "documentation_pearl": "Code underlying liver disease + portal HTN"},
+        {"label": "Gastric varices with bleeding", "code": "I86.4", "cc_mcc": "MCC"},
+        {"label": "Mallory-Weiss tear", "code": "K22.6", "cc_mcc": "CC"},
+        {"label": "Diverticular bleeding", "code": "K57.x1 (with bleeding)", "cc_mcc": "CC",
+         "examples": {"K57.31": "diverticulosis large intestine with bleeding", "K57.41": "diverticulitis with bleeding"}},
+        {"label": "Angiodysplasia with bleeding", "code": "K55.21", "cc_mcc": "CC"},
+        {"label": "Hemorrhoids with bleeding", "code": "K64.x", "cc_mcc": "neither"},
+        {"label": "Ischemic colitis with bleeding", "code": "K55.0xx", "cc_mcc": "MCC",
+         "evidence_required": ["colonoscopy or imaging confirming ischemia"]},
+        {"label": "Lower GI bleed, unspecified source", "code": "K92.2", "cc_mcc": "CC"},
+        {"label": "Upper GI bleed, unspecified source", "code": "K92.2", "cc_mcc": "CC"},
+        {"label": "Acute blood loss anemia", "code": "D62", "cc_mcc": "CC",
+         "evidence_required": ["acute drop in Hgb attributable to blood loss"],
+         "query_trigger": "GIB + Hgb drop but acute blood loss anemia not separately coded",
+         "documentation_pearl": "Always assess and code D62 alongside GIB when Hgb drops"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "linkage_flag_template": "⚠ GIB SPECIFICITY: Specify source (peptic ulcer, varices, diverticular, etc.) when identified. Always assess for acute blood loss anemia (D62) — separately coded.",
+        "rationale": "Source specification (esp. PUD, varices) drives MCC. Acute blood loss anemia is commonly missed alongside GIB."
+      },
+      "hard_rules": [
+        "Source coding requires endoscopic, imaging, or pathologic confirmation",
+        "Melena/hematemesis alone = symptom; need source dx when identified",
+        "Acute blood loss anemia (D62) is distinct from GIB and should be coded when Hgb drops",
+        "Chronic GIB + iron deficiency anemia (D50.0) is different from acute blood loss anemia (D62)",
+        "Anticoagulation use coded as adverse effect when bleeding attributable"
+      ],
+      "common_misses": [
+        "Source identified on EGD/colonoscopy but K92.2 used",
+        "Acute blood loss anemia (D62) not coded alongside",
+        "Varices linked to portal HTN/cirrhosis not coded",
+        "Anticoagulant-related bleeding not coded as adverse effect"
+      ],
+      "documentation_pearls": [
+        "Format: '[Upper/Lower] GI bleed due to [specific source]'",
+        "If endoscopy done: state findings, location, intervention (clips, banding, epinephrine)",
+        "Code acute blood loss anemia (D62) when Hgb drop attributable",
+        "If anticoagulant-related: 'GI bleed in setting of [warfarin/DOAC] therapy'",
+        "Hemodynamic status: SBP, HR, transfusion requirement"
+      ]
+    },
+
+    "Cirrhosis with decompensation": {
+      "base_code": "K74.60",
+      "base_label": "Unspecified cirrhosis of liver",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "GI/hepatic", "severity": "high",
+               "common_comorbidities": ["portal HTN", "ascites", "varices", "HE", "HRS", "SBP", "HCC", "coagulopathy"]},
+      "specificity_ladder": [
+        {"label": "Cirrhosis (compensated)", "code": "K74.60 / K70.30 (alcoholic) / K71.7 (toxic) / K74.3 (PBC) / K74.4 (PSC) / K74.69 (other)",
+         "cc_mcc": "CC",
+         "evidence_required": ["imaging or biopsy confirming cirrhosis", "no decompensation features"]},
+        {"label": "Alcoholic cirrhosis", "code": "K70.30 (without ascites) / K70.31 (with ascites)", "cc_mcc": "CC/MCC",
+         "evidence_required": ["alcohol use + cirrhosis"]},
+        {"label": "Cirrhosis with ascites", "code": "K74.6x + R18.x", "cc_mcc": "MCC (with ascites)",
+         "evidence_required": ["ascites on exam/imaging"],
+         "documentation_pearl": "Ascites elevates capture; document"},
+        {"label": "Portal hypertension", "code": "K76.6", "cc_mcc": "CC",
+         "evidence_required": ["clinical or imaging evidence: varices, splenomegaly, ascites, hepatic vein gradient"]},
+        {"label": "Esophageal varices (without bleeding)", "code": "I85.00 (primary) / I85.10 (secondary)", "cc_mcc": "neither",
+         "evidence_required": ["EGD-confirmed varices"]},
+        {"label": "Esophageal varices with bleeding", "code": "I85.01/I85.11", "cc_mcc": "MCC"},
+        {"label": "Hepatic encephalopathy", "code": "K72.90 (without coma) / K72.91 (with coma)", "cc_mcc": "MCC",
+         "see_ladder": "Encephalopathy ladder for full details"},
+        {"label": "Hepatorenal syndrome", "code": "K76.7", "cc_mcc": "MCC",
+         "see_ladder": "AKI ladder"},
+        {"label": "Spontaneous bacterial peritonitis (SBP)", "code": "K65.2", "cc_mcc": "MCC",
+         "evidence_required": ["ascitic fluid PMN >250", "positive culture or clinical presentation"]},
+        {"label": "Acute liver failure", "code": "K72.00", "cc_mcc": "MCC",
+         "evidence_required": ["coagulopathy (INR ≥1.5), encephalopathy, no prior chronic liver disease (or acute on chronic)"]},
+        {"label": "Acute on chronic liver failure (ACLF)", "code": "K72.10", "cc_mcc": "MCC",
+         "evidence_required": ["chronic liver disease + acute decompensation with organ failure"]},
+        {"label": "Hepatocellular carcinoma", "code": "C22.0", "cc_mcc": "MCC"},
+        {"label": "End-stage liver disease (ESLD)", "code": "K72.10 + supporting", "cc_mcc": "MCC",
+         "evidence_required": ["MELD-Na ≥15", "transplant evaluation", "multiple decompensations"]}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "linkage_flag_template": "⚠ CIRRHOSIS DECOMPENSATION: Specify decompensation features (ascites, HE, varices, HRS, SBP, ACLF). Multiple decompensation features each carry CC/MCC value when documented separately.",
+        "rationale": "Cirrhosis alone = CC. Each decompensation feature adds value: ascites, HE, varices with bleed, SBP, HRS, ACLF all = MCC. Etiology specification (alcohol, NASH, viral, autoimmune, PBC, PSC) supports clinical accuracy."
+      },
+      "hard_rules": [
+        "Cirrhosis requires imaging/biopsy/clinical confirmation — not from labs alone",
+        "Specify etiology: alcoholic, NASH/NAFLD, viral (HCV, HBV), autoimmune, PBC, PSC, hemochromatosis, Wilson, A1AT",
+        "HE requires AMS attributable to liver disease — see encephalopathy ladder",
+        "HRS requires cirrhosis + AKI unresponsive to volume + low urine sodium",
+        "SBP requires ascitic fluid PMN >250 (with or without positive culture)",
+        "Acute liver failure: no prior chronic disease + INR ≥1.5 + encephalopathy"
+      ],
+      "common_misses": [
+        "Decompensation features documented separately but not linked to cirrhosis",
+        "Etiology not specified",
+        "Ascites with cirrhosis but K70.31/K74.6 + R18 not coded",
+        "HE in cirrhosis on lactulose but not coded as K72.9x",
+        "SBP missed when ascitic fluid PMN >250"
+      ],
+      "documentation_pearls": [
+        "Format: '[Etiology] cirrhosis, decompensated, with [specific features]'",
+        "List each decompensation: ascites, HE grade, varices ± bleeding, HRS, SBP",
+        "Document MELD-Na, Child-Pugh class",
+        "Code Z94.4 if liver transplant status",
+        "Document chronic alcohol use (F10.20) if applicable"
+      ],
+      "medication_triggers": [
+        {"medication": "Lactulose + rifaximin combo", "specificity": "very high — hepatic encephalopathy in cirrhosis",
+         "query_trigger": "Lactulose + rifaximin on home med list but cirrhosis or HE not documented",
+         "suggestion_template": "⚠ MEDICATION FLAG: On lactulose + rifaximin — implies cirrhosis with HE history. Query."},
+        {"medication": "Spironolactone + furosemide combo (with low albumin)", "specificity": "high — cirrhotic ascites",
+         "query_trigger": "Spironolactone + furosemide + ascites or low albumin context",
+         "suggestion_template": "⚠ MEDICATION FLAG: Diuretic combo suggests cirrhotic ascites. Query."},
+        {"medication": "Nadolol/propranolol (non-selective beta-blocker)", "specificity": "moderate — variceal prophylaxis",
+         "query_trigger": "Non-selective BB on home med list + GI/liver context",
+         "suggestion_template": "⚠ MEDICATION FLAG: Non-selective BB may indicate variceal prophylaxis. Query cirrhosis/varices."}
+      ]
+    },
+
+    "Hyponatremia": {
+      "base_code": "E87.1",
+      "base_label": "Hypo-osmolality and hyponatremia",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "endocrine/metabolic", "severity": "variable",
+               "common_comorbidities": ["HF", "cirrhosis", "SIADH", "thiazides", "adrenal insufficiency", "psychogenic polydipsia"]},
+      "specificity_ladder": [
+        {"label": "Severe symptomatic hyponatremia", "code": "E87.1", "cc_mcc": "CC",
+         "evidence_required": ["Na typically <125", "neurologic symptoms: seizures, coma, severe AMS", "treated with hypertonic saline"],
+         "documentation_pearl": "Severity drives clinical care and resource use; document symptoms and treatment"},
+        {"label": "Hyponatremia due to SIADH", "code": "E22.2 + E87.1", "cc_mcc": "CC",
+         "evidence_required": ["euvolemic hyponatremia", "low serum osm", "inappropriately concentrated urine (Uosm >100)", "elevated urine Na", "normal thyroid/adrenal/renal function"]},
+        {"label": "Hypovolemic hyponatremia", "code": "E87.1 + E86.0", "cc_mcc": "CC",
+         "evidence_required": ["hyponatremia + volume depletion", "improvement with isotonic fluids"]},
+        {"label": "Hypervolemic hyponatremia", "code": "E87.1", "cc_mcc": "CC",
+         "evidence_required": ["hyponatremia + edematous state (HF, cirrhosis, nephrotic, advanced CKD)"]},
+        {"label": "Drug-induced hyponatremia", "code": "E87.1 + adverse effect code",
+         "evidence_required": ["thiazides, SSRIs, carbamazepine, MDMA, antipsychotics"]},
+        {"label": "Pseudohyponatremia", "code": "(do not code — lab artifact)",
+         "evidence_required": ["normal serum osmolality despite low Na", "severe hyperlipidemia or hyperproteinemia"],
+         "hard_rule": "Pseudohyponatremia is lab artifact — do not code as hyponatremia"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM",
+        "linkage_flag_template": "⚠ HYPONATREMIA SPECIFICITY: Specify etiology (SIADH, hypovolemic, hypervolemic, drug-induced) and severity. Symptomatic hyponatremia treated with hypertonic = severe.",
+        "rationale": "Hyponatremia captures CC; etiology specification supports clinical accuracy and CDI."
+      },
+      "hard_rules": [
+        "Distinguish true vs pseudohyponatremia (osmolality)",
+        "Severe = Na <125 or neurologic symptoms",
+        "SIADH requires euvolemia + low serum osm + elevated urine osm + elevated urine Na + normal thyroid/adrenal/renal",
+        "Always assess volume status (hypo/eu/hyper)",
+        "Identify and code precipitant when possible"
+      ],
+      "common_misses": [
+        "Etiology not specified",
+        "SIADH not coded when criteria met",
+        "Drug-induced not linked",
+        "Hypervolemic in HF/cirrhosis not linked"
+      ],
+      "documentation_pearls": [
+        "Format: '[Severity] hyponatremia, [etiology], [volume status]'",
+        "Document Na value, serum osm, urine osm, urine Na",
+        "If severe + symptomatic + hypertonic given: state clearly",
+        "Identify cause: SIADH, HF, cirrhosis, drug, hypovolemia, adrenal"
+      ]
+    },
+
+    "UTI / pyelonephritis / urosepsis": {
+      "base_code": "N39.0",
+      "base_label": "Urinary tract infection, site not specified",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "renal/infectious", "severity": "variable",
+               "common_comorbidities": ["sepsis", "BPH", "indwelling catheter", "DM", "immobility", "neurogenic bladder"]},
+      "specificity_ladder": [
+        {"label": "Acute pyelonephritis", "code": "N10", "cc_mcc": "CC",
+         "evidence_required": ["upper tract symptoms: fever, flank pain, CVA tenderness, nausea/vomiting", "+ pyuria/positive culture"],
+         "query_trigger": "UTI + flank pain or fever or CVA tenderness but coded as N39.0 only"},
+        {"label": "Chronic pyelonephritis", "code": "N11.x", "cc_mcc": "CC"},
+        {"label": "Sepsis due to UTI (urosepsis)", "code": "A41.x + N39.0/N10", "cc_mcc": "MCC",
+         "evidence_required": ["sepsis criteria + UTI as identified source"],
+         "query_trigger": "Sepsis + UTI but linkage 'sepsis due to UTI' not stated; OR 'urosepsis' written without sepsis criteria check",
+         "hard_rule": "'Urosepsis' alone is non-specific — must explicitly state 'sepsis due to UTI' for sepsis coding"},
+        {"label": "Catheter-associated UTI (CAUTI)", "code": "T83.51xA + N39.0/N10", "cc_mcc": "varies",
+         "evidence_required": ["UTI in patient with indwelling urinary catheter"],
+         "documentation_pearl": "CAUTI is a quality measure; document carefully"},
+        {"label": "Complicated UTI (with structural/functional abnormality)", "code": "N39.0 with related code",
+         "evidence_required": ["UTI in patient with stones, obstruction, neurogenic bladder, immunocompromise, pregnancy, post-procedure"]},
+        {"label": "Cystitis (specified)", "code": "N30.x", "cc_mcc": "neither (most)",
+         "examples": {"N30.00": "acute cystitis without hematuria", "N30.01": "acute cystitis with hematuria", "N30.10": "interstitial cystitis"}},
+        {"label": "Urethritis", "code": "N34.x", "cc_mcc": "neither"},
+        {"label": "Asymptomatic bacteriuria", "code": "N39.0 (use cautiously)",
+         "hard_rule": "Asymptomatic bacteriuria typically should NOT be coded as UTI — bacteriuria without symptoms"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM-HIGH",
+        "linkage_flag_template": "⚠ UTI SPECIFICITY: Specify level (cystitis vs pyelonephritis). If sepsis criteria met, link explicitly: 'sepsis due to UTI' (not 'urosepsis'). 'Urosepsis' alone is non-specific.",
+        "rationale": "Pyelonephritis vs UTI matters clinically. Sepsis linkage is highest-yield: 'sepsis due to UTI' captures sepsis MCC + organ dysfunction linkage; 'urosepsis' alone captures neither."
+      },
+      "hard_rules": [
+        "Asymptomatic bacteriuria ≠ UTI (no treatment unless pregnant or pre-urologic procedure)",
+        "Positive urine culture alone ≠ UTI without symptoms or pyuria",
+        "'Urosepsis' is informal language — always replace with 'sepsis due to UTI'",
+        "Pyelonephritis requires upper tract findings (flank pain, fever, CVA tenderness, imaging)",
+        "CAUTI requires indwelling catheter at time of UTI onset",
+        "Distinguish complicated vs uncomplicated UTI"
+      ],
+      "common_misses": [
+        "'Urosepsis' written → no sepsis MCC captured",
+        "Pyelonephritis with flank pain coded as just N39.0",
+        "Sepsis from UTI not linked to UTI",
+        "CAUTI not identified",
+        "Asymptomatic bacteriuria treated and coded as UTI (overdx)"
+      ],
+      "documentation_pearls": [
+        "Format: '[Acute/Chronic] [UTI/cystitis/pyelonephritis] due to [organism]'",
+        "If sepsis: 'Sepsis due to UTI' explicitly",
+        "If CAUTI: link to catheter",
+        "Document organism, urinalysis, imaging if obtained",
+        "Distinguish complicated vs uncomplicated"
+      ]
+    },
+
+    "Cellulitis": {
+      "base_code": "L03.90",
+      "base_label": "Cellulitis, unspecified",
+      "cc_mcc": "neither (unspecified)",
+      "tags": {"organ_system": "integumentary/infectious", "severity": "variable",
+               "common_comorbidities": ["DM", "venous insufficiency", "lymphedema", "obesity", "PAD"]},
+      "specificity_ladder": [
+        {"label": "Cellulitis of lower extremity", "code": "L03.11x", "cc_mcc": "CC",
+         "examples": {"L03.115": "right lower limb", "L03.116": "left lower limb"}},
+        {"label": "Cellulitis of upper extremity", "code": "L03.11x"},
+        {"label": "Cellulitis of trunk", "code": "L03.31x", "cc_mcc": "CC"},
+        {"label": "Cellulitis of face", "code": "L03.21x", "cc_mcc": "CC"},
+        {"label": "Erysipelas", "code": "A46", "cc_mcc": "neither",
+         "evidence_required": ["sharply demarcated, raised, fiery red lesion, often face/leg, classic for strep"]},
+        {"label": "Necrotizing fasciitis", "code": "M72.6", "cc_mcc": "MCC",
+         "evidence_required": ["rapid progression, severe pain out of proportion, crepitus, gas on imaging, systemic toxicity, surgical debridement"],
+         "query_trigger": "Cellulitis + severe pain disproportionate + systemic toxicity + surgical urgency but 'necrotizing fasciitis' not stated",
+         "hard_rule": "Necrotizing fasciitis is surgical emergency — clinical/surgical/imaging confirmation required"},
+        {"label": "Pyomyositis", "code": "M60.0xx", "cc_mcc": "MCC",
+         "evidence_required": ["bacterial infection of skeletal muscle with abscess"]},
+        {"label": "Cellulitis with abscess", "code": "L02.x + L03.x", "cc_mcc": "CC",
+         "evidence_required": ["abscess on imaging or drainage"]},
+        {"label": "Cellulitis with sepsis", "code": "A41.x + L03.x", "cc_mcc": "MCC",
+         "query_trigger": "Cellulitis + sepsis criteria but sepsis linkage to skin not stated"},
+        {"label": "Diabetic foot infection / osteomyelitis", "code": "L97.x + E11.621/E11.622 (+ M86.x if osteo)",
+         "cc_mcc": "MCC if osteomyelitis",
+         "evidence_required": ["foot ulcer in DM ± osteomyelitis confirmed on imaging or probe-to-bone"]}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM",
+        "linkage_flag_template": "⚠ CELLULITIS SPECIFICITY: Specify location, complications (abscess, osteo, necrotizing), and link to sepsis when applicable.",
+        "rationale": "Necrotizing fasciitis, osteomyelitis, and sepsis-linked cellulitis are MCC. Standard cellulitis = CC when location specified."
+      },
+      "hard_rules": [
+        "Erythema alone ≠ cellulitis (venous stasis dermatitis, gout, contact dermatitis can mimic)",
+        "Bilateral lower extremity 'cellulitis' usually venous stasis dermatitis — not bacterial",
+        "Necrotizing fasciitis is clinical/surgical emergency — high suspicion threshold",
+        "Diabetic foot ulcer with cellulitis: code BOTH",
+        "Probe-to-bone or MRI for osteomyelitis confirmation"
+      ],
+      "common_misses": [
+        "Location not specified → L03.90 (no capture)",
+        "Necrotizing infection underdiagnosed → MCC lost",
+        "Diabetic foot infection without osteo coded",
+        "Sepsis from cellulitis not linked",
+        "Abscess + cellulitis only one coded"
+      ],
+      "documentation_pearls": [
+        "Format: 'Cellulitis of [specific location], [with abscess/osteomyelitis/sepsis]'",
+        "If diabetic foot: 'Diabetic foot ulcer, [location], with [cellulitis/osteomyelitis]'",
+        "Document organism if cultured (MRSA changes coding and treatment)",
+        "If necrotizing concern: document clinical features, imaging, surgical findings"
+      ]
+    },
+
+    "COVID-19": {
+      "base_code": "U07.1",
+      "base_label": "COVID-19",
+      "cc_mcc": "MCC",
+      "tags": {"organ_system": "infectious/multisystem", "severity": "variable",
+               "common_comorbidities": ["pneumonia", "ARDS", "VTE", "AKI", "cardiac", "obesity", "DM", "CKD"]},
+      "specificity_ladder": [
+        {"label": "COVID-19 with pneumonia", "code": "U07.1 + J12.82", "cc_mcc": "MCC",
+         "evidence_required": ["confirmed COVID + clinical pneumonia"],
+         "documentation_pearl": "Sequence U07.1 first, J12.82 secondary"},
+        {"label": "COVID-19 with acute respiratory failure", "code": "U07.1 + J96.0x", "cc_mcc": "MCC",
+         "see_ladder": "Acute respiratory failure"},
+        {"label": "COVID-19 with ARDS", "code": "U07.1 + J80", "cc_mcc": "MCC",
+         "evidence_required": ["confirmed COVID + Berlin ARDS criteria"]},
+        {"label": "COVID-19 with sepsis (viral)", "code": "U07.1 + A41.89 (or A41.9 if criteria met)",
+         "cc_mcc": "MCC",
+         "evidence_required": ["clinical sepsis criteria attributable to COVID"]},
+        {"label": "Multisystem inflammatory syndrome in adults (MIS-A)", "code": "M35.81 + U07.1", "cc_mcc": "MCC"},
+        {"label": "Post-COVID condition (long COVID)", "code": "U09.9", "cc_mcc": "neither",
+         "evidence_required": ["persistent symptoms after acute COVID-19", "≥4 weeks post-infection"]},
+        {"label": "Personal history of COVID-19", "code": "Z86.16", "cc_mcc": "neither",
+         "documentation_pearl": "Use only when no current acute or post-COVID symptoms"},
+        {"label": "Asymptomatic COVID-19 (incidental positive)", "code": "Z20.822 (contact/exposure) or Z11.52 (screening)",
+         "hard_rule": "Asymptomatic incidental positive = different coding than active disease"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH (when clinically active)",
+        "linkage_flag_template": "⚠ COVID SPECIFICITY: Confirmed COVID + complications. Code U07.1 first; link complications (pneumonia J12.82, ARDS J80, resp failure J96.0x, sepsis A41.89). Distinguish acute from post-COVID (U09.9) and history (Z86.16).",
+        "rationale": "U07.1 sequencing rules and complication linkage drive proper coding. Active vs post-COVID vs history all distinct."
+      },
+      "hard_rules": [
+        "COVID-19 (U07.1) requires confirmed test (PCR, antigen) or physician clinical diagnosis",
+        "Sequence U07.1 first when COVID is principal diagnosis",
+        "Code each complication separately (pneumonia, ARDS, resp failure, sepsis)",
+        "Post-COVID condition (U09.9) requires ≥4 weeks persistence and link to prior infection",
+        "Personal history (Z86.16) only when no current active disease",
+        "Asymptomatic positive ≠ active disease coding"
+      ],
+      "common_misses": [
+        "U07.1 not sequenced first when principal",
+        "Complications not linked (pneumonia, ARDS, resp failure, VTE)",
+        "Long COVID coded as active COVID",
+        "Reinfection not distinguished from history"
+      ],
+      "documentation_pearls": [
+        "Format: 'COVID-19 with [pneumonia/ARDS/respiratory failure/sepsis]'",
+        "Document confirmation method (PCR/antigen) and date",
+        "If long COVID: '≥4 weeks since acute infection, persistent [symptoms]'",
+        "Document treatment: antivirals, steroids, anticoagulation, ventilatory support"
+      ]
+    },
+
+    "Stroke / TIA": {
+      "base_code": "I63.9 (ischemic stroke) / G45.9 (TIA)",
+      "base_label": "Cerebral infarction / Transient cerebral ischemic attack",
+      "cc_mcc": "MCC for stroke; CC for TIA",
+      "tags": {"organ_system": "neurologic", "severity": "high",
+               "common_comorbidities": ["AFib", "HTN", "DM", "carotid disease", "dyslipidemia", "smoking"]},
+      "specificity_ladder": [
+        {"label": "Cerebral infarction due to thrombosis of cerebral artery", "code": "I63.3xx / I63.5xx",
+         "cc_mcc": "MCC",
+         "evidence_required": ["imaging-confirmed infarct + thrombotic mechanism"],
+         "examples": {"I63.311": "thrombosis right MCA", "I63.40": "embolism cerebral artery unspecified"}},
+        {"label": "Cerebral infarction due to embolism", "code": "I63.4xx", "cc_mcc": "MCC",
+         "evidence_required": ["imaging-confirmed infarct + cardioembolic source (AFib, valve, PFO)"],
+         "query_trigger": "Stroke + AFib documented but cardioembolic mechanism not stated"},
+        {"label": "Lacunar infarct", "code": "I63.81", "cc_mcc": "MCC",
+         "evidence_required": ["small subcortical infarct on imaging, classic small vessel pattern"]},
+        {"label": "Stroke, unspecified", "code": "I63.9", "cc_mcc": "MCC",
+         "documentation_pearl": "Always preferable to specify mechanism"},
+        {"label": "Hemorrhagic stroke - intracerebral", "code": "I61.x", "cc_mcc": "MCC",
+         "evidence_required": ["imaging-confirmed ICH + location"]},
+        {"label": "Subarachnoid hemorrhage", "code": "I60.x", "cc_mcc": "MCC"},
+        {"label": "Transient ischemic attack (TIA)", "code": "G45.9", "cc_mcc": "CC",
+         "evidence_required": ["transient neurologic deficit", "no infarct on imaging (or rapidly resolving)"],
+         "hard_rule": "TIA = no imaging evidence of infarct. With infarct = stroke."},
+        {"label": "Stroke with NIHSS documentation", "code": "stroke code + R29.7xx",
+         "documentation_pearl": "NIHSS code R29.7xx adds severity; should accompany stroke dx",
+         "query_trigger": "Stroke documented without NIHSS — query for NIHSS"},
+        {"label": "Stroke sequelae (chronic deficits)", "code": "I69.3xx",
+         "evidence_required": ["chronic deficits from prior stroke"],
+         "documentation_pearl": "Use for late effects, not acute"},
+        {"label": "Cerebral venous sinus thrombosis", "code": "G08", "cc_mcc": "MCC"},
+        {"label": "Stroke with tPA", "code": "stroke code + Z92.82", "cc_mcc": "depends",
+         "documentation_pearl": "Z92.82 = received tPA in last 24h at outside facility"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "linkage_flag_template": "⚠ STROKE SPECIFICITY: Specify mechanism (thrombotic, embolic, lacunar, hemorrhagic), location (artery/territory), NIHSS, and tPA status. Cardioembolic stroke + AFib should be linked.",
+        "rationale": "Stroke MCC capture depends on specifying mechanism and location. NIHSS adds severity. AFib + stroke = cardioembolic linkage opportunity."
+      },
+      "hard_rules": [
+        "TIA vs stroke: imaging defines (infarct present = stroke)",
+        "Mechanism (thrombotic, embolic, lacunar) requires clinical/imaging support",
+        "Always document NIHSS at admission",
+        "Hemorrhagic stroke distinct from ischemic — different codes",
+        "Stroke sequelae (I69.x) ≠ acute stroke",
+        "Cardioembolic stroke + AFib should be explicitly linked"
+      ],
+      "common_misses": [
+        "Mechanism not specified → I63.9 default",
+        "NIHSS not documented",
+        "AFib + stroke not linked as cardioembolic",
+        "tPA receipt not coded with Z92.82",
+        "Stroke history coded as acute"
+      ],
+      "documentation_pearls": [
+        "Format: '[Acute] [ischemic/hemorrhagic] stroke, [mechanism], [territory/artery]'",
+        "Always document NIHSS at admission and discharge",
+        "Document tPA/thrombectomy receipt and time",
+        "Link to AFib if cardioembolic",
+        "State residual deficits at discharge"
+      ]
+    },
+
+    "Hypertensive emergency": {
+      "base_code": "I16.1",
+      "base_label": "Hypertensive emergency",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "cardiovascular", "severity": "variable",
+               "common_comorbidities": ["CKD", "CAD", "stroke", "HF", "aortic dissection", "pheochromocytoma"]},
+      "specificity_ladder": [
+        {"label": "Hypertensive emergency (with end-organ damage)", "code": "I16.1", "cc_mcc": "CC",
+         "evidence_required": ["severe BP elevation (typically >180/120) + acute end-organ damage: encephalopathy, ICH, MI, ACS, pulmonary edema, AKI, dissection, eclampsia"],
+         "query_trigger": "BP >180/120 + AMS/MI/AKI/pulmonary edema/dissection but 'hypertensive emergency' not stated"},
+        {"label": "Hypertensive urgency (no end-organ damage)", "code": "I16.0", "cc_mcc": "neither",
+         "evidence_required": ["severe BP elevation without end-organ damage"]},
+        {"label": "Hypertensive crisis, unspecified", "code": "I16.9", "cc_mcc": "neither"},
+        {"label": "Hypertensive encephalopathy", "code": "I67.4", "cc_mcc": "MCC",
+         "see_ladder": "Encephalopathy"},
+        {"label": "Hypertensive heart disease", "code": "I11.x", "cc_mcc": "varies",
+         "examples": {"I11.0": "hypertensive heart disease with HF"}},
+        {"label": "Hypertensive heart and CKD", "code": "I13.x", "cc_mcc": "varies"},
+        {"label": "Essential hypertension (chronic)", "code": "I10", "cc_mcc": "neither",
+         "documentation_pearl": "Default chronic HTN code"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM-HIGH",
+        "linkage_flag_template": "⚠ HTN EMERGENCY: Severe BP + end-organ damage = hypertensive emergency (I16.1). Without end-organ damage = urgency (I16.0). Identify and code end-organ damage separately (encephalopathy = MCC, etc.).",
+        "rationale": "Emergency vs urgency distinction matters. End-organ damage codes (encephalopathy, MI, AKI) drive MCC capture beyond HTN itself."
+      },
+      "hard_rules": [
+        "Emergency requires end-organ damage; urgency does not",
+        "Severe BP alone (>180/120) without symptoms = urgency",
+        "Each end-organ damage coded separately",
+        "Hypertensive encephalopathy = MCC (I67.4) — links to AMS + BP control response"
+      ],
+      "common_misses": [
+        "Hypertensive urgency miscoded as emergency",
+        "End-organ damage (encephalopathy, MI, AKI) not coded separately",
+        "BP elevation without end-organ damage labeled emergency",
+        "HTN with HF not coded as I11.0"
+      ],
+      "documentation_pearls": [
+        "Format: 'Hypertensive [emergency/urgency] [with end-organ damage: list]'",
+        "Document specific end-organ effects",
+        "BP values, treatment response, IV vs PO antihypertensives",
+        "Code chronic HTN (I10) alongside if applicable"
+      ]
+    },
+
+    "Shock": {
+      "base_code": "R57.9",
+      "base_label": "Shock, unspecified",
+      "cc_mcc": "MCC",
+      "tags": {"organ_system": "cardiovascular/multisystem", "severity": "highest",
+               "common_comorbidities": ["sepsis", "MI", "HF", "PE", "GIB", "trauma", "anaphylaxis"]},
+      "specificity_ladder": [
+        {"label": "Septic shock", "code": "R65.21", "cc_mcc": "MCC",
+         "see_ladder": "Sepsis ladder",
+         "evidence_required": ["sepsis + vasopressors despite fluid resuscitation OR persistent hypotension OR lactate >2 post-resuscitation"]},
+        {"label": "Cardiogenic shock", "code": "R57.0", "cc_mcc": "MCC",
+         "evidence_required": ["primary cardiac dysfunction (MI, HF, valve, cardiomyopathy, arrhythmia)", "hypoperfusion: hypotension, low CI, end-organ hypoperfusion", "elevated filling pressures"],
+         "query_trigger": "MI/HF + hypotension + vasopressors/inotropes + elevated lactate but 'cardiogenic shock' not stated"},
+        {"label": "Hypovolemic shock", "code": "R57.1", "cc_mcc": "MCC",
+         "evidence_required": ["volume loss: hemorrhage, severe dehydration, GI losses", "hypotension responsive to volume"]},
+        {"label": "Hemorrhagic shock", "code": "R57.1 + bleeding code", "cc_mcc": "MCC",
+         "evidence_required": ["acute blood loss + hypoperfusion"]},
+        {"label": "Distributive shock (non-septic)", "code": "R57.8 / R57.9 / T78.2 (anaphylactic)",
+         "cc_mcc": "MCC",
+         "evidence_required": ["vasodilation: anaphylaxis, neurogenic, adrenal crisis"]},
+        {"label": "Obstructive shock (PE, tamponade, tension PTX)", "code": "R57.8 + cause code",
+         "cc_mcc": "MCC",
+         "evidence_required": ["obstruction to cardiac output: massive PE, tamponade, tension pneumothorax"],
+         "query_trigger": "Massive PE + hypotension OR tamponade + hypotension but obstructive shock not coded"},
+        {"label": "Anaphylactic shock", "code": "T78.2xxA", "cc_mcc": "MCC",
+         "evidence_required": ["allergic reaction + cardiovascular compromise"]},
+        {"label": "Mixed shock (e.g., septic + cardiogenic)", "code": "code each component", "cc_mcc": "MCC",
+         "documentation_pearl": "Code each shock state when both present"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGHEST",
+        "linkage_flag_template": "⚠ SHOCK SPECIFICITY: Hypotension + vasopressors/lactate elevation = shock. Specify type (septic/cardiogenic/hypovolemic/distributive/obstructive). All types = MCC.",
+        "rationale": "Shock type identification critical for clinical care and coding. Septic shock requires specific linkage (R65.21). Cardiogenic shock often missed in MI/HF with hypotension."
+      },
+      "hard_rules": [
+        "Hypotension alone ≠ shock without hypoperfusion evidence",
+        "Vasopressor requirement is supportive evidence of shock",
+        "Septic shock requires sepsis criteria + hemodynamic criteria",
+        "Cardiogenic shock requires cardiac etiology + hypoperfusion",
+        "Mixed shock states should be coded individually",
+        "Differentiate hypovolemic vs hemorrhagic — both R57.1 but document blood loss"
+      ],
+      "common_misses": [
+        "Septic shock not linked when sepsis + pressors present",
+        "Cardiogenic shock missed in MI with hypotension on inotropes",
+        "Massive PE + hypotension not coded as obstructive shock",
+        "Anaphylactic shock coded as just allergic reaction",
+        "Type unspecified → R57.9"
+      ],
+      "documentation_pearls": [
+        "Format: '[Type] shock due to [cause]'",
+        "Document hemodynamics: BP, MAP, lactate, vasopressor doses",
+        "End-organ effects: AKI, hepatic dysfunction, AMS, DIC",
+        "If mixed: state each component"
+      ]
+    },
+
+    "Pancreatitis": {
+      "base_code": "K85.90",
+      "base_label": "Acute pancreatitis without necrosis or infection, unspecified",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "GI", "severity": "variable",
+               "common_comorbidities": ["alcohol use", "gallstones", "hypertriglyceridemia", "drug-induced", "ERCP-induced", "AKI", "ARDS"]},
+      "specificity_ladder": [
+        {"label": "Acute pancreatitis (mild, interstitial edematous)", "code": "K85.x0", "cc_mcc": "CC",
+         "evidence_required": ["clinical/labs/imaging: ≥2 of 3 of (epigastric pain, lipase >3× ULN, imaging consistent)"],
+         "examples": {"K85.00": "idiopathic", "K85.10": "biliary", "K85.20": "alcohol-induced", "K85.30": "drug-induced", "K85.80": "other", "K85.90": "unspecified"}},
+        {"label": "Acute pancreatitis with uninfected necrosis", "code": "K85.x1", "cc_mcc": "MCC",
+         "evidence_required": ["pancreatic necrosis on contrast-enhanced CT", "no infection"]},
+        {"label": "Acute pancreatitis with infected necrosis", "code": "K85.x2", "cc_mcc": "MCC",
+         "evidence_required": ["necrosis + clinical/imaging evidence of infection"]},
+        {"label": "Severe acute pancreatitis (with organ failure)", "code": "K85.x + organ failure codes",
+         "cc_mcc": "MCC",
+         "evidence_required": ["acute pancreatitis + persistent organ failure (>48h): respiratory, cardiovascular, renal"],
+         "query_trigger": "Pancreatitis + AKI/ARDS/shock but severity not noted"},
+        {"label": "Chronic pancreatitis", "code": "K86.0/K86.1", "cc_mcc": "neither (most)",
+         "evidence_required": ["chronic recurrent pancreatitis with structural changes (calcifications, ductal changes)"]},
+        {"label": "Pseudocyst of pancreas", "code": "K86.2/K86.3", "cc_mcc": "neither"},
+        {"label": "Hypertriglyceridemia-induced pancreatitis", "code": "K85.20 (or K85.80) + E78.1/E78.5",
+         "evidence_required": ["pancreatitis + triglycerides typically >1000"]}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM-HIGH",
+        "linkage_flag_template": "⚠ PANCREATITIS SPECIFICITY: Specify etiology (biliary/alcohol/drug/HTG/idiopathic), severity, and complications (necrosis, organ failure). Necrotizing pancreatitis or persistent organ failure = MCC.",
+        "rationale": "Etiology and severity drive both clinical care and CDI capture. Necrosis and persistent organ failure are MCC; mild AP is CC."
+      },
+      "hard_rules": [
+        "Diagnosis requires ≥2 of 3 (Atlanta criteria): characteristic pain + lipase >3× ULN + imaging",
+        "Lipase elevation alone ≠ pancreatitis (also AKI, post-ERCP without pancreatitis)",
+        "Necrosis requires contrast CT confirmation (typically >72h)",
+        "Severity: mild (no organ failure, resolves <1 wk), moderate (transient organ failure or local complications), severe (persistent organ failure >48h)",
+        "Always identify etiology when possible"
+      ],
+      "common_misses": [
+        "Etiology not specified → K85.90",
+        "Necrosis not coded when present on imaging",
+        "Severity not specified",
+        "Persistent organ failure (AKI, ARDS) not separately coded",
+        "Hypertriglyceridemia not linked"
+      ],
+      "documentation_pearls": [
+        "Format: 'Acute [etiology] pancreatitis, [severity], [complications]'",
+        "State organ failure separately: AKI, ARDS, shock",
+        "Document Atlanta classification (mild/moderate/severe)",
+        "Imaging findings: edema, necrosis, peripancreatic fluid"
+      ]
+    },
+
+    "C diff": {
+      "base_code": "A04.7",
+      "base_label": "Enterocolitis due to Clostridioides difficile",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "GI/infectious", "severity": "variable",
+               "common_comorbidities": ["recent antibiotics", "PPI use", "advanced age", "immunocompromise", "IBD", "recent hospitalization"]},
+      "specificity_ladder": [
+        {"label": "C. difficile enterocolitis, non-recurrent", "code": "A04.71", "cc_mcc": "CC",
+         "evidence_required": ["positive C. diff PCR/EIA + clinical diarrhea", "first episode"]},
+        {"label": "C. difficile enterocolitis, recurrent", "code": "A04.72", "cc_mcc": "CC",
+         "evidence_required": ["recurrence within 8 weeks of prior episode"]},
+        {"label": "Severe C. difficile (with toxic megacolon)", "code": "A04.7x + K59.31",
+         "cc_mcc": "MCC",
+         "evidence_required": ["C. diff + colonic dilation >6 cm + systemic toxicity"]},
+        {"label": "Fulminant C. difficile (with shock or perforation)", "code": "A04.7x + R57.x or perforation",
+         "cc_mcc": "MCC",
+         "evidence_required": ["C. diff + hypotension/shock OR ileus OR megacolon OR perforation"]},
+        {"label": "C. difficile colitis", "code": "A04.7x", "cc_mcc": "CC",
+         "documentation_pearl": "Use specific subtype (.71/.72) when known"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM",
+        "linkage_flag_template": "⚠ C. DIFF SPECIFICITY: Specify recurrent vs initial. If severe (megacolon) or fulminant (shock, perforation, ileus) → MCC. Code complications separately.",
+        "rationale": "Severe/fulminant C. diff = MCC. Distinguish recurrent (A04.72) from initial (A04.71) for clinical care."
+      },
+      "hard_rules": [
+        "Positive PCR alone in asymptomatic patient ≠ active infection (colonization)",
+        "Diarrhea + positive testing = active infection",
+        "Severe = WBC >15K, Cr >1.5× baseline, albumin <3, severe abd pain",
+        "Fulminant = shock, ileus, megacolon, perforation",
+        "Recurrent = within 8 weeks of prior episode"
+      ],
+      "common_misses": [
+        "Severe/fulminant features present but not coded as MCC",
+        "Recurrent vs initial not distinguished",
+        "Toxic megacolon, perforation, shock not separately coded",
+        "Triggering antibiotics not documented"
+      ],
+      "documentation_pearls": [
+        "Format: '[Initial/Recurrent] C. difficile enterocolitis, [severity]'",
+        "Document WBC, Cr, albumin trends",
+        "If severe: state criteria",
+        "If fulminant: state shock, megacolon, ileus",
+        "Document inciting antibiotic exposure"
+      ]
+    },
+
+    "Anemia": {
+      "base_code": "D64.9",
+      "base_label": "Anemia, unspecified",
+      "cc_mcc": "neither (unspecified)",
+      "tags": {"organ_system": "hematologic", "severity": "variable",
+               "common_comorbidities": ["GIB", "CKD", "malignancy", "iron deficiency", "B12/folate deficiency", "chronic disease"]},
+      "specificity_ladder": [
+        {"label": "Acute blood loss anemia", "code": "D62", "cc_mcc": "CC",
+         "evidence_required": ["acute Hgb drop attributable to bleeding"],
+         "query_trigger": "GIB/surgery/trauma + Hgb drop but D62 not coded",
+         "documentation_pearl": "Code alongside source of bleeding"},
+        {"label": "Iron deficiency anemia, due to blood loss (chronic)", "code": "D50.0", "cc_mcc": "CC",
+         "evidence_required": ["microcytic anemia + low ferritin/iron + chronic blood loss"]},
+        {"label": "Other iron deficiency anemia", "code": "D50.8/D50.9", "cc_mcc": "neither (most)"},
+        {"label": "Anemia of chronic disease (chronic kidney disease)", "code": "D63.1", "cc_mcc": "neither",
+         "evidence_required": ["CKD + anemia"]},
+        {"label": "Anemia in chronic disease classified elsewhere", "code": "D63.8", "cc_mcc": "neither"},
+        {"label": "Anemia in neoplastic disease", "code": "D63.0", "cc_mcc": "CC",
+         "evidence_required": ["malignancy + anemia"]},
+        {"label": "Vitamin B12 deficiency anemia", "code": "D51.x", "cc_mcc": "neither (most)"},
+        {"label": "Folate deficiency anemia", "code": "D52.x", "cc_mcc": "neither (most)"},
+        {"label": "Hemolytic anemia, autoimmune", "code": "D59.0/D59.1", "cc_mcc": "CC",
+         "evidence_required": ["positive Coombs, low haptoglobin, elevated LDH/indirect bili, schistocytes"]},
+        {"label": "Hemolytic anemia, drug-induced", "code": "D59.2", "cc_mcc": "CC"},
+        {"label": "Aplastic anemia", "code": "D61.x", "cc_mcc": "MCC",
+         "evidence_required": ["pancytopenia + bone marrow biopsy"]},
+        {"label": "Sickle cell anemia", "code": "D57.x", "cc_mcc": "varies",
+         "examples": {"D57.00": "sickle cell with crisis unspecified", "D57.01": "sickle cell with acute chest"}},
+        {"label": "Severe anemia (Hgb < clinically significant threshold requiring transfusion)",
+         "code": "use specific anemia code",
+         "documentation_pearl": "Severity supports clinical care; transfusion requirement noted"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM",
+        "linkage_flag_template": "⚠ ANEMIA SPECIFICITY: Specify etiology (acute blood loss, chronic, iron def, CKD, malignancy, hemolytic). Acute blood loss anemia (D62) commonly missed alongside GIB. Anemia in chronic disease (D63.x) links to underlying condition.",
+        "rationale": "Unspecified anemia = no capture. Etiology specification supports CC where applicable. D62 with GIB is highest-yield miss."
+      },
+      "hard_rules": [
+        "Acute blood loss anemia (D62) requires documented Hgb drop attributable to acute bleeding",
+        "Chronic vs acute distinction matters",
+        "Iron deficiency requires labs (ferritin, iron sat) supporting",
+        "Anemia of chronic disease requires underlying condition documented",
+        "Hemolytic anemia requires lab evidence (LDH, haptoglobin, bilirubin, smear)"
+      ],
+      "common_misses": [
+        "GIB + Hgb drop but D62 not coded",
+        "CKD anemia (D63.1) not linked",
+        "Malignancy anemia (D63.0) not linked",
+        "Etiology not specified → D64.9"
+      ],
+      "documentation_pearls": [
+        "Format: '[Type] anemia due to [cause]'",
+        "Document Hgb trend, transfusion requirement",
+        "Link to source: GIB, CKD, malignancy, deficiency",
+        "If acute blood loss: code D62 + bleeding source"
+      ]
+    },
+
+    "Hyperkalemia / electrolyte disturbances": {
+      "base_code": "E87.5 (hyperkalemia) / E87.6 (hypokalemia)",
+      "base_label": "Hyperkalemia / Hypokalemia",
+      "cc_mcc": "CC for severe; neither for mild",
+      "tags": {"organ_system": "metabolic", "severity": "variable",
+               "common_comorbidities": ["CKD", "AKI", "DM", "RAAS inhibitors", "NSAIDs", "rhabdo", "tumor lysis"]},
+      "specificity_ladder": [
+        {"label": "Hyperkalemia", "code": "E87.5", "cc_mcc": "CC",
+         "evidence_required": ["K >5.0–5.5 (lab-dependent)"],
+         "documentation_pearl": "Severe (K >6.5 or with ECG changes) drives clinical urgency"},
+        {"label": "Hypokalemia", "code": "E87.6", "cc_mcc": "CC",
+         "evidence_required": ["K <3.5"]},
+        {"label": "Hypernatremia", "code": "E87.0", "cc_mcc": "CC",
+         "evidence_required": ["Na >145"]},
+        {"label": "Hyponatremia", "code": "E87.1", "see_ladder": "Hyponatremia"},
+        {"label": "Hypocalcemia", "code": "E83.51", "cc_mcc": "CC",
+         "evidence_required": ["corrected Ca <8.5"]},
+        {"label": "Hypercalcemia", "code": "E83.52", "cc_mcc": "CC",
+         "evidence_required": ["corrected Ca >10.5"]},
+        {"label": "Hypomagnesemia", "code": "E83.42", "cc_mcc": "neither"},
+        {"label": "Hypermagnesemia", "code": "E83.41", "cc_mcc": "CC"},
+        {"label": "Hypophosphatemia", "code": "E83.39", "cc_mcc": "neither (most)"},
+        {"label": "Hyperphosphatemia", "code": "E83.39", "cc_mcc": "neither"},
+        {"label": "Metabolic acidosis", "code": "E87.2", "cc_mcc": "CC",
+         "evidence_required": ["low pH + low HCO3"]},
+        {"label": "Metabolic alkalosis", "code": "E87.3", "cc_mcc": "CC"},
+        {"label": "Lactic acidosis", "code": "E87.2 + lactate", "cc_mcc": "CC (MCC if severe sepsis component)",
+         "evidence_required": ["elevated lactate + acidosis"]}
+      ],
+      "ai_behavior": {
+        "priority_flag": "LOW-MEDIUM",
+        "linkage_flag_template": "⚠ ELECTROLYTE: Specific electrolyte disturbances should be coded individually. Each captures CC. Severity (e.g., K >6.5 with ECG changes) and treatment intensity support clinical accuracy.",
+        "rationale": "Each electrolyte disturbance is coded individually. Most = CC. Hyponatremia has its own ladder."
+      },
+      "hard_rules": [
+        "Code each electrolyte disturbance separately",
+        "Lab artifact (hemolyzed sample) ≠ true hyperkalemia — repeat needed",
+        "Pseudohyperkalemia from tourniquet/hemolysis not coded",
+        "Severity matters clinically (treatment intensity)"
+      ],
+      "common_misses": [
+        "Only one electrolyte coded when multiple present",
+        "Lactic acidosis not coded with sepsis",
+        "Drug-induced electrolyte disturbance not linked"
+      ],
+      "documentation_pearls": [
+        "Format: '[Hyper/Hypo][electrolyte] due to [cause]'",
+        "Document trigger (drug, AKI, GI loss, etc.)",
+        "Severity and treatment intensity",
+        "If multiple, list each"
+      ]
+    },
+
+    "Rhabdomyolysis": {
+      "base_code": "M62.82",
+      "base_label": "Rhabdomyolysis",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "musculoskeletal/renal", "severity": "variable",
+               "common_comorbidities": ["AKI", "trauma", "immobility/down time", "statin/drug toxicity", "alcohol/cocaine", "extreme exertion", "seizures", "sepsis", "compartment syndrome"]},
+      "specificity_ladder": [
+        {"label": "Rhabdomyolysis", "code": "M62.82", "cc_mcc": "CC",
+         "evidence_required": ["CK typically >5× ULN (often >5,000)", "myoglobinuria possible", "muscle pain/weakness", "context: trauma, immobility, statin, drug, exertion, seizure"]},
+        {"label": "Rhabdomyolysis with AKI", "code": "M62.82 + N17.x", "cc_mcc": "MCC (driven by AKI)",
+         "evidence_required": ["rhabdo + AKI temporally linked"],
+         "query_trigger": "Rhabdo + Cr rise but AKI not coded",
+         "documentation_pearl": "AKI in rhabdo often = pigment nephropathy/ATN — see AKI ladder"},
+        {"label": "Compartment syndrome", "code": "T79.A0xA-T79.A9xA", "cc_mcc": "MCC",
+         "evidence_required": ["elevated compartment pressure + clinical signs", "often surgical fasciotomy"]},
+        {"label": "Drug-induced rhabdomyolysis", "code": "M62.82 + adverse effect code",
+         "evidence_required": ["statins, fibrates, colchicine, antipsychotics, illicit drugs"]},
+        {"label": "Exertional rhabdomyolysis", "code": "M62.82",
+         "evidence_required": ["extreme exertion context"]}
+      ],
+      "ai_behavior": {
+        "priority_flag": "MEDIUM",
+        "linkage_flag_template": "⚠ RHABDO: Code rhabdomyolysis (M62.82) separately. Always assess for AKI (often pigment nephropathy/ATN — MCC). Identify trigger: drug, trauma, immobility, exertion, seizure, NMS.",
+        "rationale": "Rhabdo + AKI is a high-yield combo. AKI from rhabdo is often ATN (MCC). Trigger identification supports clinical care."
+      },
+      "hard_rules": [
+        "CK elevation alone in stable patient may not be rhabdo (consider context)",
+        "Rhabdo + AKI: code AKI separately and consider ATN (MCC)",
+        "Compartment syndrome is distinct, often surgical emergency",
+        "Identify and code trigger (drug, trauma, NMS, malignant hyperthermia)"
+      ],
+      "common_misses": [
+        "AKI not coded alongside rhabdo",
+        "ATN not specified when AKI from pigment nephropathy",
+        "Compartment syndrome missed in severe trauma rhabdo",
+        "Trigger not identified/coded"
+      ],
+      "documentation_pearls": [
+        "Format: 'Rhabdomyolysis due to [cause], [with/without AKI]'",
+        "Document peak CK, Cr trend, urine myoglobin",
+        "Link to AKI explicitly when present",
+        "State trigger: trauma, immobility, drug, exertion"
+      ]
+    },
+
+    "Alcohol withdrawal": {
+      "base_code": "F10.239",
+      "base_label": "Alcohol dependence with withdrawal, unspecified",
+      "cc_mcc": "CC",
+      "tags": {"organ_system": "psychiatric/neurologic", "severity": "variable",
+               "common_comorbidities": ["alcoholic liver disease", "Wernicke's", "malnutrition", "cirrhosis", "pancreatitis", "trauma"]},
+      "specificity_ladder": [
+        {"label": "Alcohol use disorder, mild/moderate/severe (without withdrawal)",
+         "code": "F10.10/F10.20", "cc_mcc": "neither",
+         "documentation_pearl": "F10.20 = alcohol dependence (more severe AUD)"},
+        {"label": "Alcohol withdrawal, uncomplicated", "code": "F10.230", "cc_mcc": "CC",
+         "evidence_required": ["recent cessation/reduction", "tremor, anxiety, autonomic hyperactivity, nausea"]},
+        {"label": "Alcohol withdrawal with perceptual disturbances", "code": "F10.232", "cc_mcc": "CC",
+         "evidence_required": ["withdrawal + visual/auditory/tactile hallucinations with intact reality testing"]},
+        {"label": "Alcohol withdrawal delirium (DTs)", "code": "F10.231", "cc_mcc": "MCC",
+         "evidence_required": ["withdrawal + delirium/confusion + hallucinations + autonomic instability + typically 2–4 days after last drink"],
+         "query_trigger": "Withdrawal + AMS + autonomic instability + hallucinations but 'DTs' or 'alcohol withdrawal delirium' not stated"},
+        {"label": "Alcohol withdrawal seizures", "code": "F10.239 + G40.x or R56.9",
+         "cc_mcc": "varies",
+         "evidence_required": ["withdrawal + seizure activity, typically 6–48h after cessation"]},
+        {"label": "Wernicke's encephalopathy in alcohol use", "code": "E51.2", "cc_mcc": "MCC",
+         "see_ladder": "Encephalopathy"},
+        {"label": "Korsakoff syndrome", "code": "F10.26 (alcohol-induced amnestic disorder)", "cc_mcc": "CC"},
+        {"label": "Alcoholic hepatitis", "code": "K70.10/K70.11", "cc_mcc": "MCC (with ascites)",
+         "evidence_required": ["heavy alcohol use + jaundice + transaminitis (AST > ALT) + clinical syndrome"]},
+        {"label": "Alcoholic cirrhosis", "code": "K70.30/K70.31", "see_ladder": "Cirrhosis"},
+        {"label": "Alcohol intoxication", "code": "F10.92x", "cc_mcc": "varies"}
+      ],
+      "ai_behavior": {
+        "priority_flag": "HIGH",
+        "linkage_flag_template": "⚠ ALCOHOL WITHDRAWAL: Specify severity (uncomplicated vs perceptual disturbances vs delirium tremens). DTs (F10.231) = MCC. Always assess for Wernicke's, alcoholic hepatitis, cirrhosis. Document AUD severity.",
+        "rationale": "DTs is MCC and frequently undercoded. Withdrawal severity matters clinically. Comorbid alcoholic liver disease, Wernicke's, malnutrition often missed."
+      },
+      "hard_rules": [
+        "DTs requires delirium + autonomic instability — typically 2–4 days post-cessation",
+        "Withdrawal seizures are usually early (6–48h)",
+        "CIWA score supports severity but doesn't drive coding",
+        "Always assess for Wernicke's (give thiamine before glucose)",
+        "Alcoholic hepatitis distinct from cirrhosis (acute vs chronic)",
+        "Code AUD (F10.20) alongside withdrawal"
+      ],
+      "common_misses": [
+        "DTs not specified when delirium + autonomic instability present → MCC lost",
+        "Withdrawal seizures not separately coded",
+        "Wernicke's missed in malnourished alcoholic with AMS",
+        "Alcoholic hepatitis not coded in heavy users",
+        "AUD severity not specified"
+      ],
+      "documentation_pearls": [
+        "Format: 'Alcohol [use disorder/withdrawal], [severity], [complications]'",
+        "Specify withdrawal: uncomplicated, with perceptual disturbances, with delirium (DTs), with seizures",
+        "Document CIWA, benzo requirements, ICU need",
+        "Always assess: Wernicke's, hepatitis, cirrhosis, malnutrition, pancreatitis"
+      ]
+    }
+  },
+
+  "fallback_cc_mcc_table": {
+    "description": "Thin lookup for ICD-10 codes outside the top 32 ladders. AI uses this when a likely diagnosis is identified but no deep ladder exists. Surfaces as soft-flag only.",
+    "format": "Reference CMS FY2026 MS-DRG Definitions Manual Appendix C for full CC/MCC list. AI prompt-time reference: when AI encounters a non-laddered diagnosis, it should suggest documentation but not assert specificity beyond what's documented.",
+    "common_examples": {
+      "I10": {"label": "Essential hypertension", "cc_mcc": "neither"},
+      "E78.5": {"label": "Hyperlipidemia, unspecified", "cc_mcc": "neither"},
+      "E66.01": {"label": "Morbid obesity due to excess calories", "cc_mcc": "CC"},
+      "Z68.41": {"label": "BMI 40.0–44.9", "cc_mcc": "CC"},
+      "Z68.42": {"label": "BMI 45.0–49.9", "cc_mcc": "CC"},
+      "Z68.43": {"label": "BMI 50.0–59.9", "cc_mcc": "CC"},
+      "Z68.44": {"label": "BMI 60.0–69.9", "cc_mcc": "CC"},
+      "Z68.45": {"label": "BMI ≥70", "cc_mcc": "CC"},
+      "F17.210": {"label": "Tobacco dependence, cigarettes, uncomplicated", "cc_mcc": "neither"},
+      "Z79.4": {"label": "Long-term insulin use", "cc_mcc": "neither (but supports DM specificity)"},
+      "Z79.01": {"label": "Long-term anticoagulants", "cc_mcc": "neither"},
+      "Z99.2": {"label": "Dependence on renal dialysis", "cc_mcc": "neither (with N18.6)"},
+      "G47.33": {"label": "OSA", "cc_mcc": "neither"},
+      "I25.10": {"label": "ASCAD without angina", "cc_mcc": "neither"},
+      "Z95.1": {"label": "Presence of CABG", "cc_mcc": "neither"},
+      "Z95.5": {"label": "Presence of coronary stent", "cc_mcc": "neither"}
+    },
+    "ai_behavior": {
+      "out_of_scope_handling": "If AI encounters a diagnosis not in any ladder, it should: (1) suggest the diagnosis if clearly documented, (2) NOT attempt specificity upgrades without ladder support, (3) flag for physician review."
+    }
+  },
+
+  "update_log": {
+    "next_review": "2026-09-15",
+    "rationale": "CMS FY2027 changes published Aug; review and patch JSON before Oct 1 effective date.",
+    "review_checklist": [
+      "Diff CMS MS-DRG Definitions Manual changes",
+      "Check CC/MCC reclassifications (Appendix C)",
+      "Add new ICD-10 codes",
+      "Review Coding Clinic guidance from prior 4 quarters",
+      "Update institution-specific rules (e.g., troponin threshold)"
+    ]
+  }
 }
