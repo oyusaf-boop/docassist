@@ -505,6 +505,126 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 let currentTab = 'hp';
 let apPlainText = '';
 
+// ═══════════════════════════════════════════════
+// FOUNDATION KNOWLEDGE BASE (FY2026 — top 32 dx ladders)
+// ═══════════════════════════════════════════════
+let FOUNDATION_KB = null;
+let FOUNDATION_KB_SUMMARY = '';
+let FOUNDATION_KB_LOADING = null;
+
+async function loadFoundationKB() {
+  if (FOUNDATION_KB) return FOUNDATION_KB;
+  if (FOUNDATION_KB_LOADING) return FOUNDATION_KB_LOADING;
+  FOUNDATION_KB_LOADING = (async () => {
+    try {
+      const res = await fetch('./foundation_knowledge_FY2026.json', { cache: 'no-cache' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const kb = await res.json();
+      FOUNDATION_KB = kb;
+      FOUNDATION_KB_SUMMARY = buildKBSummary(kb);
+      window.FOUNDATION_KB = kb;
+      console.log('[KB] Loaded ' + Object.keys(kb.diagnoses || {}).length + ' dx ladders, summary: ' + FOUNDATION_KB_SUMMARY.length + ' chars');
+      return kb;
+    } catch (err) {
+      console.warn('[KB] Failed to load foundation_knowledge_FY2026.json:', err.message);
+      FOUNDATION_KB_SUMMARY = '';
+      return null;
+    } finally {
+      FOUNDATION_KB_LOADING = null;
+    }
+  })();
+  return FOUNDATION_KB_LOADING;
+}
+
+// Build a compact prompt-injectable reference from full KB.
+// Keeps token cost reasonable while surfacing CC/MCC capture targets per dx.
+function buildKBSummary(kb) {
+  if (!kb || !kb.diagnoses) return '';
+  const lines = [];
+  lines.push('═══════════════════════════════════════════════');
+  lines.push('FOUNDATION CDI REFERENCE — FY2026 (32 hospitalist dx)');
+  lines.push('Use this as authoritative ladder for CC/MCC capture suggestions.');
+  lines.push('Each dx lists base code, top capture rungs, hard rules, common misses.');
+  lines.push('═══════════════════════════════════════════════');
+  lines.push('');
+
+  // Global rules
+  if (kb.global_rules) {
+    lines.push('GLOBAL HARD RULES:');
+    (kb.global_rules.hard_rules_universal || []).forEach(r => lines.push('  • ' + r));
+    if (kb.global_rules.cdi_specificity_principle) {
+      lines.push('  • CDI principle: ' + kb.global_rules.cdi_specificity_principle);
+    }
+    lines.push('');
+  }
+
+  // Per-dx condensed
+  Object.entries(kb.diagnoses).forEach(([dxName, dx]) => {
+    lines.push('── ' + dxName + ' ──');
+    lines.push('  Base: ' + (dx.base_code || '?') + ' = ' + (dx.cc_mcc || '?'));
+
+    // Top capture opportunities (MCC rungs first, then CC)
+    const ladder = dx.specificity_ladder || [];
+    const mccRungs = ladder.filter(r => r.cc_mcc && /MCC/i.test(r.cc_mcc)).slice(0, 4);
+    const ccRungs = ladder.filter(r => r.cc_mcc && /^CC$/i.test(r.cc_mcc)).slice(0, 2);
+
+    if (mccRungs.length) {
+      lines.push('  MCC captures:');
+      mccRungs.forEach(r => {
+        const trig = r.query_trigger ? ' [trigger: ' + r.query_trigger + ']' : '';
+        lines.push('    → ' + (r.label || '') + ' (' + (r.code || '?') + ')' + trig);
+      });
+    }
+    if (ccRungs.length) {
+      lines.push('  CC captures:');
+      ccRungs.forEach(r => {
+        lines.push('    → ' + (r.label || '') + ' (' + (r.code || '?') + ')');
+      });
+    }
+
+    // AI behavior linkage flag
+    if (dx.ai_behavior && dx.ai_behavior.linkage_flag_template) {
+      lines.push('  Linkage: ' + dx.ai_behavior.linkage_flag_template);
+    }
+
+    // Top hard rules (max 3)
+    const hardRules = (dx.hard_rules || []).slice(0, 3);
+    if (hardRules.length) {
+      lines.push('  Hard rules:');
+      hardRules.forEach(r => lines.push('    ! ' + r));
+    }
+
+    // Top common misses (max 3)
+    const misses = (dx.common_misses || []).slice(0, 3);
+    if (misses.length) {
+      lines.push('  Common misses:');
+      misses.forEach(m => lines.push('    ⚠ ' + m));
+    }
+
+    // Medication triggers (high-specificity meds only)
+    const medTrigs = (dx.medication_triggers || []).filter(m =>
+      m.specificity && /very high|^high/i.test(m.specificity)
+    ).slice(0, 3);
+    if (medTrigs.length) {
+      lines.push('  Med triggers:');
+      medTrigs.forEach(m => lines.push('    💊 ' + (m.medication || '') + ' → ' + (m.query_trigger || '')));
+    }
+
+    lines.push('');
+  });
+
+  return lines.join('\n');
+}
+
+// Wrap the system prompt with KB reference if loaded
+function withKB(systemPrompt) {
+  if (!FOUNDATION_KB_SUMMARY) return systemPrompt;
+  return systemPrompt + '\n\n' + FOUNDATION_KB_SUMMARY;
+}
+
+// Kick off load immediately
+loadFoundationKB();
+
 function setTab(btn, tab) {
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
@@ -626,7 +746,7 @@ M.E.A.T. RULE
 A secondary diagnosis is only codeable if there is evidence it was Monitored, Evaluated, Assessed, or Treated during THIS encounter. Coders cannot code from problem lists alone. Flag diagnoses listed without any M.E.A.T. element.
 
 ════════════════════════════════
-QUALITY OF CARE DOCUMENTATION (Powers Health Framework)
+QUALITY OF CARE DOCUMENTATION (Prime Health Framework)
 ════════════════════════════════
 For every progress note, check and flag if missing:
 1. MEDICAL NECESSITY: Is the reason for continued inpatient stay clearly documented? Flag if the A&P does not justify why the patient still needs inpatient level of care.
@@ -664,7 +784,7 @@ RESPIRATORY:
 - Hypercapnic respiratory failure: document as "with hypercapnia" for specificity
 - Flag all CONTINUOUS O2-dependent patients without chronic respiratory failure documented
 
-AKI / RENAL (KDIGO Criteria — Powers Health standard):
+AKI / RENAL (KDIGO Criteria — Prime Health standard):
 - AKI diagnosis requires documented BASELINE creatinine — "normal baseline" is NOT acceptable per KDIGO
 - KDIGO AKI criteria: Cr increase ≥0.3 mg/dL within 48 hours OR ≥1.5x baseline within 7 days OR UO <0.5 mL/kg/hr x6hr
 - Always flag when baseline Cr is missing or documented as "normal" without a value
@@ -691,7 +811,7 @@ TROPONIN / CARDIAC:
 - I5A protects from AMI readmission cohort; Type 2 MI is high-risk for clinical validation denial
 - "Troponin elevation," "troponinemia" = NON-CC → always flag and guide to I5A or Type 2 MI
 
-MALNUTRITION (ASPEN Criteria — Powers Health standard):
+MALNUTRITION (ASPEN Criteria — Prime Health standard):
 - Document severity: Mild, Moderate, or Severe — and physical assessment findings
 - Document: weight loss, loss of fat/muscle mass, cachexia, chronic illness contribution
 - Mild/Moderate Malnutrition = CC (SOI=3); Severe = MCC (SOI=3)
@@ -710,7 +830,7 @@ ENCEPHALOPATHY:
 - Toxic/Hepatic/Hypertensive Encephalopathy = MCC
 - Recommend "evidence of metabolic encephalopathy" rather than waiting for discharge qualifier
 
-CVA / STROKE (new — Powers Health requirement):
+CVA / STROKE (new — Prime Health requirement):
 - Always document: hemorrhagic vs embolic (ischemic)
 - Always document: location of injury (e.g., right MCA territory, left basal ganglia, cerebellum)
 - Always document: traumatic vs non-traumatic
@@ -726,7 +846,7 @@ HTN COMBO CODES:
 PRESSURE ULCERS: Stage 3-4 = MCC; Stage 1-2 = NON-CC. Document stage and POA.
 
 ════════════════════════════════
-PHSI ADDITIONAL CC/MCC — FY2026 VERIFIED (Powers Health Reference)
+PHSI ADDITIONAL CC/MCC — FY2026 VERIFIED (Prime Health Reference)
 ════════════════════════════════
 
 HIGH-YIELD MCC CONDITIONS (often underdocumented):
@@ -855,7 +975,7 @@ If sepsis not present/suspected in note, set sepsis.detected = false and provide
 GMLOS values: use real approximate Medicare geometric mean LOS for the DRG numbers you cite.
 severity: critical = revenue >$1000 or DRG shift or MCC; warning = CC or specificity; info = quality/documentation`;
 
-const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing. You apply FY2026 ICD-10 rules, Powers Health documentation standards, and KDIGO/ASPEN clinical criteria.
+const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing. You apply FY2026 ICD-10 rules, Prime Health documentation standards, and KDIGO/ASPEN clinical criteria.
 
 FREEFORM INPUT HANDLING:
 If given free-form chart content (not a labeled A&P), first identify the A&P section(s) within the pasted content. Use the ER physician note, labs, and other context to inform your CDI upgrades — especially for baseline values (ER creatinine for AKI, initial O2 sat for respiratory failure, early troponin for cardiac diagnoses). Extract the most recent A&P as the primary document to rewrite.
@@ -933,9 +1053,10 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
   try {
     prog(true, 15, 'Running CDI analysis and optimizing A&P in parallel...');
 
+    await loadFoundationKB();
     const [analysisRaw, apRaw] = await Promise.all([
-      callAPI(SYSTEM_ANALYSIS, context, 3000),
-      callAPI(SYSTEM_AP,
+      callAPI(withKB(SYSTEM_ANALYSIS), context, 3000),
+      callAPI(withKB(SYSTEM_AP),
         inputs.freeform
           ? `NOTE TYPE: ${inputs.type}\n\nCHART CONTENT (free-form — extract A&P and context from this):\n${inputs.freeform}\n\nIs this a discharge note? NO`
           : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
@@ -1381,7 +1502,8 @@ async function generateDCSummary() {
 
   try {
     prog(true, 30, 'Synthesizing hospital course and diagnoses...');
-    const raw = await callAPI(SYSTEM_DC_SUMMARY, context, 3000);
+    await loadFoundationKB();
+    const raw = await callAPI(withKB(SYSTEM_DC_SUMMARY), context, 3000);
     prog(true, 85, 'Rendering discharge summary...');
 
     let data;
@@ -1554,7 +1676,8 @@ async function generateAPB() {
   try {
     prog(true, 40, 'Synthesizing problems and generating A&P in your style...');
 
-    const raw = await callAPI(SYSTEM_AP_BUILDER, notes, 3000);
+    await loadFoundationKB();
+    const raw = await callAPI(withKB(SYSTEM_AP_BUILDER), notes, 3000);
 
     prog(true, 90, 'Done ✓');
     apbText = raw.trim();
