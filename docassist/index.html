@@ -301,31 +301,19 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
   <!-- LEFT INPUT -->
   <div id="left">
     <div class="type-tabs">
-      <button class="ntab on" onclick="setTab(this,'hp')">Initial H&P</button>
-      <button class="ntab"    onclick="setTab(this,'progress')">Progress Note</button>
-      <button class="ntab"    onclick="setTab(this,'apbuilder')">A&P Builder</button>
-      <button class="ntab"    onclick="setTab(this,'dcsummary')">DC Builder</button>
+      <button class="ntab on" onclick="setTab(this,'apgen')">✏️ Generate A&P</button>
+      <button class="ntab"    onclick="setTab(this,'dcsummary')">🏥 DC Builder</button>
     </div>
     <div id="input-card">
-      <!-- H&P -->
-      <div id="inputs-hp">
+      <!-- Generate A&P -->
+      <div id="inputs-apgen">
         <div class="input-section">
-          <div class="inp-label"><span>📋</span> Paste Anything<span class="lbl-hint">ER note · HPI · labs · consults · A&P · any order</span></div>
-          <textarea id="hp-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste anything from the chart here — ER physician note, HPI, labs, imaging, consult notes, A&P. Paste multiple items one after another. No labeling needed. AI will sort it out."></textarea>
+          <div class="inp-label"><span>📋</span> Current Encounter<span class="lbl-hint">ER note · HPI · labs · consults · progress notes · any order</span></div>
+          <textarea id="apgen-freeform" class="inp-area tall" style="min-height:340px;" placeholder="Paste anything from this encounter — ER note, admitting H&P, today's progress note, labs, imaging, consult notes. Any order, no labels needed. AI auto-detects whether it's a new admit, overnight admit, or takeover."></textarea>
         </div>
-      </div>
-      <!-- Progress -->
-      <div id="inputs-progress" style="display:none">
         <div class="input-section">
-          <div class="inp-label"><span>📋</span> Paste Anything<span class="lbl-hint">labs · progress note · consult updates · any order</span></div>
-          <textarea id="pn-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste anything from today's chart — labs, today's progress note, consultant updates, imaging results. Paste multiple items one after another. No labeling needed."></textarea>
-        </div>
-      </div>
-      <!-- A&P Builder -->
-      <div id="inputs-apbuilder" style="display:none">
-        <div class="input-section">
-          <div class="inp-label"><span>📋</span> Paste Source Notes<span class="lbl-hint">overnight H&P · ER note · consults · any order</span></div>
-          <textarea id="apb-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste any combination of: overnight physician A&P, ER note, cardiology/nephrology/other consult notes. Any order, no labeling needed. AI will generate your A&P in your style."></textarea>
+          <div class="inp-label" style="cursor:pointer;user-select:none;" onclick="togglePriorRecords()" id="prior-toggle"><span id="prior-arrow">▶</span> Prior Records<span class="lbl-hint">optional · older H&Ps · prior DC summaries · old consults</span></div>
+          <textarea id="apgen-prior" class="inp-area" style="min-height:120px;display:none;" placeholder="Paste OLDER records here — used only for baseline labs and chronic conditions. Active diagnoses are pulled from Current Encounter only."></textarea>
         </div>
       </div>
 
@@ -379,7 +367,6 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
         <button class="otab"     onclick="setOutTab(this,'sepsis')" id="sepsis-tab-btn">🦠 Sepsis Criteria</button>
         <button class="otab"     onclick="setOutTab(this,'ap')" id="ap-tab-btn">✏️ Optimized A&P</button>
         <button class="otab"     onclick="setOutTab(this,'dcsummary')" id="dcsummary-tab-btn" style="display:none">🏥 DC Summary</button>
-        <button class="otab"     onclick="setOutTab(this,'apbuilder')" id="apbuilder-tab-btn" style="display:none">✍️ My A&P</button>
         <button class="otab"     onclick="setOutTab(this,'metrics')" id="metrics-tab-btn">📈 Metrics</button>
       </div>
 
@@ -451,22 +438,6 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
         </div>
       </div>
 
-      <!-- A&P BUILDER PANEL -->
-      <div id="panel-apbuilder" class="out-panel">
-        <div id="apb-card" style="background:white;border-radius:0 14px 14px 14px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;">
-          <div style="padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#faf8f5;">
-            <div>
-              <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.9px;">My Progress Note A&P</div>
-              <div style="font-size:11px;color:var(--text3);">CDI-optimized · your style · ready to paste into MT</div>
-            </div>
-            <button id="copy-apb-btn" onclick="copyAPB()" style="padding:8px 16px;background:var(--navy);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background 0.15s;">📋 Copy A&P</button>
-          </div>
-          <div id="apb-body" style="padding:20px;">
-            <div class="empty"><div class="empty-ico">✍️</div><div class="empty-ttl">A&P Builder</div><div class="empty-sub">Paste overnight H&P, ER note, and consult notes on the left — your progress note A&P appears here ready to paste into MT</div></div>
-          </div>
-        </div>
-      </div>
-
       <!-- METRICS PANEL -->
       <div id="panel-metrics" class="out-panel">
         <div class="met-pitch-banner">
@@ -502,7 +473,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 </div>
 
 <script>
-let currentTab = 'hp';
+let currentTab = 'apgen';
 let apPlainText = '';
 
 // ═══════════════════════════════════════════════
@@ -629,39 +600,54 @@ function setTab(btn, tab) {
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   currentTab = tab;
-  ['hp','progress','apbuilder','dcsummary'].forEach(t => {
-    document.getElementById('inputs-'+t).style.display = t===tab ? 'block' : 'none';
+  ['apgen','dcsummary'].forEach(t => {
+    const el = document.getElementById('inputs-'+t);
+    if (el) el.style.display = t===tab ? 'block' : 'none';
   });
   // Update analyze button label
   const lbl = document.getElementById('analyze-btn-label');
   if (lbl) {
     if (tab==='dcsummary') lbl.textContent = 'Generate DC Summary';
-    else if (tab==='apbuilder') lbl.textContent = 'Build My A&P';
-    else lbl.textContent = 'Analyze Note';
+    else lbl.textContent = 'Generate A&P';
   }
   // Show/hide DC output tab
   const dcOutTab = document.getElementById('dcsummary-tab-btn');
   if (dcOutTab) dcOutTab.style.display = tab==='dcsummary' ? 'inline-block' : 'none';
-  // Show/hide A&P Builder output tab
-  const apbOutTab = document.getElementById('apbuilder-tab-btn');
-  if (apbOutTab) apbOutTab.style.display = tab==='apbuilder' ? 'inline-block' : 'none';
+}
+
+function togglePriorRecords() {
+  const ta = document.getElementById('apgen-prior');
+  const arrow = document.getElementById('prior-arrow');
+  if (!ta || !arrow) return;
+  if (ta.style.display === 'none') {
+    ta.style.display = 'block';
+    arrow.textContent = '▼';
+  } else {
+    ta.style.display = 'none';
+    arrow.textContent = '▶';
+  }
 }
 
 function setOutTab(btn, tab) {
   document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
-  ['analysis','sepsis','ap','dcsummary','apbuilder','metrics'].forEach(t => {
-    document.getElementById('panel-'+t).classList.toggle('on', t===tab);
+  ['analysis','sepsis','ap','dcsummary','metrics'].forEach(t => {
+    const el = document.getElementById('panel-'+t);
+    if (el) el.classList.toggle('on', t===tab);
   });
   if (tab === 'metrics') renderMetrics();
 }
 
 function getInputs() {
-  if (currentTab==='hp') return { freeform:v('hp-freeform'), type:'Initial H&P' };
-  if (currentTab==='progress') return { freeform:v('pn-freeform'), type:'Subsequent Progress Note' };
-  if (currentTab==='apbuilder') return { freeform:v('apb-freeform'), type:'A&P Builder' };
+  if (currentTab==='apgen') {
+    return {
+      freeform: v('apgen-freeform'),
+      prior: v('apgen-prior'),
+      type: 'A&P Generation'
+    };
+  }
   if (currentTab==='dcsummary') return { hpi:v('dc2-hp'), consult:v('dc2-consult'), progress:v('dc2-progress'), type:'DC Summary Builder' };
-  return { freeform:v('apb-freeform'), type:'A&P Builder' }; // fallback
+  return { freeform:v('apgen-freeform'), prior:v('apgen-prior'), type:'A&P Generation' }; // fallback
 }
 function v(id) { const el=document.getElementById(id); return el ? el.value.trim() : ''; }
 
@@ -1007,6 +993,19 @@ CORE RULES:
 8. New diagnoses: Add at bottom marked "Suggested:".
 9. Preserve original formatting style.
 
+LAB PROMPT PLACEHOLDERS (CRITICAL — physician will write diagnoses manually):
+- NEVER auto-suggest cardiac diagnoses (Type 1 MI, Type 2 MI, Non-Ischemic Myocardial Injury), HF/CHF subtypes, or PE/DVT based on lab values alone.
+- Troponin (institutional URL = 20 pg/mL):
+  · trop <=20: do nothing (silent)
+  · trop 21-50: insert {{TROP_SOFT}} under the relevant cardiac/CHF/sepsis problem
+  · trop 51-500: insert {{TROP_FULL}} under the relevant cardiac problem
+  · trop >500: insert {{TROP_HIGH}} under the relevant cardiac problem
+- BNP (any value above lab cutoff, typically >100): insert {{BNP_PROMPT}} under the relevant cardiac/HF/dyspnea problem
+- D-dimer (elevated AND no etiology referenced anywhere in the chart): insert {{DDIMER_PROMPT}} under the most clinically relevant problem (or as standalone line if no fit)
+- Insert placeholders on a NEW LINE inside the relevant problem's narrative. Do NOT replace placeholder text — JS will substitute the actual prompt text after generation.
+- If a lab value is not present in the chart, do not insert any placeholder for that lab.
+- If a placeholder is appropriate but no clear cardiac/HF problem exists, place it under the closest related problem.
+
 Return ONLY raw JSON, no markdown:
 {
   "ap_text": "full rewritten A&P as plain text preserving original formatting",
@@ -1033,10 +1032,13 @@ async function analyze() {
   // Build context — freeform tabs pass raw paste; structured tabs (discharge) pass labeled sections
   let context;
   if (inputs.freeform !== undefined) {
+    const priorBlock = inputs.prior
+      ? '\n\n═══ PRIOR RECORDS (use ONLY for baseline labs and chronic conditions — never pull active diagnoses from here) ═══\n' + inputs.prior
+      : '';
     context = `Note Type: ${inputs.type}
 
-CHART CONTENT (free-form paste — may include ER note, HPI, labs, consult notes, A&P in any order):
-${inputs.freeform}
+CURRENT ENCOUNTER (free-form paste — may include ER note, HPI, labs, consult notes, A&P, progress notes in any order):
+${inputs.freeform}${priorBlock}
 
 ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergies, ROS, social history.`;
   } else {
@@ -1054,11 +1056,14 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     prog(true, 15, 'Running CDI analysis and optimizing A&P in parallel...');
 
     await loadFoundationKB();
+    const priorForAP = inputs.prior
+      ? '\n\nPRIOR RECORDS (baseline/chronic context only — DO NOT pull active diagnoses from here):\n' + inputs.prior
+      : '';
     const [analysisRaw, apRaw] = await Promise.all([
       callAPI(withKB(SYSTEM_ANALYSIS), context, 3000),
       callAPI(withKB(SYSTEM_AP),
         inputs.freeform
-          ? `NOTE TYPE: ${inputs.type}\n\nCHART CONTENT (free-form — extract A&P and context from this):\n${inputs.freeform}\n\nIs this a discharge note? NO`
+          ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
           : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
         2500)
     ]);
@@ -1075,6 +1080,13 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     renderDRG(analysis.drg, analysis.icd_codes, analysis.gaps);
     renderRevBar(analysis.summary);
     renderSepsis(analysis.sepsis);
+
+    // Apply lab placeholder substitution (trop / BNP / D-dimer)
+    if (apData && apData.ap_text) {
+      const chartContent = [inputs.freeform, inputs.prior, inputs.hpi, inputs.labs, inputs.ap].filter(Boolean).join('\n');
+      apData.ap_text = processLabPlaceholders(apData.ap_text, chartContent);
+    }
+
     renderAP(apData, inputs.ap);
 
     // Capture de-identified metrics for ROI tracking
@@ -1273,6 +1285,90 @@ function toggleSepsis(id) {
   if (toggle) toggle.textContent = el.classList.contains('open') ? '▲ hide' : '▼ show';
 }
 
+// ═══════════════════════════════════════════════
+// LAB PLACEHOLDER POST-PROCESSOR
+// ═══════════════════════════════════════════════
+function extractLabs(text) {
+  if (!text) return {};
+  const t = text.toLowerCase();
+  const labs = {};
+
+  // Troponin (institutional URL = 20 pg/mL) — pick highest if multiple values
+  const tropRe = /\b(?:troponin\s*[it]?|trop(?!ical)|hs[\s-]?trop|tnt|tni)\b\s*[:=]?\s*(\d+\.?\d*)/g;
+  const tropVals = [];
+  let tm;
+  while ((tm = tropRe.exec(t)) !== null) tropVals.push(parseFloat(tm[1]));
+  if (tropVals.length) labs.trop = Math.max.apply(null, tropVals);
+
+  // BNP (exclude NT-proBNP)
+  const bnpRe = /\bbnp\b\s*[:=]?\s*(\d+\.?\d*)/g;
+  const bnpVals = [];
+  let bm;
+  while ((bm = bnpRe.exec(t)) !== null) {
+    const before = t.slice(Math.max(0, bm.index - 12), bm.index);
+    if (!/pro[\s-]?$|nt[\s-]?pro[\s-]?$/i.test(before)) {
+      bnpVals.push(parseFloat(bm[1]));
+    }
+  }
+  if (bnpVals.length) labs.bnp = Math.max.apply(null, bnpVals);
+
+  // D-dimer
+  const ddRe = /\bd[\s-]?dimer\b\s*[:=]?\s*(\d+\.?\d*)/g;
+  const ddVals = [];
+  let dm;
+  while ((dm = ddRe.exec(t)) !== null) ddVals.push(parseFloat(dm[1]));
+  if (ddVals.length) labs.ddimer = Math.max.apply(null, ddVals);
+
+  return labs;
+}
+
+function dDimerHasEtiology(text) {
+  if (!text) return false;
+  return /\b(p\.?e\.?\b|pulmonary embolism|d\.?v\.?t\.?\b|deep vein|\bvte\b|thromboembol|hypercoag|venous thromb)\b/i.test(text);
+}
+
+function processLabPlaceholders(apText, chartText) {
+  if (!apText) return apText;
+  const labs = extractLabs(chartText);
+  let out = apText;
+
+  // TROPONIN — tiered
+  if (labs.trop !== undefined && labs.trop > 20) {
+    let prompt;
+    if (labs.trop <= 50) {
+      prompt = '⚠️ Troponin mildly elevated (' + labs.trop + ' pg/mL): clinical correlation needed — consider rise/fall, ischemic features, clinical context. DocAssist will not suggest a diagnosis.';
+    } else if (labs.trop <= 500) {
+      prompt = '⚠️ Troponin elevated (' + labs.trop + ' pg/mL): document rise/fall pattern, ischemic symptoms, ECG changes, and clinical context (CHF, sepsis, CKD, tachyarrhythmia, PE, post-op). Physician writes the diagnosis manually.';
+    } else {
+      prompt = '⚠️ Troponin significantly elevated (' + labs.trop + ' pg/mL): document rise/fall, ischemic features, ECG changes, clinical context. Consider cardiology consult if not yet involved. Physician writes the diagnosis manually.';
+    }
+    out = out.split('{{TROP_SOFT}}').join(prompt);
+    out = out.split('{{TROP_FULL}}').join(prompt);
+    out = out.split('{{TROP_HIGH}}').join(prompt);
+  } else {
+    // Threshold not met or no trop — strip any orphan placeholders
+    out = out.replace(/\{\{TROP_(SOFT|FULL|HIGH)\}\}\s*\n?/g, '');
+  }
+
+  // BNP — simple
+  if (labs.bnp !== undefined && labs.bnp > 100) {
+    const bnpPrompt = '⚠️ Elevated BNP (' + labs.bnp + ' pg/mL): consider CHF or alternate diagnoses. Physician writes the diagnosis manually.';
+    out = out.split('{{BNP_PROMPT}}').join(bnpPrompt);
+  } else {
+    out = out.replace(/\{\{BNP_PROMPT\}\}\s*\n?/g, '');
+  }
+
+  // D-DIMER — conditional (elevated AND no etiology referenced)
+  if (labs.ddimer !== undefined && labs.ddimer > 500 && !dDimerHasEtiology(chartText)) {
+    const ddPrompt = '⚠️ Elevated D-Dimer (' + labs.ddimer + '): please document etiology or cause.';
+    out = out.split('{{DDIMER_PROMPT}}').join(ddPrompt);
+  } else {
+    out = out.replace(/\{\{DDIMER_PROMPT\}\}\s*\n?/g, '');
+  }
+
+  return out;
+}
+
 function renderAP(apData, originalAP) {
   if (!apData) {
     document.getElementById('ap-body').innerHTML = '<div class="empty"><div class="empty-ico">⚠️</div><div class="empty-ttl">Could not generate optimized A&P</div></div>';
@@ -1372,16 +1468,14 @@ function setSpinners(on) {
 function resetOutputs() {
   document.getElementById('rev-bar').classList.remove('on');
   apPlainText = '';
-  apbText = '';
   document.getElementById('ap-tab-btn').innerHTML = '✏️ Optimized A&P';
   document.getElementById('sepsis-tab-btn').innerHTML = '🦠 Sepsis Criteria';
   const dcBtn = document.getElementById('copy-course-btn'); if (dcBtn) dcBtn.style.display='none';
   const dxBtn = document.getElementById('copy-dx-btn'); if (dxBtn) dxBtn.style.display='none';
-  const apbOutTab = document.getElementById('apbuilder-tab-btn'); if (apbOutTab) apbOutTab.style.display='none';
 }
 
 function clearAll() {
-  ['hp-freeform','pn-freeform','apb-freeform','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['apgen-freeform','apgen-prior','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   resetOutputs(); prog(false);
   document.getElementById('em-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">E&M Level Analysis</div><div class="empty-sub">Paste your note and click Analyze</div></div>';
   document.getElementById('cdi-body').innerHTML='<div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div>';
@@ -1584,126 +1678,9 @@ function copySection(textId, btn) {
 function handleAnalyze() {
   if (currentTab === 'dcsummary') {
     generateDCSummary();
-  } else if (currentTab === 'apbuilder') {
-    generateAPB();
   } else {
     analyze();
   }
-}
-
-// ── A&P BUILDER ──
-const SYSTEM_AP_BUILDER = `You are a hospitalist physician generating a progress note Assessment & Plan in the physician's personal style.
-
-SOURCE MATERIAL: You will receive a free-form paste that may include any combination of: overnight H&P A&P written by another physician, ER physician note, cardiology/nephrology/other consultant notes. Extract all relevant clinical information from all sources.
-
-OUTPUT FORMAT — follow this exactly:
-[Age] [sex] with:
-
-1. [CDI-Upgraded Diagnosis Name] - [Narrative plan sentence(s) weaving in relevant clinical data, current status, and plan]
-
-2. [CDI-Upgraded Diagnosis Name] - [Narrative plan sentence(s)]
-
-(continue for all problems)
-
-STYLE RULES — match this physician's voice precisely:
-- Header line: "[Age] YO [male/female] with:" — use age/sex from notes, never use patient name
-- Each problem: number + period + space + diagnosis + space + dash + space + narrative
-- Narrative is flowing prose, NOT bullet points — everything on one line per problem
-- Weave data inline naturally: "O2 sat now 96% on 2L NC", "creatinine 2.1 up from baseline 1.0", "rate controlled at 88 on telemetry"
-- Include: current status, relevant today's data, and plan — all in one sentence or two
-- Rationale brief but present: "given afib and immobilization risk", "in setting of CHF exacerbation"
-- Active voice: "Will continue", "Monitor", "Start", "Hold", "Consult"
-- Status always noted: "improving", "stable", "no acute issues today", "worsening"
-- Concise but complete — match complexity to problem acuity
-
-PROBLEM ORDERING:
-1. Primary/most acute diagnosis first (reason for admission)
-2. Active complications and secondary acute problems
-3. Active chronic problems being monitored/managed
-4. Prophylaxis and chronic stable conditions last (DVT ppx, hypothyroidism, dyslipidemia, etc.)
-
-CDI RULES — upgrade all diagnosis names:
-- "CHF" → "Acute on Chronic [Systolic/Diastolic] Congestive Heart Failure" (use HFpEF/HFrEF if documented)
-- "AMS/confusion" → "Metabolic Encephalopathy" — use "evidence of" in progress notes
-- "Respiratory distress/insufficiency" → "Acute Hypoxemic Respiratory Failure" if O2 required
-- Continuous home O2 → add "Chronic Respiratory Failure with Hypoxia" as separate problem
-- "AKI" → include KDIGO stage and baseline Cr: "AKI KDIGO Stage X (baseline Cr X.X, current X.X)"
-- "Urosepsis" → "Sepsis due to [organism if known], source UTI"
-- Sepsis → "Sepsis as evidenced by [source] causing [organ dysfunction]"
-- "NSTEMI" without type → flag as Type 1 or Type 2 in narrative
-- Troponin elevation without ischemia → "Non-Ischemic Myocardial Injury"
-- "T2DM" → "Type 2 Diabetes Mellitus with Hyperglycemia" if glucose elevated
-- CVA → specify hemorrhagic vs ischemic, territory, LOC
-- "Pneumonia" → specify type if possible (aspiration, gram-negative, MRSA, community-acquired)
-- "Renal insufficiency/CRI" → specify CKD stage
-- Malnutrition → specify mild/moderate/severe per ASPEN
-- Always apply PHSI CC/MCC upgrades from your training
-
-CONSULTANT INTEGRATION:
-- Incorporate consultant recommendations into the relevant problem plan
-- Use more specific diagnosis language if consultant was more specific than admitting note
-- Note if consultant recommended specific tests, treatments, or follow-up
-
-ER NOTE INTEGRATION:
-- Use ER vitals and initial data to establish baselines
-- Incorporate ER differential if it identified something not in the A&P
-- Use initial labs from ER for KDIGO, troponin trajectory, lactate
-
-PRIVACY: Never use patient name. Age and sex only.
-
-Return ONLY the formatted A&P text — no JSON, no markdown, no explanation. Just the note starting with the header line.`;
-
-let apbText = '';
-
-async function generateAPB() {
-  const notes = v('apb-freeform');
-  if (!notes) { alert('Please paste source notes first.'); return; }
-
-  setBusy(true);
-  prog(true, 0, 'Reading source notes...');
-
-  // Switch to A&P Builder output tab
-  const apbOutTab = document.getElementById('apbuilder-tab-btn');
-  if (apbOutTab) { apbOutTab.style.display='inline-block'; }
-  document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
-  if (apbOutTab) apbOutTab.classList.add('on');
-  ['analysis','sepsis','ap','dcsummary','apbuilder'].forEach(t => {
-    document.getElementById('panel-'+t).classList.toggle('on', t==='apbuilder');
-  });
-
-  document.getElementById('apb-body').innerHTML = '<div class="spin-wrap"><div class="spin"></div>Generating your A&P...</div>';
-
-  try {
-    prog(true, 40, 'Synthesizing problems and generating A&P in your style...');
-
-    await loadFoundationKB();
-    const raw = await callAPI(withKB(SYSTEM_AP_BUILDER), notes, 3000);
-
-    prog(true, 90, 'Done ✓');
-    apbText = raw.trim();
-
-    // Render with monospace styling matching physician note feel
-    document.getElementById('apb-body').innerHTML =
-      '<div style="font-family:monospace;font-size:13px;line-height:1.9;color:var(--text);white-space:pre-wrap;word-break:break-word;">' + esc(apbText) + '</div>';
-
-    setTimeout(() => prog(false), 1000);
-
-  } catch(err) {
-    document.getElementById('apb-body').innerHTML =
-      '<div style="background:#f8d7da;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#842029;font-size:13px;">⚠️ ' + esc(err.message) + '</div>';
-    prog(false);
-  }
-  setBusy(false);
-}
-
-function copyAPB() {
-  if (!apbText) return;
-  navigator.clipboard.writeText(apbText).then(() => {
-    const btn = document.getElementById('copy-apb-btn');
-    btn.textContent = '✅ Copied!';
-    btn.style.background = '#0f5132';
-    setTimeout(() => { btn.innerHTML = '📋 Copy A&P'; btn.style.background = ''; }, 2000);
-  });
 }
 
 // ── AUTH ──
