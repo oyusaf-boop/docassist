@@ -619,16 +619,21 @@
       "base_code": "E46",
       "base_label": "Unspecified protein-calorie malnutrition",
       "cc_mcc": "CC",
+      "framework": {"primary": "ASPEN/AND 2012 (White et al)", "secondary": "GLIM 2018", "note": "ASPEN is the audit-defensible primary (Prime CDI tool references ASPEN). GLIM attached per rung as secondary confirmation."},
       "tags": {"organ_system": "nutritional", "severity": "variable",
                "common_comorbidities": ["cancer", "cirrhosis", "CHF", "COPD", "CKD", "dementia", "depression", "alcohol use", "post-op"]},
       "specificity_ladder": [
         {"label": "Severe protein-calorie malnutrition", "code": "E43", "cc_mcc": "MCC",
-         "evidence_required": ["meets ≥2 ASPEN/AND criteria SEVERE: weight loss >5%/1mo or >7.5%/3mo or >10%/6mo, BMI <18.5 (acute) or <16 (chronic), severe muscle/fat loss, severe edema, reduced grip strength, energy intake <50% for ≥5 days (acute) or ≥1 month (chronic/social)"],
+         "evidence_required": ["meets ≥2 ASPEN/AND criteria SEVERE: weight loss >5%/1mo or >7.5%/3mo or >10%/6mo (acute >2%/1wk), energy intake ≤50% for ≥5d (acute) or ≤75% for ≥1mo (chronic), severe muscle loss, severe subcutaneous fat loss, moderate-severe fluid accumulation, measurably reduced grip strength"],
+         "glim_criteria": "GLIM Stage 2 (severe): ≥1 phenotypic [weight loss >10%/6mo or >20%/>6mo; BMI <18.5 if <70yo or <20 if ≥70yo; severe muscle deficit] PLUS ≥1 etiologic [intake ≤50% needs >1wk or any reduction >2wk or chronic GI/malabsorption; OR acute/chronic inflammation/disease burden]",
          "query_trigger": "Significant weight loss OR low BMI OR severe muscle wasting OR poor PO documented + RD note suggests severe but only 'malnutrition' or no malnutrition coded",
          "documentation_pearl": "Severe malnutrition (E43) is MCC. Moderate (E44.0) is CC. Specify severity always."},
         {"label": "Moderate protein-calorie malnutrition", "code": "E44.0", "cc_mcc": "CC",
-         "evidence_required": ["meets ≥2 ASPEN/AND criteria MODERATE: weight loss 1–2%/wk or 5%/mo or 7.5%/3mo, mild-moderate muscle/fat loss, intake 50–75% for ≥1 wk (acute) or <75% for ≥1 mo"]},
-        {"label": "Mild protein-calorie malnutrition", "code": "E44.1", "cc_mcc": "CC"},
+         "evidence_required": ["meets ≥2 ASPEN/AND criteria NONSEVERE: weight loss 1–2%/wk or 5%/mo or 7.5%/3mo, mild-moderate muscle/fat loss, mild fluid accumulation, energy intake <75% for ≥7d (acute) or ≥1mo (chronic)"],
+         "glim_criteria": "GLIM Stage 1 (moderate): ≥1 phenotypic [weight loss 5–10%/6mo or 10–20%/>6mo; BMI <20 if <70yo or <22 if ≥70yo; mild-moderate muscle deficit] PLUS ≥1 etiologic [as above]",
+         "documentation_pearl": "ASPEN does not distinguish mild from moderate — both are 'nonsevere'. GLIM Stage 1 maps here."},
+        {"label": "Mild protein-calorie malnutrition", "code": "E44.1", "cc_mcc": "CC",
+         "note": "WEAKEST-SUPPORTED RUNG. ASPEN collapses mild+moderate into 'nonsevere' (no mild/moderate split); GLIM grades only moderate/severe. No framework defines 'mild' discretely. Use only when intake reduction / weight loss is real but minimal and RD concurs — otherwise prefer E44.0 or E46."},
         {"label": "Cachexia", "code": "R64", "cc_mcc": "MCC",
          "evidence_required": ["chronic illness (cancer, HF, COPD, CKD, AIDS)", "involuntary weight loss >5% in 6 mo", "muscle wasting", "anorexia, fatigue, low albumin"],
          "documentation_pearl": "Cachexia code links to underlying chronic disease"},
@@ -641,16 +646,36 @@
       ],
       "ai_behavior": {
         "priority_flag": "HIGH",
-        "linkage_flag_template": "⚠ MALNUTRITION OPPORTUNITY: Weight loss/low BMI/poor intake/muscle wasting documented. RD assessment recommended. Severe malnutrition (E43) = MCC; specify severity.",
-        "rationale": "Malnutrition is heavily under-coded. Severe (MCC) requires explicit ASPEN/AND criteria documentation. RD note alone insufficient — physician must concur in own dx."
+        "analysis_mode": {
+          "passive_note_analysis": "If evidence is insufficient to support malnutrition, STAY SILENT — do not surface a suggestion or flag. Insufficient = no quantified weight loss/intake, no wasting exam, and no etiologic context.",
+          "explicit_opinion_request": "If user explicitly asks DocAssist to opine on malnutrition (e.g., responding to a health-system CDI query), ANSWER even on limited data: name the highest rung the evidence supports; if none is supported, recommend 'clinically undetermined — defer pending RD assessment + quantified intake/weight' and list exactly which required elements are missing.",
+          "sufficient_evidence": "Surface a specificity suggestion at the highest rung the literal note evidence supports."
+        },
+        "read_own_note": "DocAssist reads the note directly, maps literal phrases/values to ASPEN/GLIM criteria, and explicitly names which required elements are ABSENT. It does not defer wholesale to the RD note — but per hard_rules the physician must still independently document the dx.",
+        "linkage_flag_template": "⚠ MALNUTRITION OPPORTUNITY: Weight loss/low BMI/poor intake/muscle wasting documented. Severe (E43) = MCC; specify severity. Missing for severity support: [list]. RD assessment recommended.",
+        "rationale": "Malnutrition is heavily under-coded. Severe (MCC) requires explicit ASPEN/AND criteria. RD note alone insufficient — physician must concur in own dx."
+      },
+      "required_elements_checklist": {
+        "purpose": "Elements DocAssist scans for; absent ones are named in the missing-elements flag",
+        "elements": [
+          "Unintentional weight loss % + timeframe",
+          "Energy/protein intake as % of estimated needs + duration",
+          "Muscle wasting on exam (temporal, clavicle, interosseous, quadriceps, calf)",
+          "Subcutaneous fat loss on exam (orbital, triceps, fat over ribs)",
+          "Fluid accumulation (edema/ascites) that may mask weight loss",
+          "Grip strength (if measured)",
+          "Etiologic context: acute illness/injury vs chronic illness vs social/environmental",
+          "BMI (GLIM phenotypic; NOT an ASPEN defining characteristic)"
+        ]
       },
       "hard_rules": [
         "Physician must independently document malnutrition dx — cannot rely solely on RD note",
         "Must specify severity (mild/moderate/severe)",
-        "Low albumin alone ≠ malnutrition (acute phase reactant)",
+        "Low albumin/prealbumin alone ≠ malnutrition (acute phase reactant; both frameworks exclude as defining criteria)",
         "Weight loss must be involuntary, not from diuresis or intentional weight loss",
         "Obesity does not preclude malnutrition (sarcopenic obesity, recent significant loss)",
-        "ASPEN/AND criteria require ≥2 of 6 to meet"
+        "ASPEN/AND requires ≥2 of 6 characteristics; GLIM requires ≥1 phenotypic + ≥1 etiologic",
+        "BMI alone is not an ASPEN characteristic — do not assert ASPEN malnutrition off BMI"
       ],
       "common_misses": [
         "RD documents severe malnutrition but physician doesn't agree/document → MCC lost",
@@ -661,7 +686,7 @@
       ],
       "documentation_pearls": [
         "Format: '[Mild/Moderate/Severe] protein-calorie malnutrition due to [underlying cause]'",
-        "Reference ASPEN/AND criteria met",
+        "Reference which ASPEN/AND criteria are met (and GLIM stage if used)",
         "State weight loss percentage and timeframe",
         "Document muscle/fat wasting on exam",
         "Link to underlying disease",
@@ -670,19 +695,21 @@
       "evidence_binding_specifics": {
         "ASPEN_AND_criteria": [
           "Weight loss percentage over time",
-          "BMI low for height",
+          "Energy intake below requirements (% of needs + duration)",
           "Muscle wasting on exam",
           "Subcutaneous fat loss",
           "Localized or generalized fluid accumulation masking weight loss",
-          "Reduced grip strength",
-          "Energy intake below requirements"
+          "Reduced grip strength"
         ],
-        "severe_thresholds": {
-          "acute (<3 mo)": "weight loss >2%/1wk or >5%/1mo or >7.5%/3mo, intake ≤50% for ≥5d, severe wasting",
-          "chronic (≥3 mo)": "BMI <18.5 (mild), <16 (severe), >10%/6mo, >20%/year"
+        "ASPEN_note": "ASPEN severity = nonsevere vs severe only, bucketed by context (acute illness / chronic illness / social-environmental). BMI is NOT a defining characteristic.",
+        "GLIM_grading": {
+          "moderate_stage1": "≥1 phenotypic [weight loss 5–10%/6mo or 10–20%/>6mo; BMI <20 (<70yo) or <22 (≥70yo); mild-moderate muscle deficit] + ≥1 etiologic",
+          "severe_stage2": "≥1 phenotypic [weight loss >10%/6mo or >20%/>6mo; BMI <18.5 (<70yo) or <20 (≥70yo); severe muscle deficit] + ≥1 etiologic",
+          "etiologic": "reduced intake ≤50% needs >1wk OR any reduction >2wk OR chronic GI/malabsorption; OR acute/chronic inflammation/disease burden"
         }
       }
     },
+
 
     "Pressure injury": {
       "base_code": "L89.9",
