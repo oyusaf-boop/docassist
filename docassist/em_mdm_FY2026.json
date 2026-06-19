@@ -1,0 +1,296 @@
+{
+  "meta": {
+    "name": "em_mdm_FY2026",
+    "version": "1.0",
+    "source": "NAMAS lay-description of the 2023 AMA Inpatient MDM chart",
+    "effective": "AMA CY 2023 (Jan 1) — inpatient place of service",
+    "scoring_rule": "Final level = highest level met by at least 2 of 3 elements (Problems, Data, Risk); OR documented total time >= the code's threshold.",
+    "elements": [
+      "problems",
+      "data",
+      "risk"
+    ],
+    "levels": [
+      "straightforward",
+      "low",
+      "moderate",
+      "high"
+    ],
+    "encounter_type_map": {
+      "new_admit": "initial",
+      "overnight_admit": "initial",
+      "takeover": "subsequent",
+      "progress": "subsequent",
+      "obs_same_day": "obs_short",
+      "consult": "consult"
+    },
+    "notes": [
+      "Risk is an examples-only column per AMA; matches are advisory and must be flagged low_confidence.",
+      "Final code needs 2 of 3 elements at the level, OR total documented time at/above the threshold.",
+      "This file is loaded alongside foundation_knowledge_FY2026.json at analyze time but is edited and versioned separately."
+    ]
+  },
+  "code_families": {
+    "initial": {
+      "label": "Initial hospital or observation care (new admit)",
+      "codes_by_level": {
+        "low": "99221",
+        "moderate": "99222",
+        "high": "99223"
+      }
+    },
+    "subsequent": {
+      "label": "Subsequent hospital or observation care",
+      "codes_by_level": {
+        "low": "99231",
+        "moderate": "99232",
+        "high": "99233"
+      }
+    },
+    "obs_short": {
+      "label": "Hospital/observation admit & discharge, same calendar date period",
+      "codes_by_level": {
+        "low": "99234",
+        "moderate": "99235",
+        "high": "99236"
+      }
+    },
+    "consult": {
+      "label": "Inpatient or observation consultation",
+      "codes_by_level": {
+        "straightforward": "99252",
+        "low": "99253",
+        "moderate": "99254",
+        "high": "99255"
+      }
+    }
+  },
+  "time_thresholds_minutes": {
+    "99252": 35,
+    "99221": 40,
+    "99231": 25,
+    "99234": 45,
+    "99253": 45,
+    "99222": 55,
+    "99232": 35,
+    "99235": 70,
+    "99254": 60,
+    "99223": 75,
+    "99233": 50,
+    "99236": 85,
+    "99255": 80
+  },
+  "elements": {
+    "problems": {
+      "label": "Number and Complexity of Problems Addressed",
+      "match": "any",
+      "tiers": {
+        "straightforward": {
+          "criteria": [
+            "1 self-limited or minor problem"
+          ]
+        },
+        "low": {
+          "criteria": [
+            "2 or more self-limited or minor problems",
+            "1 stable chronic illness",
+            "1 acute, uncomplicated illness or injury",
+            "1 stable acute illness",
+            "1 acute uncomplicated illness or injury requiring inpatient or observation admit"
+          ]
+        },
+        "moderate": {
+          "criteria": [
+            "1 chronic illness with exacerbation, progression, or side effects of treatment",
+            "2 or more stable chronic illnesses",
+            "1 undiagnosed new problem with uncertain prognosis",
+            "1 acute illness with systemic symptoms",
+            "1 acute complicated injury"
+          ]
+        },
+        "high": {
+          "criteria": [
+            "1 or more chronic illnesses with severe exacerbation, progression, or side effects of treatment",
+            "1 acute or chronic illness or injury that poses a threat to life or bodily function"
+          ]
+        }
+      }
+    },
+    "data": {
+      "label": "Amount and/or Complexity of Data to be Reviewed and Analyzed",
+      "data_item_pool": {
+        "review_external_records": "Review external note(s)/records from an external source",
+        "review_unique_test_result": "Review the result(s) of each unique test",
+        "order_unique_test": "Order each unique test (imaging, lab, psychometric, physiologic)",
+        "additional_historian": "Encounter requiring an additional/independent historian",
+        "independent_interpretation": "Independent interpretation of a test read & billed by another provider (no separate report)",
+        "external_discussion": "Discussion of management or test interpretation with an external physician/QHP/source (not separately reported)"
+      },
+      "tiers": {
+        "straightforward": {
+          "requirement": "Minimal or none",
+          "categories_required": 0,
+          "options": []
+        },
+        "low": {
+          "requirement": "Limited — meet at least 1 of 2 categories",
+          "categories_required": 1,
+          "options": [
+            {
+              "id": "cat1_tests",
+              "label": "Category 1: any 2 of {external records, unique test result reviewed, unique test ordered}",
+              "min_items": 2,
+              "item_pool": [
+                "review_external_records",
+                "review_unique_test_result",
+                "order_unique_test"
+              ]
+            },
+            {
+              "id": "cat2_historian",
+              "label": "Category 2: encounter including an additional historian",
+              "min_items": 1,
+              "item_pool": [
+                "additional_historian"
+              ]
+            }
+          ]
+        },
+        "moderate": {
+          "requirement": "Moderate — meet at least 1 of 3 categories",
+          "categories_required": 1,
+          "options": [
+            {
+              "id": "cat1_combo",
+              "label": "Category 1: any combination of 3 from {external records, unique test result, unique test ordered, additional historian}",
+              "min_items": 3,
+              "item_pool": [
+                "review_external_records",
+                "review_unique_test_result",
+                "order_unique_test",
+                "additional_historian"
+              ]
+            },
+            {
+              "id": "cat2_indep_interp",
+              "label": "Category 2: independent interpretation of a test",
+              "min_items": 1,
+              "item_pool": [
+                "independent_interpretation"
+              ]
+            },
+            {
+              "id": "cat3_discussion",
+              "label": "Category 3: discussion of management/test interpretation with external source",
+              "min_items": 1,
+              "item_pool": [
+                "external_discussion"
+              ]
+            }
+          ]
+        },
+        "high": {
+          "requirement": "Extensive — meet at least 2 of 3 categories",
+          "categories_required": 2,
+          "options": [
+            {
+              "id": "cat1_combo",
+              "label": "Category 1: any combination of 3 from {external records, unique test result, unique test ordered, additional historian}",
+              "min_items": 3,
+              "item_pool": [
+                "review_external_records",
+                "review_unique_test_result",
+                "order_unique_test",
+                "additional_historian"
+              ]
+            },
+            {
+              "id": "cat2_indep_interp",
+              "label": "Category 2: independent interpretation of a test",
+              "min_items": 1,
+              "item_pool": [
+                "independent_interpretation"
+              ]
+            },
+            {
+              "id": "cat3_discussion",
+              "label": "Category 3: discussion of management/test interpretation with external source",
+              "min_items": 1,
+              "item_pool": [
+                "external_discussion"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "risk": {
+      "label": "Risk of Complications and/or Morbidity or Mortality of Patient Management",
+      "examples_only": true,
+      "confidence": "low",
+      "note": "AMA examples-only column. Matches are advisory; flag low_confidence and never auto-assign a cardiac/HF/PE/DVT diagnosis from a risk match.",
+      "tiers": {
+        "straightforward": {
+          "examples": [
+            "Will follow up on patient tomorrow",
+            "Patient awaiting discharge"
+          ]
+        },
+        "low": {
+          "examples": [
+            "Medications NOT requiring prescriptive authority (e.g., OTC)",
+            "Durable medical equipment (DME)",
+            "Physical therapy",
+            "Consult/referral without elaboration",
+            "Awaiting discharge without further treatment plan"
+          ]
+        },
+        "moderate": {
+          "examples": [
+            "Initiation, continuation, discontinuation, or modification of a medication requiring prescriptive authority",
+            "Decision regarding a minor procedure with documented patient or procedure risk factors",
+            "Decision regarding a major procedure without documented patient or procedure risk factors",
+            "Patient social or economic conditions impacting care",
+            "Consult/referral required for an average/moderate-risk management option",
+            "Leaving AMA without high-complexity risk documented"
+          ]
+        },
+        "high": {
+          "examples": [
+            "Long/short-term intensive drug monitoring to prevent toxicity (not efficacy monitoring)",
+            "Decision regarding a major procedure with documented patient or procedure risk factors",
+            "Decision regarding emergency major surgery / major surgery with minimal delay",
+            "Decision regarding hospitalization or escalation to a higher level of care",
+            "Documentation/discussion of DNR or de-escalation due to poor prognosis",
+            "Administration of a controlled substance via IM, IV, or SubQ"
+          ]
+        }
+      }
+    }
+  },
+  "scoring": {
+    "two_of_three": true,
+    "time_alternative": true,
+    "method": "Score each of the 3 elements to a level. Visit level = the highest level reached by >= 2 of the 3 elements. Independently, if total documented encounter time >= the code's time threshold, that code is supported by time.",
+    "output_contract": {
+      "per_element": [
+        "level",
+        "matched_criteria",
+        "missing_for_next_level"
+      ],
+      "summary": [
+        "supported_level",
+        "supported_code",
+        "basis (mdm_2of3 | time)",
+        "upgrade_gap",
+        "low_confidence_flags"
+      ]
+    },
+    "guardrails": [
+      "Troponin 0-20 pg/mL is normal; never escalate Problems or Risk from troponin alone.",
+      "Anticoagulant prophylaxis (Arixtra / Lovenox SubQ / heparin SubQ) does not establish DVT, PE, or atrial fibrillation.",
+      "Every Problems or Risk match must cite explicit supporting evidence in the note text.",
+      "Risk-tier matches are advisory (low_confidence): they may surface a documentation opportunity but must never auto-assign a diagnosis."
+    ]
+  }
+}
