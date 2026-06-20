@@ -1060,12 +1060,12 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
       ? '\n\nPRIOR RECORDS (baseline/chronic context only — DO NOT pull active diagnoses from here):\n' + inputs.prior
       : '';
     const [analysisRaw, apRaw] = await Promise.all([
-      callAPI(withKB(SYSTEM_ANALYSIS), context, 3000),
+      callAPI(withKB(SYSTEM_ANALYSIS), context, 8000),
       callAPI(withKB(SYSTEM_AP),
         inputs.freeform
           ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
           : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
-        2500)
+        4000)
     ]);
 
     prog(true, 80, 'Rendering results...');
