@@ -1614,7 +1614,7 @@ async function generateDCSummary() {
   try {
     prog(true, 30, 'Synthesizing hospital course and diagnoses...');
     await loadFoundationKB();
-    const raw = await callAPI(withKB(SYSTEM_DC_SUMMARY), context, 6000);
+    const raw = await callAPI(SYSTEM_DC_SUMMARY, context, 3000);
     prog(true, 85, 'Rendering discharge summary...');
 
     let data;
