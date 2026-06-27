@@ -18,17 +18,17 @@
   --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
 }
 body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min-height:100vh; color:var(--text); font-size:14px; line-height:1.5; }
- 
+
 /* HEADER */
 #hdr { background:var(--navy); height:56px; display:flex; align-items:center; padding:0 28px; justify-content:space-between; position:sticky; top:0; z-index:50; box-shadow:0 2px 12px rgba(0,0,0,0.2); }
 #logo { font-size:17px; font-weight:800; color:white; letter-spacing:-0.4px; display:flex; align-items:center; gap:10px; }
 #logo-icon { width:30px; height:30px; background:#2a7abf; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; }
 #logo span { color:#60b0f0; }
 #hdr-meta { font-size:11px; color:rgba(255,255,255,0.35); }
- 
+
 /* MAIN LAYOUT */
 #wrap { max-width:1440px; margin:0 auto; padding:24px 22px 60px; display:grid; grid-template-columns:480px 1fr; gap:20px; align-items:start; }
- 
+
 /* LEFT */
 #left { display:flex; flex-direction:column; gap:0; position:sticky; top:70px; }
 .type-tabs { display:flex; gap:0; }
@@ -56,7 +56,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 #prog-fill { height:100%; background:var(--navy2); width:0%; transition:width 0.5s ease; border-radius:3px; }
 #prog-txt { font-size:11px; color:var(--text3); }
 .assumption-note { margin-top:14px; padding:10px 13px; background:#f4f1ec; border-radius:8px; border:1px solid var(--border); font-size:11.5px; color:var(--text2); line-height:1.6; }
- 
+
 /* RIGHT */
 #right { display:flex; flex-direction:column; gap:16px; }
 #rev-bar { background:var(--navy); border-radius:14px; padding:16px 22px; display:none; align-items:center; justify-content:space-between; gap:16px; box-shadow:var(--shadow); flex-wrap:wrap; }
@@ -66,7 +66,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .rev-val { font-size:18px; font-weight:800; color:white; }
 .rev-val.green { color:#60d090; }
 .rev-div { width:1px; height:36px; background:rgba(255,255,255,0.15); }
- 
+
 /* OUTPUT TABS */
 .out-tabs { display:flex; gap:0; flex-wrap:wrap; }
 .otab { padding:10px 16px; border:1.5px solid var(--border); border-bottom:none; background:#f4f1ec; color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.12s; white-space:nowrap; }
@@ -76,14 +76,14 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .otab-badge { display:inline-block; background:#c0392b; color:white; border-radius:10px; font-size:9px; font-weight:800; padding:1px 5px; margin-left:4px; vertical-align:middle; }
 .out-panel { display:none; }
 .out-panel.on { display:flex; flex-direction:column; gap:16px; }
- 
+
 /* CARDS */
 .card { background:white; border-radius:0 14px 14px 14px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
 .card-first { border-radius:0 0 14px 14px; }
 .card-hdr { padding:13px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:#faf8f5; }
 .card-title { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.9px; }
 .card-body { padding:18px; }
- 
+
 /* SPINNERS / EMPTY */
 .empty { text-align:center; padding:36px 20px; color:var(--text3); }
 .empty-ico { font-size:28px; margin-bottom:8px; }
@@ -92,7 +92,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .spin-wrap { display:flex; align-items:center; gap:10px; padding:24px 0; color:var(--text3); font-size:13px; }
 .spin { width:18px; height:18px; border:2.5px solid var(--border); border-top-color:var(--navy2); border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
 @keyframes spin { to { transform:rotate(360deg); } }
- 
+
 /* E&M */
 .em-level-box { background:var(--navy); border-radius:10px; padding:16px 18px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .em-code { font-size:28px; font-weight:800; color:white; letter-spacing:-1px; }
@@ -114,7 +114,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .dot-g { width:7px; height:7px; border-radius:50%; background:#2ecc71; margin-top:5px; flex-shrink:0; }
 .dot-a { width:7px; height:7px; border-radius:50%; background:#f39c12; margin-top:5px; flex-shrink:0; }
 .dot-r { width:7px; height:7px; border-radius:50%; background:#e74c3c; margin-top:5px; flex-shrink:0; }
- 
+
 /* CDI ALERTS */
 .alert-block { border-radius:9px; padding:12px 14px; margin-bottom:8px; font-size:13px; line-height:1.55; }
 .alert-block:last-child { margin-bottom:0; }
@@ -124,7 +124,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .a-amber { background:var(--amber-light); border-left:3px solid #e0a020; color:#5a3800; }
 .a-blue  { background:var(--blue-light); border-left:3px solid #2a7abf; color:#0f3060; }
 .a-purple { background:var(--purple-light); border-left:3px solid #7c3aed; color:#3b0764; }
- 
+
 /* SEPSIS PANEL */
 .sepsis-panel { background:white; border:1.5px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:8px; }
 .sepsis-hdr { background:var(--navy); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
@@ -144,7 +144,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .sv-partial { background:var(--amber-light); border:1px solid #fcd34d; color:#78350f; }
 .sv-unmet { background:#fef2f2; border:1px solid #fca5a5; color:#7f1d1d; }
 .sepsis-denial-tip { margin-top:8px; padding:8px 10px; background:var(--blue-light); border-radius:6px; font-size:11.5px; color:var(--navy2); line-height:1.5; }
- 
+
 /* DRG */
 .drg-compare { display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center; margin-bottom:14px; }
 .drg-box { border-radius:10px; padding:13px 14px; text-align:center; }
@@ -177,7 +177,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .gap-row:last-child { border-bottom:none; }
 .gap-dot { width:5px; height:5px; border-radius:50%; background:#e0a020; margin-top:6px; flex-shrink:0; }
 .sec-lbl { font-size:10.5px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; }
- 
+
 /* A&P */
 #ap-card { background:white; border-radius:0 14px 14px 14px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
 #ap-hdr { padding:13px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:#faf8f5; }
@@ -193,15 +193,15 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .ap-suggested-label { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.7px; color:#7a4f00; margin-bottom:4px; }
 .meat-warning { background:#fff8e8; border:1px solid #fcd34d; border-radius:8px; padding:10px 13px; margin-top:12px; font-size:12px; color:#78350f; line-height:1.5; }
 .meat-warning strong { display:block; margin-bottom:3px; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; }
- 
+
 ::-webkit-scrollbar { width:5px; }
 ::-webkit-scrollbar-thumb { background:var(--border); border-radius:5px; }
- 
+
 /* COPY BTN SMALL */
 .copy-btn-sm { padding:5px 12px; background:var(--bg3,#f4f1ec); border:1.5px solid var(--border); border-radius:6px; font-size:11px; color:var(--text2); cursor:pointer; font-family:inherit; transition:all 0.15s; }
 .copy-btn-sm:hover { border-color:var(--navy2); color:var(--navy); }
 .copy-btn-sm.copied { background:var(--green-light,#d1e7dd); border-color:#a8d8b8; color:var(--green,#0f5132); }
- 
+
 /* DC SUMMARY */
 #dc-course-text { font-size:13.5px; line-height:1.9; color:var(--text); font-style:italic; border-left:3px solid var(--navy2,#1a4a6b); padding-left:16px; white-space:pre-wrap; }
 .dc-dx-list { list-style:none; padding:0; }
@@ -212,7 +212,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .dc-dx-name { font-weight:600; color:var(--text); }
 .dc-dx-cc { display:inline-block; font-size:9.5px; font-weight:800; padding:1px 6px; border-radius:4px; margin-left:6px; text-transform:uppercase; vertical-align:middle; }
 .dc-dx-note { font-size:11.5px; color:var(--text2,#5a5450); margin-top:2px; }
- 
+
 /* LOGIN OVERLAY */
 #login-overlay { position:fixed; inset:0; background:#0f2d48; z-index:1000; display:flex; align-items:center; justify-content:center; }
 #login-overlay.hidden { display:none; }
@@ -226,7 +226,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 #login-btn:hover:not(:disabled) { background:#163d5e; }
 #login-btn:disabled { background:#9ab0c4; cursor:not-allowed; }
 #login-error { font-size:12px; color:#c0392b; margin-top:10px; min-height:18px; }
- 
+
 /* METRICS DASHBOARD */
 .met-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:14px; }
 .met-card { background:white; border:1px solid var(--border); border-radius:10px; padding:14px 16px; box-shadow:var(--shadow); }
@@ -280,7 +280,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 </style>
 </head>
 <body>
- 
+
 <!-- LOGIN OVERLAY -->
 <div id="login-overlay">
   <div id="login-box">
@@ -291,44 +291,32 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
     <div id="login-error"></div>
   </div>
 </div>
- 
+
 <div id="hdr">
   <div id="logo"><div id="logo-icon">⚕</div>Doc<span>Assist</span></div>
-  <div id="hdr-meta">CDI & E&M Companion · Beta v9.0</div>
+  <div id="hdr-meta">CDI & E&M Companion · Beta v11</div>
 </div>
- 
+
 <div id="wrap">
   <!-- LEFT INPUT -->
   <div id="left">
     <div class="type-tabs">
-      <button class="ntab on" onclick="setTab(this,'hp')">Initial H&P</button>
-      <button class="ntab"    onclick="setTab(this,'progress')">Progress Note</button>
-      <button class="ntab"    onclick="setTab(this,'apbuilder')">A&P Builder</button>
-      <button class="ntab"    onclick="setTab(this,'dcsummary')">DC Builder</button>
+      <button class="ntab on" onclick="setTab(this,'apgen')">✏️ Generate A&P</button>
+      <button class="ntab"    onclick="setTab(this,'dcsummary')">🏥 DC Builder</button>
     </div>
     <div id="input-card">
-      <!-- H&P -->
-      <div id="inputs-hp">
+      <!-- Generate A&P -->
+      <div id="inputs-apgen">
         <div class="input-section">
-          <div class="inp-label"><span>📋</span> Paste Anything<span class="lbl-hint">ER note · HPI · labs · consults · A&P · any order</span></div>
-          <textarea id="hp-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste anything from the chart here — ER physician note, HPI, labs, imaging, consult notes, A&P. Paste multiple items one after another. No labeling needed. AI will sort it out."></textarea>
+          <div class="inp-label"><span>📋</span> Current Encounter<span class="lbl-hint">ER note · HPI · labs · consults · progress notes · any order</span></div>
+          <textarea id="apgen-freeform" class="inp-area tall" style="min-height:340px;" placeholder="Paste anything from this encounter — ER note, admitting H&P, today's progress note, labs, imaging, consult notes. Any order, no labels needed. AI auto-detects whether it's a new admit, overnight admit, or takeover."></textarea>
+        </div>
+        <div class="input-section">
+          <div class="inp-label" style="cursor:pointer;user-select:none;" onclick="togglePriorRecords()" id="prior-toggle"><span id="prior-arrow">▶</span> Prior Records<span class="lbl-hint">optional · older H&Ps · prior DC summaries · old consults</span></div>
+          <textarea id="apgen-prior" class="inp-area" style="min-height:120px;display:none;" placeholder="Paste OLDER records here — used only for baseline labs and chronic conditions. Active diagnoses are pulled from Current Encounter only."></textarea>
         </div>
       </div>
-      <!-- Progress -->
-      <div id="inputs-progress" style="display:none">
-        <div class="input-section">
-          <div class="inp-label"><span>📋</span> Paste Anything<span class="lbl-hint">labs · progress note · consult updates · any order</span></div>
-          <textarea id="pn-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste anything from today's chart — labs, today's progress note, consultant updates, imaging results. Paste multiple items one after another. No labeling needed."></textarea>
-        </div>
-      </div>
-      <!-- A&P Builder -->
-      <div id="inputs-apbuilder" style="display:none">
-        <div class="input-section">
-          <div class="inp-label"><span>📋</span> Paste Source Notes<span class="lbl-hint">overnight H&P · ER note · consults · any order</span></div>
-          <textarea id="apb-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste any combination of: overnight physician A&P, ER note, cardiology/nephrology/other consult notes. Any order, no labeling needed. AI will generate your A&P in your style."></textarea>
-        </div>
-      </div>
- 
+
       <!-- DC Summary Builder -->
       <div id="inputs-dcsummary" style="display:none">
         <div class="input-section">
@@ -346,9 +334,9 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
           <textarea id="dc2-progress" class="inp-area tall" placeholder="Paste the most recent progress note here..."></textarea>
         </div>
       </div>
- 
+
       <div class="assumption-note"><strong>Tip:</strong> Paste in any order — ER note, HPI, labs, consult notes, A&P. Multiple pastes are fine. AI classifies everything automatically.</div>
- 
+
       <div id="btn-row">
         <button id="analyze-btn" onclick="handleAnalyze()"><span>⚡</span> <span id="analyze-btn-label">Analyze Note</span></button>
         <button id="clear-btn" onclick="clearAll()">Clear</button>
@@ -356,7 +344,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
       <div id="prog"><div id="prog-bg"><div id="prog-fill"></div></div><div id="prog-txt"></div></div>
     </div>
   </div>
- 
+
   <!-- RIGHT OUTPUT -->
   <div id="right">
     <!-- Revenue Bar -->
@@ -371,7 +359,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
       <div class="rev-div"></div>
       <div class="rev-item"><div class="rev-label">CDI Alerts</div><div class="rev-val" id="rev-alerts">—</div></div>
     </div>
- 
+
     <!-- Output Tabs -->
     <div>
       <div class="out-tabs">
@@ -379,10 +367,9 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
         <button class="otab"     onclick="setOutTab(this,'sepsis')" id="sepsis-tab-btn">🦠 Sepsis Criteria</button>
         <button class="otab"     onclick="setOutTab(this,'ap')" id="ap-tab-btn">✏️ Optimized A&P</button>
         <button class="otab"     onclick="setOutTab(this,'dcsummary')" id="dcsummary-tab-btn" style="display:none">🏥 DC Summary</button>
-        <button class="otab"     onclick="setOutTab(this,'apbuilder')" id="apbuilder-tab-btn" style="display:none">✍️ My A&P</button>
         <button class="otab"     onclick="setOutTab(this,'metrics')" id="metrics-tab-btn">📈 Metrics</button>
       </div>
- 
+
       <!-- ANALYSIS PANEL -->
       <div id="panel-analysis" class="out-panel on">
         <div class="card card-first">
@@ -398,7 +385,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
           <div class="card-body" id="drg-body"><div class="empty"><div class="empty-ico">💰</div><div class="empty-ttl">DRG & ICD-10 Analysis</div><div class="empty-sub">DRG comparison, GMLOS, and ICD-10 codes appear here</div></div></div>
         </div>
       </div>
- 
+
       <!-- SEPSIS CRITERIA PANEL -->
       <div id="panel-sepsis" class="out-panel">
         <div class="card card-first">
@@ -408,7 +395,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
           </div>
         </div>
       </div>
- 
+
       <!-- OPTIMIZED A&P PANEL -->
       <div id="panel-ap" class="out-panel">
         <div id="ap-card">
@@ -422,7 +409,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
           <div id="ap-body"><div class="empty"><div class="empty-ico">✏️</div><div class="empty-ttl">Optimized A&P</div><div class="empty-sub">Run analysis first — your CDI-optimized note appears here ready to paste into MT</div></div></div>
         </div>
       </div>
- 
+
       <!-- DC SUMMARY BUILDER PANEL -->
       <div id="panel-dcsummary" class="out-panel">
         <div class="card card-first">
@@ -450,23 +437,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
           </div>
         </div>
       </div>
- 
-      <!-- A&P BUILDER PANEL -->
-      <div id="panel-apbuilder" class="out-panel">
-        <div id="apb-card" style="background:white;border-radius:0 14px 14px 14px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;">
-          <div style="padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#faf8f5;">
-            <div>
-              <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.9px;">My Progress Note A&P</div>
-              <div style="font-size:11px;color:var(--text3);">CDI-optimized · your style · ready to paste into MT</div>
-            </div>
-            <button id="copy-apb-btn" onclick="copyAPB()" style="padding:8px 16px;background:var(--navy);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background 0.15s;">📋 Copy A&P</button>
-          </div>
-          <div id="apb-body" style="padding:20px;">
-            <div class="empty"><div class="empty-ico">✍️</div><div class="empty-ttl">A&P Builder</div><div class="empty-sub">Paste overnight H&P, ER note, and consult notes on the left — your progress note A&P appears here ready to paste into MT</div></div>
-          </div>
-        </div>
-      </div>
- 
+
       <!-- METRICS PANEL -->
       <div id="panel-metrics" class="out-panel">
         <div class="met-pitch-banner">
@@ -496,55 +467,190 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
           </div>
         </div>
       </div>
- 
+
     </div>
   </div>
 </div>
- 
+
 <script>
-let currentTab = 'hp';
+let currentTab = 'apgen';
 let apPlainText = '';
- 
+
+// ═══════════════════════════════════════════════
+// FOUNDATION KNOWLEDGE BASE (FY2026 — top 32 dx ladders)
+// ═══════════════════════════════════════════════
+let FOUNDATION_KB = null;
+let FOUNDATION_KB_SUMMARY = '';
+let FOUNDATION_KB_LOADING = null;
+
+async function loadFoundationKB() {
+  if (FOUNDATION_KB) return FOUNDATION_KB;
+  if (FOUNDATION_KB_LOADING) return FOUNDATION_KB_LOADING;
+  FOUNDATION_KB_LOADING = (async () => {
+    try {
+      const res = await fetch('./foundation_knowledge_FY2026.json', { cache: 'no-cache' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const kb = await res.json();
+      FOUNDATION_KB = kb;
+      FOUNDATION_KB_SUMMARY = buildKBSummary(kb);
+      window.FOUNDATION_KB = kb;
+      console.log('[KB] Loaded ' + Object.keys(kb.diagnoses || {}).length + ' dx ladders, summary: ' + FOUNDATION_KB_SUMMARY.length + ' chars');
+      return kb;
+    } catch (err) {
+      console.warn('[KB] Failed to load foundation_knowledge_FY2026.json:', err.message);
+      FOUNDATION_KB_SUMMARY = '';
+      return null;
+    } finally {
+      FOUNDATION_KB_LOADING = null;
+    }
+  })();
+  return FOUNDATION_KB_LOADING;
+}
+
+// Build a compact prompt-injectable reference from full KB.
+// Keeps token cost reasonable while surfacing CC/MCC capture targets per dx.
+function buildKBSummary(kb) {
+  if (!kb || !kb.diagnoses) return '';
+  const lines = [];
+  lines.push('═══════════════════════════════════════════════');
+  lines.push('FOUNDATION CDI REFERENCE — FY2026 (32 hospitalist dx)');
+  lines.push('Use this as authoritative ladder for CC/MCC capture suggestions.');
+  lines.push('Each dx lists base code, top capture rungs, hard rules, common misses.');
+  lines.push('═══════════════════════════════════════════════');
+  lines.push('');
+
+  // Global rules
+  if (kb.global_rules) {
+    lines.push('GLOBAL HARD RULES:');
+    (kb.global_rules.hard_rules_universal || []).forEach(r => lines.push('  • ' + r));
+    if (kb.global_rules.cdi_specificity_principle) {
+      lines.push('  • CDI principle: ' + kb.global_rules.cdi_specificity_principle);
+    }
+    lines.push('');
+  }
+
+  // Per-dx condensed
+  Object.entries(kb.diagnoses).forEach(([dxName, dx]) => {
+    lines.push('── ' + dxName + ' ──');
+    lines.push('  Base: ' + (dx.base_code || '?') + ' = ' + (dx.cc_mcc || '?'));
+
+    // Top capture opportunities (MCC rungs first, then CC)
+    const ladder = dx.specificity_ladder || [];
+    const mccRungs = ladder.filter(r => r.cc_mcc && /MCC/i.test(r.cc_mcc)).slice(0, 4);
+    const ccRungs = ladder.filter(r => r.cc_mcc && /^CC$/i.test(r.cc_mcc)).slice(0, 2);
+
+    if (mccRungs.length) {
+      lines.push('  MCC captures:');
+      mccRungs.forEach(r => {
+        const trig = r.query_trigger ? ' [trigger: ' + r.query_trigger + ']' : '';
+        lines.push('    → ' + (r.label || '') + ' (' + (r.code || '?') + ')' + trig);
+      });
+    }
+    if (ccRungs.length) {
+      lines.push('  CC captures:');
+      ccRungs.forEach(r => {
+        lines.push('    → ' + (r.label || '') + ' (' + (r.code || '?') + ')');
+      });
+    }
+
+    // AI behavior linkage flag
+    if (dx.ai_behavior && dx.ai_behavior.linkage_flag_template) {
+      lines.push('  Linkage: ' + dx.ai_behavior.linkage_flag_template);
+    }
+
+    // Top hard rules (max 3)
+    const hardRules = (dx.hard_rules || []).slice(0, 3);
+    if (hardRules.length) {
+      lines.push('  Hard rules:');
+      hardRules.forEach(r => lines.push('    ! ' + r));
+    }
+
+    // Top common misses (max 3)
+    const misses = (dx.common_misses || []).slice(0, 3);
+    if (misses.length) {
+      lines.push('  Common misses:');
+      misses.forEach(m => lines.push('    ⚠ ' + m));
+    }
+
+    // Medication triggers (high-specificity meds only)
+    const medTrigs = (dx.medication_triggers || []).filter(m =>
+      m.specificity && /very high|^high/i.test(m.specificity)
+    ).slice(0, 3);
+    if (medTrigs.length) {
+      lines.push('  Med triggers:');
+      medTrigs.forEach(m => lines.push('    💊 ' + (m.medication || '') + ' → ' + (m.query_trigger || '')));
+    }
+
+    lines.push('');
+  });
+
+  return lines.join('\n');
+}
+
+// Wrap the system prompt with KB reference if loaded
+function withKB(systemPrompt) {
+  if (!FOUNDATION_KB_SUMMARY) return systemPrompt;
+  return systemPrompt + '\n\n' + FOUNDATION_KB_SUMMARY;
+}
+
+// Kick off load immediately
+loadFoundationKB();
+
 function setTab(btn, tab) {
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   currentTab = tab;
-  ['hp','progress','apbuilder','dcsummary'].forEach(t => {
-    document.getElementById('inputs-'+t).style.display = t===tab ? 'block' : 'none';
+  ['apgen','dcsummary'].forEach(t => {
+    const el = document.getElementById('inputs-'+t);
+    if (el) el.style.display = t===tab ? 'block' : 'none';
   });
   // Update analyze button label
   const lbl = document.getElementById('analyze-btn-label');
   if (lbl) {
     if (tab==='dcsummary') lbl.textContent = 'Generate DC Summary';
-    else if (tab==='apbuilder') lbl.textContent = 'Build My A&P';
-    else lbl.textContent = 'Analyze Note';
+    else lbl.textContent = 'Generate A&P';
   }
   // Show/hide DC output tab
   const dcOutTab = document.getElementById('dcsummary-tab-btn');
   if (dcOutTab) dcOutTab.style.display = tab==='dcsummary' ? 'inline-block' : 'none';
-  // Show/hide A&P Builder output tab
-  const apbOutTab = document.getElementById('apbuilder-tab-btn');
-  if (apbOutTab) apbOutTab.style.display = tab==='apbuilder' ? 'inline-block' : 'none';
 }
- 
+
+function togglePriorRecords() {
+  const ta = document.getElementById('apgen-prior');
+  const arrow = document.getElementById('prior-arrow');
+  if (!ta || !arrow) return;
+  if (ta.style.display === 'none') {
+    ta.style.display = 'block';
+    arrow.textContent = '▼';
+  } else {
+    ta.style.display = 'none';
+    arrow.textContent = '▶';
+  }
+}
+
 function setOutTab(btn, tab) {
   document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
-  ['analysis','sepsis','ap','dcsummary','apbuilder','metrics'].forEach(t => {
-    document.getElementById('panel-'+t).classList.toggle('on', t===tab);
+  ['analysis','sepsis','ap','dcsummary','metrics'].forEach(t => {
+    const el = document.getElementById('panel-'+t);
+    if (el) el.classList.toggle('on', t===tab);
   });
   if (tab === 'metrics') renderMetrics();
 }
- 
+
 function getInputs() {
-  if (currentTab==='hp') return { freeform:v('hp-freeform'), type:'Initial H&P' };
-  if (currentTab==='progress') return { freeform:v('pn-freeform'), type:'Subsequent Progress Note' };
-  if (currentTab==='apbuilder') return { freeform:v('apb-freeform'), type:'A&P Builder' };
+  if (currentTab==='apgen') {
+    return {
+      freeform: v('apgen-freeform'),
+      prior: v('apgen-prior'),
+      type: 'A&P Generation'
+    };
+  }
   if (currentTab==='dcsummary') return { hpi:v('dc2-hp'), consult:v('dc2-consult'), progress:v('dc2-progress'), type:'DC Summary Builder' };
-  return { freeform:v('apb-freeform'), type:'A&P Builder' }; // fallback
+  return { freeform:v('apgen-freeform'), prior:v('apgen-prior'), type:'A&P Generation' }; // fallback
 }
 function v(id) { const el=document.getElementById(id); return el ? el.value.trim() : ''; }
- 
+
 async function callAPI(system, user, maxTokens) {
   const res = await fetch('/api/analyze', {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -554,54 +660,71 @@ async function callAPI(system, user, maxTokens) {
   if (data.error) throw new Error(data.error);
   return data.text;
 }
- 
+
 function parseJSON(raw) {
   let s = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
   if (!s.startsWith('{')) { const m=s.match(/\{[\s\S]*\}/); if(m) s=m[0]; }
-  return JSON.parse(s);
+  try { return JSON.parse(s); }
+  catch(e) { return JSON.parse(sanitizeJSON(s)); }
 }
- 
+
+function sanitizeJSON(s) {
+  // Escape raw control chars that appear inside string literals (common in narrative prose)
+  let out = '', inStr = false, esc = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (esc) { out += c; esc = false; continue; }
+    if (c === '\\') { out += c; esc = true; continue; }
+    if (c === '"') { inStr = !inStr; out += c; continue; }
+    if (inStr && c === '\n') { out += '\\n'; continue; }
+    if (inStr && c === '\r') { out += '\\r'; continue; }
+    if (inStr && c === '\t') { out += '\\t'; continue; }
+    out += c;
+  }
+  return out;
+}
+
 // ═══════════════════════════════════════════════
 // SYSTEM PROMPTS
 // ═══════════════════════════════════════════════
- 
+
 const SYSTEM_ANALYSIS = `You are a combined CDI specialist, E&M coding expert, and inpatient medical coding specialist for hospitalist physicians. You use FY2026 ICD-10-CM guidelines, CC/MCC classifications, and evidence-based clinical criteria.
- 
+
 ════════════════════════════════
 STEP 1 — CLASSIFY THE FREE-FORM INPUT
 ════════════════════════════════
 The physician may paste raw chart content in any order — ER physician note, HPI, labs, imaging, consult notes (cardiology, nephrology, etc.), A&P sections. Multiple notes may be pasted together without labels.
- 
+
 Your FIRST task before any CDI analysis is to mentally organize what you are reading:
- 
+
 IDENTIFY NOTE TYPES PRESENT:
 - ER/ED physician note: look for triage vitals, initial presentation, ER differential, early labs, EMS narrative, disposition decision
 - Admitting H&P: look for HPI, full problem history, admission A&P
 - Consultant notes: identified by specialty-specific language, "Thank you for the consult", recommendations section
 - Progress notes: look for daily subjective/objective/assessment/plan structure
 - Lab/data dump: raw lab values, imaging reports, vital sign trends
- 
+
 EXTRACT EARLY BASELINES (critical for CDI accuracy):
 - ER creatinine = true baseline for KDIGO AKI criteria (not admission Cr)
 - Initial O2 saturation and FiO2 in ER = supports respiratory failure documentation
 - First lactate value = supports sepsis severity
 - Initial troponin = establishes rise/fall pattern for MI vs myocardial injury
 - Arrival vital signs = supports shock, sepsis, hypertensive emergency documentation
- 
+
 DELTA DIAGNOSIS DETECTION:
 - Compare ER physician differential/working diagnoses vs A&P diagnoses
 - If ER note documents "concern for sepsis, started empiric antibiotics, lactate 3.2" but A&P only says "UTI" → flag sepsis opportunity
 - If ER note documents "hypoxic, O2 sat 82% on RA" but A&P says "respiratory distress" → flag acute respiratory failure
 - If ER note documents "found down, altered" but A&P says "AMS" → flag metabolic encephalopathy
 - Any diagnosis the ER physician considered but that is absent from the A&P should be flagged
- 
+
 CONSULTANT INTELLIGENCE:
 - Extract consultant recommendations that may not yet be acted on
 - Note if consultant used more specific diagnosis language than the admitting note (e.g., cardiologist says "acute decompensated HFrEF" but A&P says "CHF")
 - Flag consultant diagnosis upgrades the physician should incorporate
- 
+
 PHYSICAL EXAM, PMH, PSH, MEDICATIONS, ALLERGIES, ROS are ASSUMED DOCUMENTED — never flag these.
- 
+
 ════════════════════════════════
 E&M CODING (AMA 2023 MDM Rules)
 ════════════════════════════════
@@ -610,7 +733,7 @@ Subsequent: 99231 (Low), 99232 (Moderate), 99233 (High)
 Need 2/3 MDM elements: Problems, Data, Risk
 High MDM: 1+ highly complex problem OR severe exacerbation of chronic illness threatening life/function
 Moderate: 1 acute/chronic illness with exacerbation OR 2+ stable chronic
- 
+
 ════════════════════════════════
 PRINCIPAL DIAGNOSIS RULES
 ════════════════════════════════
@@ -619,14 +742,14 @@ PRINCIPAL DIAGNOSIS RULES
 - When 2 conditions both present at admission, the one requiring more resources may be principal
 - Flag if physician's A&P order doesn't match likely admission reason
 - DISCHARGE NOTES: flag any unresolved "vs." differentials — physician must give final diagnosis at discharge
- 
+
 ════════════════════════════════
 M.E.A.T. RULE
 ════════════════════════════════
 A secondary diagnosis is only codeable if there is evidence it was Monitored, Evaluated, Assessed, or Treated during THIS encounter. Coders cannot code from problem lists alone. Flag diagnoses listed without any M.E.A.T. element.
- 
+
 ════════════════════════════════
-QUALITY OF CARE DOCUMENTATION (Powers Health Framework)
+QUALITY OF CARE DOCUMENTATION (Prime Health Framework)
 ════════════════════════════════
 For every progress note, check and flag if missing:
 1. MEDICAL NECESSITY: Is the reason for continued inpatient stay clearly documented? Flag if the A&P does not justify why the patient still needs inpatient level of care.
@@ -635,7 +758,7 @@ For every progress note, check and flag if missing:
 4. TREATMENT CHANGES: If medications, oxygen requirements, or treatment plans changed, is the rationale documented? Flag undocumented changes.
 5. NEW DEVELOPMENTS/COMPLICATIONS: Are new complications or developments affecting care or length of stay documented with POA status? Flag new issues without clear documentation.
 6. HOSPITAL ACQUIRED CONDITIONS (HAC): Was each complication present on admission (POA=Y) or acquired after admission (POA=N)? Flag any complication without clear POA documentation.
- 
+
 ════════════════════════════════
 "EVIDENCE OF" DOCUMENTATION TIP
 ════════════════════════════════
@@ -643,18 +766,18 @@ For every progress note, check and flag if missing:
 "Probable/possible/suspected/likely" = uncertain = ONLY codeable if at discharge summary (inpatient rule).
 Strategy: Recommend "evidence of metabolic encephalopathy" in progress notes rather than waiting for discharge.
 This is per AHA Coding Clinic and Brundage Group CDI guidance.
- 
+
 ════════════════════════════════
 FY2026 CC/MCC RULES
 ════════════════════════════════
- 
+
 HEART FAILURE:
 - "CHF" unspecified = NON-CC (SOI=1) → CRITICAL ALERT
 - Acute/Acute-on-Chronic Systolic or Diastolic or Combined CHF = MCC (SOI=3)
 - HFpEF = Diastolic Heart Failure; HFrEF = Systolic Heart Failure — both acceptable terminology
 - Chronic Systolic/Diastolic/Combined = CC
 - Must document BOTH acuity (Acute/Acute-on-Chronic/Chronic) AND type (Systolic/Diastolic/Combined or HFpEF/HFrEF)
- 
+
 RESPIRATORY:
 - "Respiratory insufficiency," "respiratory distress," "hypoxia" = NON-CC → ALWAYS flag
 - Acute Respiratory Failure (J96.0x) = MCC (SOI=4) — does NOT require intubation
@@ -663,8 +786,8 @@ RESPIRATORY:
 - Intermittent/nocturnal/PRN home O2 does NOT qualify as chronic respiratory failure — do NOT upgrade
 - Hypercapnic respiratory failure: document as "with hypercapnia" for specificity
 - Flag all CONTINUOUS O2-dependent patients without chronic respiratory failure documented
- 
-AKI / RENAL (KDIGO Criteria — Powers Health standard):
+
+AKI / RENAL (KDIGO Criteria — Prime Health standard):
 - AKI diagnosis requires documented BASELINE creatinine — "normal baseline" is NOT acceptable per KDIGO
 - KDIGO AKI criteria: Cr increase ≥0.3 mg/dL within 48 hours OR ≥1.5x baseline within 7 days OR UO <0.5 mL/kg/hr x6hr
 - Always flag when baseline Cr is missing or documented as "normal" without a value
@@ -673,7 +796,7 @@ AKI / RENAL (KDIGO Criteria — Powers Health standard):
 - Vasomotor Nephropathy = MCC (SOI=4); Hepatorenal Syndrome = MCC (SOI=4)
 - "Renal insufficiency," "CRI," "chronic renal failure" without CKD staging = NON-CC → always flag
 - CKD Stage 3-5 = CC; ESRD = MCC
- 
+
 SEPSIS (document as: "Sepsis as evidenced by [infection] causing [organ dysfunction]"):
 - Always document: infectious source + causative organism (if known) + organ dysfunction caused
 - Example: "Sepsis as evidenced by gram-negative pneumonia causing acute respiratory failure"
@@ -682,7 +805,7 @@ SEPSIS (document as: "Sepsis as evidenced by [infection] causing [organ dysfunct
 - Severe Sepsis (R65.2x) requires documented organ dysfunction LINKED to sepsis
 - Negative blood cultures do NOT rule out sepsis if clinical evidence exists
 - Septic Shock (R65.21): SBP<90 unresponsive to fluids OR vasopressors required
- 
+
 TROPONIN / CARDIAC:
 - "NSTEMI" without Type specification → flag: may be miscoded as I21.4 (triggers AMI readmission cohort)
 - Type 2 MI (I21.A1) = MCC: supply-demand mismatch + BOTH criteria met (troponin rise/fall AND ischemia evidence)
@@ -690,45 +813,45 @@ TROPONIN / CARDIAC:
 - Troponin rise WITHOUT ischemia evidence = Non-Ischemic Myocardial Injury (I5A) = CC — NOT a Type 2 MI
 - I5A protects from AMI readmission cohort; Type 2 MI is high-risk for clinical validation denial
 - "Troponin elevation," "troponinemia" = NON-CC → always flag and guide to I5A or Type 2 MI
- 
-MALNUTRITION (ASPEN Criteria — Powers Health standard):
+
+MALNUTRITION (ASPEN Criteria — Prime Health standard):
 - Document severity: Mild, Moderate, or Severe — and physical assessment findings
 - Document: weight loss, loss of fat/muscle mass, cachexia, chronic illness contribution
 - Mild/Moderate Malnutrition = CC (SOI=3); Severe = MCC (SOI=3)
 - Flag when ANY present: albumin <3.4, prealbumin <15, poor PO intake, NPO >5d, BMI<20, muscle wasting, cachexia
 - Severe: albumin <2.8, weight loss >5% in 1mo or >10% in 6mo, BMI<18.5
- 
+
 DIABETES:
 - "T2DM" alone = low specificity; add organ involvement
 - T2DM with hyperglycemia = E11.65 (CC) — not R73.09
 - Diabetes = hypercoagulable state (CC) — always codeable secondary dx
 - DKA = MCC; Hyperosmolar state = MCC
- 
+
 ENCEPHALOPATHY:
 - "AMS," "confusion," "altered mental status" = NON-CC → ALWAYS flag
 - Metabolic Encephalopathy (G93.41) = MCC (SOI=4)
 - Toxic/Hepatic/Hypertensive Encephalopathy = MCC
 - Recommend "evidence of metabolic encephalopathy" rather than waiting for discharge qualifier
- 
-CVA / STROKE (new — Powers Health requirement):
+
+CVA / STROKE (new — Prime Health requirement):
 - Always document: hemorrhagic vs embolic (ischemic)
 - Always document: location of injury (e.g., right MCA territory, left basal ganglia, cerebellum)
 - Always document: traumatic vs non-traumatic
 - Always document: with or without loss of consciousness (LOC)
 - Ischemic stroke: document if cardioembolic, large vessel, small vessel, or cryptogenic
 - Flag any CVA/stroke documentation missing these elements
- 
+
 HTN COMBO CODES:
 - HTN + heart disease → ICD-10 presumes causal link → code as I11.x (hypertensive heart disease)
 - HTN + CKD → code as I12.x (hypertensive CKD) — no explicit linkage needed
 - Hypertensive Emergency (I16.1) = CC (SOI=3)
- 
+
 PRESSURE ULCERS: Stage 3-4 = MCC; Stage 1-2 = NON-CC. Document stage and POA.
- 
+
 ════════════════════════════════
-PHSI ADDITIONAL CC/MCC — FY2026 VERIFIED (Powers Health Reference)
+PHSI ADDITIONAL CC/MCC — FY2026 VERIFIED (Prime Health Reference)
 ════════════════════════════════
- 
+
 HIGH-YIELD MCC CONDITIONS (often underdocumented):
 - Aspiration Pneumonia = MCC (SOI=4) — higher weight than standard pneumonia; always specify aspiration if applicable
 - Pneumonia GR-VE (gram-negative) = MCC (SOI=3); Pneumonia MRSA = MCC (SOI=3); Pneumonia COVID = MCC (SOI=4)
@@ -752,7 +875,7 @@ HIGH-YIELD MCC CONDITIONS (often underdocumented):
 - Peptic Ulcer with GI Bleed = MCC (SOI=3)
 - Appendicitis with Peritonitis = MCC (SOI=3)
 - Aneurysm of Aorta (Arch/Descending/Ascending) = MCC (SOI=3-4)
- 
+
 CC CONDITIONS (commonly missed):
 - Acute Cholecystitis = CC (SOI=3) — specify acute vs chronic
 - Cholangitis = CC (SOI=2)
@@ -764,7 +887,7 @@ CC CONDITIONS (commonly missed):
 - Pulmonary Edema Chronic = CC (SOI=2)
 - Pressure Ulcer Stage III = CC (SOI=2); Stage IV = MCC (SOI=3)
 - Non-Ischemic Myocardial Injury Non-Traumatic (I5A) = CC (SOI=2)* — new FY2026 code
- 
+
 ════════════════════════════════
 PHSI NON-CC LIST — HIGH SOI BUT NOT CC/MCC (FY2026 Verified)
 ════════════════════════════════
@@ -784,14 +907,14 @@ CRITICAL: The following diagnoses have SOI ≥2 but are NOT CC or MCC. Do NOT fl
 - Parkinson's Disease = NON-CC (SOI=1-2) — document but no CC credit
 - Sickle Cell Disease = NON-CC (SOI=2)
 When these are present: document accurately but redirect CDI focus to other more impactful diagnoses
- 
+
 POA (Present on Admission): Document timing of complications clearly. Conditions developing AFTER admission cannot be principal dx and affect quality metrics differently.
- 
+
 UNCERTAIN DIAGNOSIS (inpatient only):
 - "Probable/suspected/likely/possible/consistent with/compatible with" = code as confirmed AT DISCHARGE
 - "Evidence of [diagnosis]" = codeable in ANY progress note (not uncertain)
 - Recommend "evidence of" language in progress notes for diagnoses not yet fully confirmed
- 
+
 Return ONLY raw JSON, no markdown, no backticks:
 {
   "em": {
@@ -850,16 +973,16 @@ Return ONLY raw JSON, no markdown, no backticks:
   "gaps":["..."],
   "summary":{"em_code":"99223","complexity":"High","mcc_cc_count":"1 MCC, 2 CC","drg_opportunity":"+$3,200","alert_count":3}
 }
- 
+
 If sepsis not present/suspected in note, set sepsis.detected = false and provide empty arrays.
 GMLOS values: use real approximate Medicare geometric mean LOS for the DRG numbers you cite.
 severity: critical = revenue >$1000 or DRG shift or MCC; warning = CC or specificity; info = quality/documentation`;
- 
-const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing. You apply FY2026 ICD-10 rules, Powers Health documentation standards, and KDIGO/ASPEN clinical criteria.
- 
+
+const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing. You apply FY2026 ICD-10 rules, Prime Health documentation standards, and KDIGO/ASPEN clinical criteria.
+
 FREEFORM INPUT HANDLING:
 If given free-form chart content (not a labeled A&P), first identify the A&P section(s) within the pasted content. Use the ER physician note, labs, and other context to inform your CDI upgrades — especially for baseline values (ER creatinine for AKI, initial O2 sat for respiratory failure, early troponin for cardiac diagnoses). Extract the most recent A&P as the primary document to rewrite.
- 
+
 CORE RULES:
 1. PRESERVE original problem list order and clinical thinking — never delete or change physician's plan
 2. UPGRADE diagnosis names to most specific codeable form (FY2026 ICD-10):
@@ -886,7 +1009,20 @@ CORE RULES:
 7. ICD-10 codes: Do NOT include in note text.
 8. New diagnoses: Add at bottom marked "Suggested:".
 9. Preserve original formatting style.
- 
+
+LAB PROMPT PLACEHOLDERS (CRITICAL — physician will write diagnoses manually):
+- NEVER auto-suggest cardiac diagnoses (Type 1 MI, Type 2 MI, Non-Ischemic Myocardial Injury), HF/CHF subtypes, or PE/DVT based on lab values alone.
+- Troponin (institutional URL = 20 pg/mL):
+  · trop <=20: do nothing (silent)
+  · trop 21-50: insert {{TROP_SOFT}} under the relevant cardiac/CHF/sepsis problem
+  · trop 51-500: insert {{TROP_FULL}} under the relevant cardiac problem
+  · trop >500: insert {{TROP_HIGH}} under the relevant cardiac problem
+- BNP (any value above lab cutoff, typically >100): insert {{BNP_PROMPT}} under the relevant cardiac/HF/dyspnea problem
+- D-dimer (elevated AND no etiology referenced anywhere in the chart): insert {{DDIMER_PROMPT}} under the most clinically relevant problem (or as standalone line if no fit)
+- Insert placeholders on a NEW LINE inside the relevant problem's narrative. Do NOT replace placeholder text — JS will substitute the actual prompt text after generation.
+- If a lab value is not present in the chart, do not insert any placeholder for that lab.
+- If a placeholder is appropriate but no clear cardiac/HF problem exists, place it under the closest related problem.
+
 Return ONLY raw JSON, no markdown:
 {
   "ap_text": "full rewritten A&P as plain text preserving original formatting",
@@ -898,7 +1034,7 @@ Return ONLY raw JSON, no markdown:
   "quality_flags": ["Response to treatment not documented for pneumonia","Medical necessity for continued stay not stated"],
   "unresolved_differentials": []
 }`;
- 
+
 // ═══════════════════════════════════════════════
 // MAIN ANALYZE
 // ═══════════════════════════════════════════════
@@ -906,18 +1042,21 @@ async function analyze() {
   const inputs = getInputs();
   const hasContent = inputs.freeform || inputs.ap;
   if (!hasContent) { alert('Please paste chart content first.'); return; }
- 
+
   setBusy(true); setSpinners(true); resetOutputs();
   prog(true, 0, 'Starting analysis...');
- 
+
   // Build context — freeform tabs pass raw paste; structured tabs (discharge) pass labeled sections
   let context;
   if (inputs.freeform !== undefined) {
+    const priorBlock = inputs.prior
+      ? '\n\n═══ PRIOR RECORDS (use ONLY for baseline labs and chronic conditions — never pull active diagnoses from here) ═══\n' + inputs.prior
+      : '';
     context = `Note Type: ${inputs.type}
- 
-CHART CONTENT (free-form paste — may include ER note, HPI, labs, consult notes, A&P in any order):
-${inputs.freeform}
- 
+
+CURRENT ENCOUNTER (free-form paste — may include ER note, HPI, labs, consult notes, A&P, progress notes in any order):
+${inputs.freeform}${priorBlock}
+
 ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergies, ROS, social history.`;
   } else {
     context = [
@@ -929,36 +1068,47 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
       `\nNote context: This is a ${currentTab==='discharge'?'DISCHARGE note — flag any unresolved differentials':'progress/admission note'}.`
     ].filter(Boolean).join('');
   }
- 
+
   try {
     prog(true, 15, 'Running CDI analysis and optimizing A&P in parallel...');
- 
+
+    await loadFoundationKB();
+    const priorForAP = inputs.prior
+      ? '\n\nPRIOR RECORDS (baseline/chronic context only — DO NOT pull active diagnoses from here):\n' + inputs.prior
+      : '';
     const [analysisRaw, apRaw] = await Promise.all([
-      callAPI(SYSTEM_ANALYSIS, context, 3000),
-      callAPI(SYSTEM_AP,
+      callAPI(withKB(SYSTEM_ANALYSIS), context, 3000),
+      callAPI(withKB(SYSTEM_AP),
         inputs.freeform
-          ? `NOTE TYPE: ${inputs.type}\n\nCHART CONTENT (free-form — extract A&P and context from this):\n${inputs.freeform}\n\nIs this a discharge note? NO`
+          ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
           : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
         2500)
     ]);
- 
+
     prog(true, 80, 'Rendering results...');
- 
+
     let analysis, apData;
     try { analysis = parseJSON(analysisRaw); } catch(e) { throw new Error('Analysis parse failed: ' + analysisRaw.slice(0,300)); }
     try { apData = parseJSON(apRaw); } catch(e) { throw new Error('A&P parse failed: ' + apRaw.slice(0,300)); }
- 
+
     setSpinners(false);
     renderEM(analysis.em);
     renderCDI(analysis.cdi_alerts);
     renderDRG(analysis.drg, analysis.icd_codes, analysis.gaps);
     renderRevBar(analysis.summary);
     renderSepsis(analysis.sepsis);
+
+    // Apply lab placeholder substitution (trop / BNP / D-dimer)
+    if (apData && apData.ap_text) {
+      const chartContent = [inputs.freeform, inputs.prior, inputs.hpi, inputs.labs, inputs.ap].filter(Boolean).join('\n');
+      apData.ap_text = processLabPlaceholders(apData.ap_text, chartContent);
+    }
+
     renderAP(apData, inputs.ap);
- 
+
     // Capture de-identified metrics for ROI tracking
     captureMetrics(analysis);
- 
+
     // Update tab badges
     const alertCount = (analysis.cdi_alerts||[]).length;
     document.getElementById('ap-tab-btn').innerHTML =
@@ -966,10 +1116,10 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     if (analysis.sepsis?.detected) {
       document.getElementById('sepsis-tab-btn').innerHTML = '🦠 Sepsis Criteria <span class="otab-badge">!</span>';
     }
- 
+
     prog(true, 100, 'Analysis complete ✓');
     setTimeout(() => prog(false), 1500);
- 
+
   } catch(err) {
     setSpinners(false);
     document.getElementById('em-body').innerHTML = `<div style="background:#fde;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#8b0000;font-size:13px;">⚠️ ${esc(err.message)}</div>`;
@@ -977,11 +1127,11 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
   }
   setBusy(false);
 }
- 
+
 // ═══════════════════════════════════════════════
 // RENDER FUNCTIONS
 // ═══════════════════════════════════════════════
- 
+
 function renderEM(em) {
   if (!em) return;
   const lvl = l => `<span class="${l==='High'?'hi':l==='Moderate'?'mo':'lo'}">${l}</span>`;
@@ -1008,7 +1158,7 @@ function renderEM(em) {
   }
   document.getElementById('em-body').innerHTML = h;
 }
- 
+
 function renderCDI(alerts) {
   if (!alerts?.length) {
     document.getElementById('cdi-body').innerHTML = '<div class="empty"><div class="empty-ico">✅</div><div class="empty-ttl">No CDI alerts</div><div class="empty-sub">Documentation looks solid</div></div>';
@@ -1022,7 +1172,7 @@ function renderCDI(alerts) {
   });
   document.getElementById('cdi-body').innerHTML = h;
 }
- 
+
 function renderDRG(drg, codes, gaps) {
   let h = '';
   if (drg) {
@@ -1065,7 +1215,7 @@ function renderDRG(drg, codes, gaps) {
   }
   document.getElementById('drg-body').innerHTML = h || '<div class="empty"><div class="empty-ico">📊</div><div class="empty-ttl">DRG data unavailable</div></div>';
 }
- 
+
 function renderSepsis(sep) {
   if (!sep || !sep.detected) {
     document.getElementById('sepsis-body').innerHTML = `
@@ -1074,9 +1224,9 @@ function renderSepsis(sep) {
       <div class="empty-sub">Sepsis criteria will auto-populate when sepsis, SIRS, or septic shock language is present in your note</div></div>`;
     return;
   }
- 
+
   let h = '';
- 
+
   // Sepsis-2
   const s2 = sep.sepsis2;
   if (s2) {
@@ -1101,7 +1251,7 @@ function renderSepsis(sep) {
       ${s2met?'✅':'⚠️'} Sepsis-2: ${s2.criteria_met} of ${s2.sirs_criteria?.length||4} SIRS criteria met — ${s2met?'Threshold MET (≥2)':'Threshold NOT met'}
     </div></div></div>`;
   }
- 
+
   // Sepsis-3
   const s3 = sep.sepsis3;
   if (s3) {
@@ -1126,7 +1276,7 @@ function renderSepsis(sep) {
       ${s3met?'✅':'⚠️'} Sepsis-3: Estimated SOFA ${esc(s3.sofa_score_estimated||'?')} — ${s3met?'Threshold LIKELY MET':'Insufficient data to confirm'}
     </div></div></div>`;
   }
- 
+
   // Organ dysfunction & denial tips
   if (sep.organ_dysfunction_documented !== undefined) {
     h += `<div class="alert-block ${sep.organ_dysfunction_documented?'a-blue':'a-amber'}" style="margin-top:8px;">
@@ -1134,16 +1284,16 @@ function renderSepsis(sep) {
       <div>${sep.organ_dysfunction_documented?'Organ dysfunction is documented and linked to sepsis — supports Severe Sepsis (R65.2x) coding':'Organ dysfunction not explicitly linked to sepsis — document the link to support Severe Sepsis coding and prevent downcoding denials'}</div>
     </div>`;
   }
- 
+
   if (sep.documentation_tips?.length) {
     h += `<div class="sepsis-denial-tip"><strong style="display:block;margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">💡 Denial Prevention Tips</strong>`;
     sep.documentation_tips.forEach(t => h += `<div style="display:flex;gap:6px;margin-top:3px;"><span>→</span><span>${esc(t)}</span></div>`);
     h += `</div>`;
   }
- 
+
   document.getElementById('sepsis-body').innerHTML = h;
 }
- 
+
 function toggleSepsis(id) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -1151,7 +1301,91 @@ function toggleSepsis(id) {
   const toggle = document.getElementById(id.replace('body','toggle'));
   if (toggle) toggle.textContent = el.classList.contains('open') ? '▲ hide' : '▼ show';
 }
- 
+
+// ═══════════════════════════════════════════════
+// LAB PLACEHOLDER POST-PROCESSOR
+// ═══════════════════════════════════════════════
+function extractLabs(text) {
+  if (!text) return {};
+  const t = text.toLowerCase();
+  const labs = {};
+
+  // Troponin (institutional URL = 20 pg/mL) — pick highest if multiple values
+  const tropRe = /\b(?:troponin\s*[it]?|trop(?!ical)|hs[\s-]?trop|tnt|tni)\b\s*[:=]?\s*(\d+\.?\d*)/g;
+  const tropVals = [];
+  let tm;
+  while ((tm = tropRe.exec(t)) !== null) tropVals.push(parseFloat(tm[1]));
+  if (tropVals.length) labs.trop = Math.max.apply(null, tropVals);
+
+  // BNP (exclude NT-proBNP)
+  const bnpRe = /\bbnp\b\s*[:=]?\s*(\d+\.?\d*)/g;
+  const bnpVals = [];
+  let bm;
+  while ((bm = bnpRe.exec(t)) !== null) {
+    const before = t.slice(Math.max(0, bm.index - 12), bm.index);
+    if (!/pro[\s-]?$|nt[\s-]?pro[\s-]?$/i.test(before)) {
+      bnpVals.push(parseFloat(bm[1]));
+    }
+  }
+  if (bnpVals.length) labs.bnp = Math.max.apply(null, bnpVals);
+
+  // D-dimer
+  const ddRe = /\bd[\s-]?dimer\b\s*[:=]?\s*(\d+\.?\d*)/g;
+  const ddVals = [];
+  let dm;
+  while ((dm = ddRe.exec(t)) !== null) ddVals.push(parseFloat(dm[1]));
+  if (ddVals.length) labs.ddimer = Math.max.apply(null, ddVals);
+
+  return labs;
+}
+
+function dDimerHasEtiology(text) {
+  if (!text) return false;
+  return /\b(p\.?e\.?\b|pulmonary embolism|d\.?v\.?t\.?\b|deep vein|\bvte\b|thromboembol|hypercoag|venous thromb)\b/i.test(text);
+}
+
+function processLabPlaceholders(apText, chartText) {
+  if (!apText) return apText;
+  const labs = extractLabs(chartText);
+  let out = apText;
+
+  // TROPONIN — tiered
+  if (labs.trop !== undefined && labs.trop > 20) {
+    let prompt;
+    if (labs.trop <= 50) {
+      prompt = '⚠️ Troponin mildly elevated (' + labs.trop + ' pg/mL): clinical correlation needed — consider rise/fall, ischemic features, clinical context. DocAssist will not suggest a diagnosis.';
+    } else if (labs.trop <= 500) {
+      prompt = '⚠️ Troponin elevated (' + labs.trop + ' pg/mL): document rise/fall pattern, ischemic symptoms, ECG changes, and clinical context (CHF, sepsis, CKD, tachyarrhythmia, PE, post-op). Physician writes the diagnosis manually.';
+    } else {
+      prompt = '⚠️ Troponin significantly elevated (' + labs.trop + ' pg/mL): document rise/fall, ischemic features, ECG changes, clinical context. Consider cardiology consult if not yet involved. Physician writes the diagnosis manually.';
+    }
+    out = out.split('{{TROP_SOFT}}').join(prompt);
+    out = out.split('{{TROP_FULL}}').join(prompt);
+    out = out.split('{{TROP_HIGH}}').join(prompt);
+  } else {
+    // Threshold not met or no trop — strip any orphan placeholders
+    out = out.replace(/\{\{TROP_(SOFT|FULL|HIGH)\}\}\s*\n?/g, '');
+  }
+
+  // BNP — simple
+  if (labs.bnp !== undefined && labs.bnp > 100) {
+    const bnpPrompt = '⚠️ Elevated BNP (' + labs.bnp + ' pg/mL): consider CHF or alternate diagnoses. Physician writes the diagnosis manually.';
+    out = out.split('{{BNP_PROMPT}}').join(bnpPrompt);
+  } else {
+    out = out.replace(/\{\{BNP_PROMPT\}\}\s*\n?/g, '');
+  }
+
+  // D-DIMER — conditional (elevated AND no etiology referenced)
+  if (labs.ddimer !== undefined && labs.ddimer > 500 && !dDimerHasEtiology(chartText)) {
+    const ddPrompt = '⚠️ Elevated D-Dimer (' + labs.ddimer + '): please document etiology or cause.';
+    out = out.split('{{DDIMER_PROMPT}}').join(ddPrompt);
+  } else {
+    out = out.replace(/\{\{DDIMER_PROMPT\}\}\s*\n?/g, '');
+  }
+
+  return out;
+}
+
 function renderAP(apData, originalAP) {
   if (!apData) {
     document.getElementById('ap-body').innerHTML = '<div class="empty"><div class="empty-ico">⚠️</div><div class="empty-ttl">Could not generate optimized A&P</div></div>';
@@ -1162,7 +1396,7 @@ function renderAP(apData, originalAP) {
   const changes = apData.changes_made || [];
   const meatAdds = apData.meat_additions || [];
   const unresolved = apData.unresolved_differentials || [];
- 
+
   // Plain text for clipboard
   let plain = [mainText];
   if (suggested.length) {
@@ -1170,16 +1404,16 @@ function renderAP(apData, originalAP) {
     suggested.forEach(s => plain.push(`\nSuggested: ${s.name}\n  Rationale: ${s.rationale}`));
   }
   apPlainText = plain.join('');
- 
+
   // Display HTML
   let html = `<div id="ap-text">${esc(mainText)}</div>`;
- 
+
   if (unresolved.length) {
     html += `<div class="meat-warning"><strong>⚠️ Unresolved Differentials — Resolve Before Discharge</strong>`;
     unresolved.forEach(u => html += `<div>• ${esc(u)}</div>`);
     html += `</div>`;
   }
- 
+
   if (suggested.length) {
     html += `<div style="margin-top:16px;"><div class="sec-lbl" style="margin-bottom:8px;">💡 Suggested Additions</div>`;
     suggested.forEach(s => {
@@ -1187,9 +1421,9 @@ function renderAP(apData, originalAP) {
     });
     html += `</div>`;
   }
- 
+
   const qualityFlags = apData.quality_flags || [];
- 
+
   if (changes.length || meatAdds.length || qualityFlags.length) {
     html += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">`;
     if (changes.length) {
@@ -1206,10 +1440,10 @@ function renderAP(apData, originalAP) {
     }
     html += `</div>`;
   }
- 
+
   document.getElementById('ap-body').innerHTML = html;
 }
- 
+
 function renderRevBar(s) {
   if (!s) return;
   document.getElementById('rev-em').textContent = s.em_code||'—';
@@ -1219,7 +1453,7 @@ function renderRevBar(s) {
   document.getElementById('rev-alerts').textContent = s.alert_count||'0';
   document.getElementById('rev-bar').classList.add('on');
 }
- 
+
 function copyAP() {
   if (!apPlainText) return;
   navigator.clipboard.writeText(apPlainText).then(() => {
@@ -1229,38 +1463,36 @@ function copyAP() {
     setTimeout(() => { btn.innerHTML = '📋 Copy A&P'; btn.classList.remove('copied'); }, 2000);
   });
 }
- 
+
 function setBusy(on) {
   const btn = document.getElementById('analyze-btn');
   btn.disabled = on;
   btn.innerHTML = on ? '<div class="spin" style="border-color:rgba(255,255,255,0.3);border-top-color:white;width:16px;height:16px;"></div> Analyzing...' : '<span>⚡</span> Analyze Note';
 }
- 
+
 function prog(show, pct, txt) {
   document.getElementById('prog').classList.toggle('on', show);
   if (show) { document.getElementById('prog-fill').style.width=pct+'%'; document.getElementById('prog-txt').textContent=txt; }
 }
- 
+
 function setSpinners(on) {
   if (!on) return;
   ['em-body','cdi-body','drg-body'].forEach(id => document.getElementById(id).innerHTML='<div class="spin-wrap"><div class="spin"></div>Analyzing...</div>');
   document.getElementById('ap-body').innerHTML='<div class="spin-wrap"><div class="spin"></div>Generating optimized A&P...</div>';
   document.getElementById('sepsis-body').innerHTML='<div class="spin-wrap"><div class="spin"></div>Evaluating sepsis criteria...</div>';
 }
- 
+
 function resetOutputs() {
   document.getElementById('rev-bar').classList.remove('on');
   apPlainText = '';
-  apbText = '';
   document.getElementById('ap-tab-btn').innerHTML = '✏️ Optimized A&P';
   document.getElementById('sepsis-tab-btn').innerHTML = '🦠 Sepsis Criteria';
   const dcBtn = document.getElementById('copy-course-btn'); if (dcBtn) dcBtn.style.display='none';
   const dxBtn = document.getElementById('copy-dx-btn'); if (dxBtn) dxBtn.style.display='none';
-  const apbOutTab = document.getElementById('apbuilder-tab-btn'); if (apbOutTab) apbOutTab.style.display='none';
 }
- 
+
 function clearAll() {
-  ['hp-freeform','pn-freeform','apb-freeform','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['apgen-freeform','apgen-prior','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   resetOutputs(); prog(false);
   document.getElementById('em-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">E&M Level Analysis</div><div class="empty-sub">Paste your note and click Analyze</div></div>';
   document.getElementById('cdi-body').innerHTML='<div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div>';
@@ -1270,17 +1502,16 @@ function clearAll() {
   document.getElementById('dc-course-body').innerHTML='<div class="empty"><div class="empty-ico">🏥</div><div class="empty-ttl">Hospital Course</div><div class="empty-sub">Paste source notes on the left and click Generate DC Summary</div></div>';
   document.getElementById('dc-dx-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">Discharge Diagnoses</div><div class="empty-sub">CDI-optimized diagnosis list appears here</div></div>';
   document.getElementById('dc-cdi-body').innerHTML='<div class="empty"><div class="empty-ico">⚡</div><div class="empty-ttl">CDI Flags</div><div class="empty-sub">Last-chance documentation opportunities appear here</div></div>';
-  document.getElementById('apb-body').innerHTML='<div class="empty"><div class="empty-ico">✍️</div><div class="empty-ttl">A&P Builder</div><div class="empty-sub">Paste overnight H&P, ER note, and consult notes on the left — your progress note A&P appears here ready to paste into MT</div></div>';
   const lbl = document.getElementById('analyze-btn-label'); if (lbl) lbl.textContent='Analyze Note';
 }
- 
+
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
- 
+
 // ── DC SUMMARY BUILDER ──
 const SYSTEM_DC_SUMMARY = `You are a senior hospitalist physician and CDI specialist generating a discharge summary from source notes.
- 
+
 PRIVACY: Never use patient name or MRN. Use age/sex only (e.g. "78-year-old male").
- 
+
 HOSPITAL COURSE (narrative paragraph):
 Write a single cohesive narrative paragraph in formal clinical prose. Cover:
 - Age, sex, chief complaint, and reason for admission
@@ -1289,7 +1520,7 @@ Write a single cohesive narrative paragraph in formal clinical prose. Cover:
 - Response to treatment and clinical trajectory
 - Condition and status at time of discharge
 Write in past tense. Be concise but complete. Do NOT use bullet points. 3-6 sentences.
- 
+
 DISCHARGE DIAGNOSES (FY2026 ICD-10 optimized):
 Generate the full discharge diagnosis list with maximum CDI specificity.
 - First diagnosis = Principal Diagnosis (what brought the patient in / bought the bed)
@@ -1310,7 +1541,7 @@ Generate the full discharge diagnosis list with maximum CDI specificity.
 - For each diagnosis: CC or MCC classification if applicable
 - Flag any diagnosis still needing physician clarification
 - NOTE: The following are NOT CC/MCC despite high SOI — document accurately but note they don't move DRG: hyperkalemia, hypermagnesemia, hypocalcemia, oliguria/anuria, thrombocytopenia, failure to thrive, emphysema alone, morbid obesity alone, cor pulmonale chronic, electrolyte disorder unspecified, thrombocytopenia, neutropenia
- 
+
 CDI FLAGS (final documentation check):
 Any last-chance documentation opportunities before signing. Focus on:
 - Diagnoses still lacking required specificity
@@ -1318,7 +1549,7 @@ Any last-chance documentation opportunities before signing. Focus on:
 - MEAT gaps for secondary diagnoses
 - Unresolved differentials that should be finalized
 - POA status questions for complications
- 
+
 Return ONLY raw JSON, no markdown, no backticks:
 {
   "hospital_course": "78-year-old male admitted with...",
@@ -1347,17 +1578,17 @@ Return ONLY raw JSON, no markdown, no backticks:
     }
   ]
 }`;
- 
+
 async function generateDCSummary() {
   const inputs = getInputs();
   if (!inputs.progress && !inputs.hpi) {
     alert('Please paste at least the last progress note or initial H&P.');
     return;
   }
- 
+
   setBusy(true);
   prog(true, 0, 'Reading source notes...');
- 
+
   // Show DC Summary panel and spinner
   const dcOutTab = document.getElementById('dcsummary-tab-btn');
   if (dcOutTab) { dcOutTab.style.display='inline-block'; }
@@ -1367,30 +1598,31 @@ async function generateDCSummary() {
   ['analysis','sepsis','ap','dcsummary'].forEach(t => {
     document.getElementById('panel-'+t).classList.toggle('on', t==='dcsummary');
   });
- 
+
   ['dc-course-body','dc-dx-body','dc-cdi-body'].forEach(id => {
     document.getElementById(id).innerHTML = '<div class="spin-wrap"><div class="spin"></div>Generating...</div>';
   });
- 
+
   const context = [
     'TASK: Generate discharge summary from the following source notes.',
     inputs.hpi      ? `\nINITIAL H&P:\n${inputs.hpi}` : '',
     inputs.consult  ? `\nCONSULT NOTE(S):\n${inputs.consult}` : '',
     inputs.progress ? `\nLAST PROGRESS NOTE:\n${inputs.progress}` : '',
   ].filter(Boolean).join('');
- 
+
   try {
     prog(true, 30, 'Synthesizing hospital course and diagnoses...');
-    const raw = await callAPI(SYSTEM_DC_SUMMARY, context, 3000);
+    await loadFoundationKB();
+    const raw = await callAPI(SYSTEM_DC_SUMMARY, context, 5000);
     prog(true, 85, 'Rendering discharge summary...');
- 
+
     let data;
-    try { data = parseJSON(raw); } catch(e) { throw new Error('Parse error: ' + raw.slice(0,300)); }
- 
+    try { data = parseJSON(raw); } catch(e) { throw new Error('Parse error: ' + raw.slice(0,200) + '  …[TAIL]… ' + raw.slice(-150)); }
+
     renderDCSummary(data);
     prog(true, 100, 'DC Summary ready ✓');
     setTimeout(() => prog(false), 1200);
- 
+
   } catch(err) {
     document.getElementById('dc-course-body').innerHTML =
       `<div style="background:#f8d7da;border:1px solid #f0a0a0;border-radius:8px;padding:12px;color:#842029;font-size:13px;">⚠️ ${esc(err.message)}</div>`;
@@ -1398,17 +1630,17 @@ async function generateDCSummary() {
   }
   setBusy(false);
 }
- 
+
 function renderDCSummary(data) {
   if (!data) return;
- 
+
   // Hospital Course
   const courseText = data.hospital_course || '';
   document.getElementById('dc-course-body').innerHTML =
     `<div id="dc-course-text">${esc(courseText)}</div>`;
   const copyCoursBtn = document.getElementById('copy-course-btn');
   if (copyCoursBtn) copyCoursBtn.style.display = 'inline-flex';
- 
+
   // Discharge Diagnoses
   const dx = data.discharge_diagnoses || [];
   if (dx.length) {
@@ -1433,7 +1665,7 @@ function renderDCSummary(data) {
     const copyDxBtn = document.getElementById('copy-dx-btn');
     if (copyDxBtn) copyDxBtn.style.display = 'inline-flex';
   }
- 
+
   // CDI Flags
   const flags = data.cdi_flags || [];
   if (flags.length) {
@@ -1448,7 +1680,7 @@ function renderDCSummary(data) {
     document.getElementById('dc-cdi-body').innerHTML = '<div class="empty"><div class="empty-ico">✅</div><div class="empty-ttl">No CDI flags</div><div class="empty-sub">Documentation looks complete</div></div>';
   }
 }
- 
+
 function copySection(textId, btn) {
   const el = document.getElementById(textId);
   if (!el) return;
@@ -1458,137 +1690,21 @@ function copySection(textId, btn) {
     setTimeout(() => { btn.innerHTML = '📋 Copy'; btn.classList.remove('copied'); }, 2000);
   });
 }
- 
+
 function handleAnalyze() {
   if (currentTab === 'dcsummary') {
     generateDCSummary();
-  } else if (currentTab === 'apbuilder') {
-    generateAPB();
   } else {
     analyze();
   }
 }
- 
-// ── A&P BUILDER ──
-const SYSTEM_AP_BUILDER = `You are a hospitalist physician generating a progress note Assessment & Plan in the physician's personal style.
- 
-SOURCE MATERIAL: You will receive a free-form paste that may include any combination of: overnight H&P A&P written by another physician, ER physician note, cardiology/nephrology/other consultant notes. Extract all relevant clinical information from all sources.
- 
-OUTPUT FORMAT — follow this exactly:
-[Age] [sex] with:
- 
-1. [CDI-Upgraded Diagnosis Name] - [Narrative plan sentence(s) weaving in relevant clinical data, current status, and plan]
- 
-2. [CDI-Upgraded Diagnosis Name] - [Narrative plan sentence(s)]
- 
-(continue for all problems)
- 
-STYLE RULES — match this physician's voice precisely:
-- Header line: "[Age] YO [male/female] with:" — use age/sex from notes, never use patient name
-- Each problem: number + period + space + diagnosis + space + dash + space + narrative
-- Narrative is flowing prose, NOT bullet points — everything on one line per problem
-- Weave data inline naturally: "O2 sat now 96% on 2L NC", "creatinine 2.1 up from baseline 1.0", "rate controlled at 88 on telemetry"
-- Include: current status, relevant today's data, and plan — all in one sentence or two
-- Rationale brief but present: "given afib and immobilization risk", "in setting of CHF exacerbation"
-- Active voice: "Will continue", "Monitor", "Start", "Hold", "Consult"
-- Status always noted: "improving", "stable", "no acute issues today", "worsening"
-- Concise but complete — match complexity to problem acuity
- 
-PROBLEM ORDERING:
-1. Primary/most acute diagnosis first (reason for admission)
-2. Active complications and secondary acute problems
-3. Active chronic problems being monitored/managed
-4. Prophylaxis and chronic stable conditions last (DVT ppx, hypothyroidism, dyslipidemia, etc.)
- 
-CDI RULES — upgrade all diagnosis names:
-- "CHF" → "Acute on Chronic [Systolic/Diastolic] Congestive Heart Failure" (use HFpEF/HFrEF if documented)
-- "AMS/confusion" → "Metabolic Encephalopathy" — use "evidence of" in progress notes
-- "Respiratory distress/insufficiency" → "Acute Hypoxemic Respiratory Failure" if O2 required
-- Continuous home O2 → add "Chronic Respiratory Failure with Hypoxia" as separate problem
-- "AKI" → include KDIGO stage and baseline Cr: "AKI KDIGO Stage X (baseline Cr X.X, current X.X)"
-- "Urosepsis" → "Sepsis due to [organism if known], source UTI"
-- Sepsis → "Sepsis as evidenced by [source] causing [organ dysfunction]"
-- "NSTEMI" without type → flag as Type 1 or Type 2 in narrative
-- Troponin elevation without ischemia → "Non-Ischemic Myocardial Injury"
-- "T2DM" → "Type 2 Diabetes Mellitus with Hyperglycemia" if glucose elevated
-- CVA → specify hemorrhagic vs ischemic, territory, LOC
-- "Pneumonia" → specify type if possible (aspiration, gram-negative, MRSA, community-acquired)
-- "Renal insufficiency/CRI" → specify CKD stage
-- Malnutrition → specify mild/moderate/severe per ASPEN
-- Always apply PHSI CC/MCC upgrades from your training
- 
-CONSULTANT INTEGRATION:
-- Incorporate consultant recommendations into the relevant problem plan
-- Use more specific diagnosis language if consultant was more specific than admitting note
-- Note if consultant recommended specific tests, treatments, or follow-up
- 
-ER NOTE INTEGRATION:
-- Use ER vitals and initial data to establish baselines
-- Incorporate ER differential if it identified something not in the A&P
-- Use initial labs from ER for KDIGO, troponin trajectory, lactate
- 
-PRIVACY: Never use patient name. Age and sex only.
- 
-Return ONLY the formatted A&P text — no JSON, no markdown, no explanation. Just the note starting with the header line.`;
- 
-let apbText = '';
- 
-async function generateAPB() {
-  const notes = v('apb-freeform');
-  if (!notes) { alert('Please paste source notes first.'); return; }
- 
-  setBusy(true);
-  prog(true, 0, 'Reading source notes...');
- 
-  // Switch to A&P Builder output tab
-  const apbOutTab = document.getElementById('apbuilder-tab-btn');
-  if (apbOutTab) { apbOutTab.style.display='inline-block'; }
-  document.querySelectorAll('.otab').forEach(b => b.classList.remove('on'));
-  if (apbOutTab) apbOutTab.classList.add('on');
-  ['analysis','sepsis','ap','dcsummary','apbuilder'].forEach(t => {
-    document.getElementById('panel-'+t).classList.toggle('on', t==='apbuilder');
-  });
- 
-  document.getElementById('apb-body').innerHTML = '<div class="spin-wrap"><div class="spin"></div>Generating your A&P...</div>';
- 
-  try {
-    prog(true, 40, 'Synthesizing problems and generating A&P in your style...');
- 
-    const raw = await callAPI(SYSTEM_AP_BUILDER, notes, 3000);
- 
-    prog(true, 90, 'Done ✓');
-    apbText = raw.trim();
- 
-    // Render with monospace styling matching physician note feel
-    document.getElementById('apb-body').innerHTML =
-      '<div style="font-family:monospace;font-size:13px;line-height:1.9;color:var(--text);white-space:pre-wrap;word-break:break-word;">' + esc(apbText) + '</div>';
- 
-    setTimeout(() => prog(false), 1000);
- 
-  } catch(err) {
-    document.getElementById('apb-body').innerHTML =
-      '<div style="background:#f8d7da;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#842029;font-size:13px;">⚠️ ' + esc(err.message) + '</div>';
-    prog(false);
-  }
-  setBusy(false);
-}
- 
-function copyAPB() {
-  if (!apbText) return;
-  navigator.clipboard.writeText(apbText).then(() => {
-    const btn = document.getElementById('copy-apb-btn');
-    btn.textContent = '✅ Copied!';
-    btn.style.background = '#0f5132';
-    setTimeout(() => { btn.innerHTML = '📋 Copy A&P'; btn.style.background = ''; }, 2000);
-  });
-}
- 
+
 // ── AUTH ──
 function checkSession() {
   const has = document.cookie.split(';').some(c => c.trim() === 'da_session=authenticated');
   if (has) document.getElementById('login-overlay').classList.add('hidden');
 }
- 
+
 async function doLogin() {
   const input = document.getElementById('login-input');
   const btn = document.getElementById('login-btn');
@@ -1612,25 +1728,25 @@ async function doLogin() {
   }
   btn.disabled = false; btn.textContent = 'Access DocAssist';
 }
- 
+
 // ═══════════════════════════════════════════════
 // METRICS — De-identified efficacy tracking (no PHI)
 // ═══════════════════════════════════════════════
 const METRICS_KEY = 'docassist_metrics_v1';
 let metFilter = 'all';
- 
+
 function _parseDollars(s) {
   if (s === null || s === undefined) return 0;
   const m = String(s).match(/-?[\d,]+(?:\.\d+)?/);
   return m ? Math.round(parseFloat(m[0].replace(/,/g, ''))) : 0;
 }
- 
+
 function _parseFloatLoose(s) {
   if (s === null || s === undefined) return null;
   const m = String(s).match(/-?[\d,]+(?:\.\d+)?/);
   return m ? parseFloat(m[0].replace(/,/g, '')) : null;
 }
- 
+
 function _categorize(title) {
   const t = (title || '').toLowerCase();
   if (/heart failure|chf|hfref|hfpef|systolic|diastolic/.test(t)) return 'Heart Failure Specificity';
@@ -1650,7 +1766,7 @@ function _categorize(title) {
   if (/\bdrg\b/.test(t)) return 'DRG Optimization';
   return 'Other Specificity';
 }
- 
+
 function captureMetrics(analysis) {
   if (!analysis) return;
   try {
@@ -1659,24 +1775,24 @@ function captureMetrics(analysis) {
     const summary = analysis.summary || {};
     const alerts = analysis.cdi_alerts || [];
     const sepsis = analysis.sepsis || {};
- 
+
     let mcc = 0, cc = 0;
     const mccMatch = String(summary.mcc_cc_count || '').match(/(\d+)\s*MCC/i);
     const ccMatch = String(summary.mcc_cc_count || '').match(/(\d+)\s*CC(?!\w)/i);
     if (mccMatch) mcc = parseInt(mccMatch[1], 10);
     if (ccMatch) cc = parseInt(ccMatch[1], 10);
- 
+
     const drgRev = drg.impact_available ? _parseDollars(drg.revenue_impact) : 0;
     const emRev = em.upgrade_available ? _parseDollars(em.revenue_gap_per_note) : 0;
     const drgShifted = !!(drg.impact_available && drg.current_number && drg.optimized_number && drg.current_number !== drg.optimized_number);
- 
+
     const gmlosCur = _parseFloatLoose(drg.current_gmlos);
     const gmlosOpt = _parseFloatLoose(drg.optimized_gmlos);
     const gmlosDelta = (gmlosCur !== null && gmlosOpt !== null) ? +(gmlosOpt - gmlosCur).toFixed(2) : null;
- 
+
     const categories = alerts.map(a => _categorize(a.title)).filter(Boolean);
     const critCount = alerts.filter(a => a.severity === 'critical').length;
- 
+
     const record = {
       id: 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
       ts: new Date().toISOString(),
@@ -1699,7 +1815,7 @@ function captureMetrics(analysis) {
       upgrade_categories: categories,
       total_opportunity_dollars: drgRev + emRev
     };
- 
+
     const existing = _loadMetrics();
     existing.push(record);
     localStorage.setItem(METRICS_KEY, JSON.stringify(existing));
@@ -1708,12 +1824,12 @@ function captureMetrics(analysis) {
     console.warn('Metrics capture failed:', e);
   }
 }
- 
+
 function _loadMetrics() {
   try { return JSON.parse(localStorage.getItem(METRICS_KEY) || '[]'); }
   catch(e) { return []; }
 }
- 
+
 function _filteredMetrics() {
   const all = _loadMetrics();
   if (metFilter === 'all') return all;
@@ -1721,26 +1837,26 @@ function _filteredMetrics() {
   const cutoff = Date.now() - days * 86400000;
   return all.filter(r => new Date(r.ts).getTime() >= cutoff);
 }
- 
+
 function _bumpMetricsBadge() {
   const btn = document.getElementById('metrics-tab-btn');
   if (!btn) return;
   const n = _loadMetrics().length;
   btn.innerHTML = `📈 Metrics${n > 0 ? `<span class="otab-badge" style="background:#0f5132">${n}</span>` : ''}`;
 }
- 
+
 function setMetFilter(btn, val) {
   metFilter = val;
   document.querySelectorAll('#met-filter .met-fbtn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   renderMetrics();
 }
- 
+
 function renderMetrics() {
   const recs = _filteredMetrics();
   const body = document.getElementById('met-body');
   if (!body) return;
- 
+
   if (!recs.length) {
     body.innerHTML = `<div class="met-empty">
       <div class="met-empty-ico">📈</div>
@@ -1749,7 +1865,7 @@ function renderMetrics() {
     </div>`;
     return;
   }
- 
+
   const n = recs.length;
   const totalDrgRev = recs.reduce((a,r) => a + (r.drg_revenue_dollars || 0), 0);
   const totalEmRev = recs.reduce((a,r) => a + (r.em_dollars_per_note || 0), 0);
@@ -1761,21 +1877,21 @@ function renderMetrics() {
   const totalMCC = recs.reduce((a,r) => a + (r.mcc_count || 0), 0);
   const sepsisCount = recs.filter(r => r.sepsis_detected).length;
   const critAlerts = recs.reduce((a,r) => a + (r.critical_alert_count || 0), 0);
- 
+
   const gmlosDeltas = recs.map(r => r.gmlos_delta_days).filter(v => typeof v === 'number');
   const avgGmlosDelta = gmlosDeltas.length ? +(gmlosDeltas.reduce((a,b)=>a+b,0) / gmlosDeltas.length).toFixed(2) : null;
- 
+
   const catCount = {};
   recs.forEach(r => (r.upgrade_categories || []).forEach(c => {
     catCount[c] = (catCount[c] || 0) + 1;
   }));
   const topCats = Object.entries(catCount).sort((a,b) => b[1]-a[1]).slice(0, 8);
   const maxCat = topCats.length ? topCats[0][1] : 1;
- 
+
   const fmt$ = v => '$' + Math.round(v).toLocaleString();
- 
+
   let h = '';
- 
+
   h += `<div class="met-grid">
     <div class="met-card hero">
       <div class="met-lbl">Total $ Opportunity Surfaced</div>
@@ -1798,7 +1914,7 @@ function renderMetrics() {
       <div class="met-sub">High-severity CDI alerts</div>
     </div>
   </div>`;
- 
+
   h += `<div class="met-grid">
     <div class="met-card">
       <div class="met-lbl">CC Opportunities</div>
@@ -1821,7 +1937,7 @@ function renderMetrics() {
       <div class="met-sub">SIRS/SOFA criteria evaluated</div>
     </div>
   </div>`;
- 
+
   if (avgGmlosDelta !== null) {
     h += `<div class="card">
       <div class="card-hdr"><span class="card-title">GMLOS Impact</span><span style="font-size:11px;color:var(--text3)">Length-of-stay alignment with severity</span></div>
@@ -1836,7 +1952,7 @@ function renderMetrics() {
       </div>
     </div>`;
   }
- 
+
   if (topCats.length) {
     h += `<div class="card">
       <div class="card-hdr"><span class="card-title">Top Documentation Gap Categories</span><span style="font-size:11px;color:var(--text3)">De-identified · category-level only</span></div>
@@ -1851,7 +1967,7 @@ function renderMetrics() {
     });
     h += `</div></div>`;
   }
- 
+
   const recent = recs.slice(-10).reverse();
   h += `<div class="card">
     <div class="card-hdr"><span class="card-title">Recent Analyses (last 10)</span><span style="font-size:11px;color:var(--text3)">No PHI · timestamp + numeric only</span></div>
@@ -1877,10 +1993,10 @@ function renderMetrics() {
     </tr>`;
   });
   h += `</tbody></table></div></div>`;
- 
+
   body.innerHTML = h;
 }
- 
+
 function exportMetricsCSV() {
   const recs = _filteredMetrics();
   if (!recs.length) { alert('No metrics to export.'); return; }
@@ -1908,7 +2024,7 @@ function exportMetricsCSV() {
   a.click();
   URL.revokeObjectURL(url);
 }
- 
+
 function exportMetricsPDF() {
   const panel = document.getElementById('panel-metrics');
   if (!panel) return;
@@ -1932,19 +2048,18 @@ function exportMetricsPDF() {
   w.document.close();
   setTimeout(() => w.print(), 600);
 }
- 
+
 function clearMetrics() {
   if (!confirm('Reset all metrics? This cannot be undone.')) return;
   localStorage.removeItem(METRICS_KEY);
   _bumpMetricsBadge();
   renderMetrics();
 }
- 
+
 // Initialize badge on load
 _bumpMetricsBadge();
- 
+
 checkSession();
 </script>
 </body>
 </html>
- 
