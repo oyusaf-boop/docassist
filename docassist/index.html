@@ -32,7 +32,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 /* LEFT */
 #left { display:flex; flex-direction:column; gap:0; position:sticky; top:70px; }
 .type-tabs { display:flex; gap:0; }
-.ntab { padding:10px 18px; border:1.5px solid var(--border); border-bottom:none; background:#f4f1ec; color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.12s; text-align:center; }
+.ntab { flex:1; padding:10px 8px; border:1.5px solid var(--border); border-bottom:none; background:#f4f1ec; color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.12s; text-align:center; }
 .ntab:first-child { border-radius:10px 0 0 0; }
 .ntab:last-child { border-radius:0 10px 0 0; }
 .ntab.on { background:white; color:var(--navy); border-bottom-color:white; z-index:2; position:relative; }
@@ -309,7 +309,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
       <div id="inputs-apgen">
         <div class="input-section">
           <div class="inp-label"><span>📋</span> Current Encounter<span class="lbl-hint">ER note · HPI · labs · consults · progress notes · any order</span></div>
-          <textarea id="apgen-freeform" class="inp-area tall" style="min-height:380px;" placeholder="Paste anything from this encounter — ER note, admitting H&P, today's progress note, labs, imaging, consult notes. Any order, no labels needed. AI auto-detects whether it's a new admit, overnight admit, or takeover."></textarea>
+          <textarea id="apgen-freeform" class="inp-area tall" style="min-height:340px;" placeholder="Paste anything from this encounter — ER note, admitting H&P, today's progress note, labs, imaging, consult notes. Any order, no labels needed. AI auto-detects whether it's a new admit, overnight admit, or takeover."></textarea>
         </div>
         <div class="input-section">
           <div class="inp-label" style="cursor:pointer;user-select:none;" onclick="togglePriorRecords()" id="prior-toggle"><span id="prior-arrow">▶</span> Prior Records<span class="lbl-hint">optional · older H&Ps · prior DC summaries · old consults</span></div>
@@ -664,7 +664,24 @@ async function callAPI(system, user, maxTokens) {
 function parseJSON(raw) {
   let s = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
   if (!s.startsWith('{')) { const m=s.match(/\{[\s\S]*\}/); if(m) s=m[0]; }
-  return JSON.parse(s);
+  try { return JSON.parse(s); }
+  catch(e) { return JSON.parse(sanitizeJSON(s)); }
+}
+
+function sanitizeJSON(s) {
+  // Escape raw control chars that appear inside string literals (common in narrative prose)
+  let out = '', inStr = false, esc = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (esc) { out += c; esc = false; continue; }
+    if (c === '\\') { out += c; esc = true; continue; }
+    if (c === '"') { inStr = !inStr; out += c; continue; }
+    if (inStr && c === '\n') { out += '\\n'; continue; }
+    if (inStr && c === '\r') { out += '\\r'; continue; }
+    if (inStr && c === '\t') { out += '\\t'; continue; }
+    out += c;
+  }
+  return out;
 }
 
 // ═══════════════════════════════════════════════
@@ -1060,12 +1077,12 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
       ? '\n\nPRIOR RECORDS (baseline/chronic context only — DO NOT pull active diagnoses from here):\n' + inputs.prior
       : '';
     const [analysisRaw, apRaw] = await Promise.all([
-      callAPI(withKB(SYSTEM_ANALYSIS), context, 8000),
+      callAPI(withKB(SYSTEM_ANALYSIS), context, 3000),
       callAPI(withKB(SYSTEM_AP),
         inputs.freeform
           ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
           : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
-        4000)
+        2500)
     ]);
 
     prog(true, 80, 'Rendering results...');
@@ -1597,11 +1614,11 @@ async function generateDCSummary() {
   try {
     prog(true, 30, 'Synthesizing hospital course and diagnoses...');
     await loadFoundationKB();
-    const raw = await callAPI(withKB(SYSTEM_DC_SUMMARY), context, 3000);
+    const raw = await callAPI(withKB(SYSTEM_DC_SUMMARY), context, 6000);
     prog(true, 85, 'Rendering discharge summary...');
 
     let data;
-    try { data = parseJSON(raw); } catch(e) { throw new Error('Parse error: ' + raw.slice(0,300)); }
+    try { data = parseJSON(raw); } catch(e) { throw new Error('Parse error: ' + raw.slice(0,200) + '  …[TAIL]… ' + raw.slice(-150)); }
 
     renderDCSummary(data);
     prog(true, 100, 'DC Summary ready ✓');
