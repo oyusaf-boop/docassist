@@ -1508,7 +1508,7 @@ function clearAll() {
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── DC SUMMARY BUILDER ──
-const SYSTEM_DC_SUMMARY = `You are a senior hospitalist physician and CDI specialist generating a discharge summary from source notes.
+const SYSTEM_DC_COURSE = `You are a senior hospitalist physician generating the HOSPITAL COURSE narrative of a discharge summary from source notes.
 
 PRIVACY: Never use patient name or MRN. Use age/sex only (e.g. "78-year-old male").
 
@@ -1521,26 +1521,35 @@ Write a single cohesive narrative paragraph in formal clinical prose. Cover:
 - Condition and status at time of discharge
 Write in past tense. Be concise but complete. Do NOT use bullet points. 3-6 sentences.
 
+Return ONLY raw JSON, no markdown, no backticks:
+{
+  "hospital_course": "78-year-old male admitted with..."
+}`;
+
+const SYSTEM_DC_DX = `You are a senior hospitalist physician and CDI specialist generating the DISCHARGE DIAGNOSES and CDI documentation flags from source notes.
+
+PRIVACY: Never use patient name or MRN. Use age/sex only (e.g. "78-year-old male").
+
 DISCHARGE DIAGNOSES (FY2026 ICD-10 optimized):
 Generate the full discharge diagnosis list with maximum CDI specificity.
 - First diagnosis = Principal Diagnosis (what brought the patient in / bought the bed)
 - Remaining = Secondary diagnoses in order of clinical significance
 - Apply ALL FY2026 CDI rules:
-  * CHF → must include acuity (Acute/Acute-on-Chronic/Chronic) AND type (Systolic/Diastolic/Combined) or HFpEF/HFrEF
-  * AKI → must include KDIGO-based baseline Cr; note if ATN criteria met
-  * Sepsis → "Sepsis as evidenced by [source] causing [organ dysfunction]"; specify organism
-  * Respiratory failure → specify Acute/Acute-on-Chronic/Chronic and Hypoxic/Hypercapnic
-  * AMS → Metabolic/Toxic/Hepatic/Hypertensive Encephalopathy (not "AMS")
-  * Malnutrition → specify Mild/Moderate/Severe per ASPEN criteria
-  * NSTEMI → specify Type 1 or Type 2; troponin elevation without ischemia = Non-Ischemic Myocardial Injury (I5A)
-  * CVA → specify hemorrhagic vs embolic, location, traumatic vs non-traumatic
-  * T2DM → add organ involvement or hyperglycemia qualifier
-  * Continuous home O2 → Chronic Respiratory Failure with Hypoxia
-  * HTN + heart disease → Hypertensive Heart Disease
-  * HTN + CKD → Hypertensive CKD
+  * CHF -> must include acuity (Acute/Acute-on-Chronic/Chronic) AND type (Systolic/Diastolic/Combined) or HFpEF/HFrEF
+  * AKI -> must include KDIGO-based baseline Cr; note if ATN criteria met
+  * Sepsis -> "Sepsis as evidenced by [source] causing [organ dysfunction]"; specify organism
+  * Respiratory failure -> specify Acute/Acute-on-Chronic/Chronic and Hypoxic/Hypercapnic
+  * AMS -> Metabolic/Toxic/Hepatic/Hypertensive Encephalopathy (not "AMS")
+  * Malnutrition -> specify Mild/Moderate/Severe per ASPEN criteria
+  * NSTEMI -> specify Type 1 or Type 2; troponin elevation without ischemia = Non-Ischemic Myocardial Injury (I5A)
+  * CVA -> specify hemorrhagic vs embolic, location, traumatic vs non-traumatic
+  * T2DM -> add organ involvement or hyperglycemia qualifier
+  * Continuous home O2 -> Chronic Respiratory Failure with Hypoxia
+  * HTN + heart disease -> Hypertensive Heart Disease
+  * HTN + CKD -> Hypertensive CKD
 - For each diagnosis: CC or MCC classification if applicable
 - Flag any diagnosis still needing physician clarification
-- NOTE: The following are NOT CC/MCC despite high SOI — document accurately but note they don't move DRG: hyperkalemia, hypermagnesemia, hypocalcemia, oliguria/anuria, thrombocytopenia, failure to thrive, emphysema alone, morbid obesity alone, cor pulmonale chronic, electrolyte disorder unspecified, thrombocytopenia, neutropenia
+- NOTE: The following are NOT CC/MCC despite high SOI -- document accurately but note they don't move DRG: hyperkalemia, hypermagnesemia, hypocalcemia, oliguria/anuria, thrombocytopenia, failure to thrive, emphysema alone, morbid obesity alone, cor pulmonale chronic, electrolyte disorder unspecified, neutropenia
 
 CDI FLAGS (final documentation check):
 Any last-chance documentation opportunities before signing. Focus on:
@@ -1552,7 +1561,6 @@ Any last-chance documentation opportunities before signing. Focus on:
 
 Return ONLY raw JSON, no markdown, no backticks:
 {
-  "hospital_course": "78-year-old male admitted with...",
   "discharge_diagnoses": [
     {
       "number": 1,
@@ -1612,12 +1620,25 @@ async function generateDCSummary() {
 
   try {
     prog(true, 30, 'Synthesizing hospital course and diagnoses...');
-    await loadFoundationKB();
-    const raw = await callAPI(SYSTEM_DC_SUMMARY, context, 5000);
+
+    // Two independent calls, each safely under the token ceiling — avoids timeout/truncation on long summaries
+    const [courseRaw, dxRaw] = await Promise.all([
+      callAPI(SYSTEM_DC_COURSE, context, 2500),
+      callAPI(SYSTEM_DC_DX, context, 3000)
+    ]);
     prog(true, 85, 'Rendering discharge summary...');
 
-    let data;
-    try { data = parseJSON(raw); } catch(e) { throw new Error('Parse error: ' + raw.slice(0,200) + '  …[TAIL]… ' + raw.slice(-150)); }
+    let courseData, dxData;
+    try { courseData = parseJSON(courseRaw); }
+    catch(e) { throw new Error('Course parse error: ' + courseRaw.slice(0,150) + '  …[TAIL]… ' + courseRaw.slice(-120)); }
+    try { dxData = parseJSON(dxRaw); }
+    catch(e) { throw new Error('Diagnoses parse error: ' + dxRaw.slice(0,150) + '  …[TAIL]… ' + dxRaw.slice(-120)); }
+
+    const data = {
+      hospital_course: courseData.hospital_course || '',
+      discharge_diagnoses: dxData.discharge_diagnoses || [],
+      cdi_flags: dxData.cdi_flags || []
+    };
 
     renderDCSummary(data);
     prog(true, 100, 'DC Summary ready ✓');
