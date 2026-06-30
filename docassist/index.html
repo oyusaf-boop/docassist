@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DocAssist — CDI & E&M Companion</title>
-<style>
+<style
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --navy: #0f2d48; --navy2: #1a4a6b;
@@ -1055,8 +1055,8 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
 
     await loadFoundationKB();
     const [analysisRaw, apRaw] = await Promise.all([
-      callAPI(withKB(SYSTEM_ANALYSIS), context, 8000),
-      callAPI(withKB(SYSTEM_AP),
+      callAPI(SYSTEM_ANALYSIS, context, 8000),
+      callAPI(SYSTEM_AP,
         inputs.freeform
           ? `NOTE TYPE: ${inputs.type}\n\nCHART CONTENT (free-form — extract A&P and context from this):\n${inputs.freeform}\n\nIs this a discharge note? NO`
           : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
