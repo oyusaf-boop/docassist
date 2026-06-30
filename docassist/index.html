@@ -1503,7 +1503,7 @@ async function generateDCSummary() {
   try {
     prog(true, 30, 'Synthesizing hospital course and diagnoses...');
     await loadFoundationKB();
-    const raw = await callAPI(withKB(SYSTEM_DC_SUMMARY), context, 3000);
+    const raw = await callAPI(withKB(SYSTEM_DC_SUMMARY), context, 8000);
     prog(true, 85, 'Rendering discharge summary...');
 
     let data;
@@ -1677,7 +1677,7 @@ async function generateAPB() {
     prog(true, 40, 'Synthesizing problems and generating A&P in your style...');
 
     await loadFoundationKB();
-    const raw = await callAPI(withKB(SYSTEM_AP_BUILDER), notes, 3000);
+    const raw = await callAPI(withKB(SYSTEM_AP_BUILDER), notes, 8000);
 
     prog(true, 90, 'Done ✓');
     apbText = raw.trim();
