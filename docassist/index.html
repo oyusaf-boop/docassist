@@ -1060,7 +1060,7 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
         inputs.freeform
           ? `NOTE TYPE: ${inputs.type}\n\nCHART CONTENT (free-form — extract A&P and context from this):\n${inputs.freeform}\n\nIs this a discharge note? NO`
           : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
-        2500)
+        4000)
     ]);
 
     prog(true, 80, 'Rendering results...');
