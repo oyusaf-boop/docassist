@@ -622,6 +622,81 @@ function withKB(systemPrompt) {
   return systemPrompt + '\n\n' + FOUNDATION_KB_SUMMARY;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SELECTIVE KB INJECTION — Option C Fix (2026-06-30)
+// Instead of injecting the full 133 KB foundation KB on every call,
+// we scan the note text and inject only the diagnosis entries relevant
+// to this specific note. Global rules + fallback table always included.
+// Avg prompt size reduction: ~87–92% for typical 2–4 diagnosis notes.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const KEYWORD_MAP = {
+  "AKI":                                    ["aki", "acute kidney injury", "acute kidney", "creatinine", "renal failure", "oliguria", "anuria", "renal insufficiency"],
+  "Sepsis":                                 ["sepsis", "septic", "sirs", "bacteremia", "septicemia", "septic shock"],
+  "Heart failure":                          ["heart failure", " hf ", "hfref", "hfpef", "chf", "ejection fraction", "ef ", "lvef", "bnp", "diuresis", "lasix", "volume overload", "pulmonary edema", "cardiomyopathy"],
+  "Pneumonia":                              ["pneumonia", " pna ", " cap ", " hap ", "lung infiltrate", "consolidation", "community acquired", "hospital acquired"],
+  "COPD exacerbation":                      ["copd", "chronic obstructive", "emphysema", "bronchitis", "copd exacerbation", "obstructive lung"],
+  "Asthma exacerbation":                    ["asthma", "bronchospasm", "reactive airway"],
+  "Encephalopathy":                         ["encephalopathy", "hepatic encephalopathy", "metabolic encephalopathy", "toxic encephalopathy", "wernicke"],
+  "Acute respiratory failure":              ["respiratory failure", "hypoxic", "hypercapnic", "ards", "acute hypoxemic", "intubated", "mechanical ventilation", "bipap", "cpap"],
+  "Malnutrition":                           ["malnutrition", "malnourished", "albumin", "prealbumin", "cachexia", "failure to thrive", "weight loss", "nutritional"],
+  "Pressure injury":                        ["pressure injury", "pressure ulcer", "decubitus", "wound", "stage 2", "stage 3", "stage 4"],
+  "Delirium / AMS":                         ["delirium", "altered mental status", " ams ", "confusion", "disoriented", "agitation", "altered mentation"],
+  "DKA / HHS":                              ["dka", "hhs", "diabetic ketoacidosis", "hyperosmolar", "hyperglycemic"],
+  "Diabetes with complications":            ["diabetes", "diabetic", "hyperglycemia", "hypoglycemia", "insulin", "hba1c", "a1c", "glucose"],
+  "CKD":                                    ["ckd", "chronic kidney disease", "chronic renal", "esrd", "gfr", "dialysis", "hemodialysis"],
+  "Atrial fibrillation":                    ["atrial fibrillation", "afib", "a-fib", "atrial flutter", "aflutter", "rapid ventricular"],
+  "NSTEMI / STEMI / Type 2 MI":            ["nstemi", "stemi", "myocardial infarction", " mi ", "troponin", "heart attack", "type 2 mi", "type 1 mi", "demand ischemia", "acs", "acute coronary"],
+  "PE / DVT":                               ["pulmonary embolism", " pe ", " dvt ", "deep vein thrombosis", "venous thromboembolism", "vte", "clot", "anticoagulation", "heparin drip", "lovenox"],
+  "GI bleed":                               ["gi bleed", "gastrointestinal bleed", "upper gi", "lower gi", "hematemesis", "melena", "hematochezia", "ugib", "lgib", "blood in stool"],
+  "Cirrhosis with decompensation":          ["cirrhosis", "cirrhotic", "ascites", "varices", "portal hypertension", "hepatic", "liver failure", "esophageal varices"],
+  "Hyponatremia":                           ["hyponatremia", "low sodium", "low na", "siadh", "sodium 1", "na 1"],
+  "UTI / pyelonephritis / urosepsis":       ["urinary tract infection", " uti ", "pyelonephritis", "urosepsis", "dysuria", "pyuria", "bacteriuria", "urinalysis"],
+  "Cellulitis":                             ["cellulitis", "skin infection", "erythema", "wound infection", "abscess", "necrotizing"],
+  "COVID-19":                               ["covid", "covid-19", "sars-cov", "coronavirus"],
+  "Stroke / TIA":                           ["stroke", " tia ", " cva ", "cerebrovascular", "ischemic stroke", "hemorrhagic stroke", "hemiplegia", "hemiparesis", "aphasia", "dysarthria", "facial droop", "weakness", "neuro deficits"],
+  "Hypertensive emergency":                 ["hypertensive emergency", "hypertensive urgency", "malignant hypertension", "hypertensive crisis", "blood pressure", "sbp >", "sbp>"],
+  "Shock":                                  ["shock", "hypotension", "vasopressors", "norepinephrine", "levophed", "vasopressin", "cardiogenic shock", "distributive", "mean arterial"],
+  "Pancreatitis":                           ["pancreatitis", "pancreatic", "lipase", "amylase"],
+  "C diff":                                 ["c diff", "c. diff", "clostridium difficile", "cdiff", "clostridioides", "pseudomembranous", "watery diarrhea"],
+  "Anemia":                                 ["anemia", "hemoglobin", "hematocrit", " hgb ", " hct ", "transfusion", "prbc", "iron deficiency", "b12", "folate"],
+  "Hyperkalemia / electrolyte disturbances":["hyperkalemia", "hypokalemia", "potassium", "hypernatremia", "hypomagnesemia", "magnesium", "hypocalcemia", "calcium", "phosphorus", "electrolyte"],
+  "Rhabdomyolysis":                         ["rhabdomyolysis", "rhabdo", "cpk", "ck elevation", "myoglobinuria", "muscle breakdown"],
+  "Alcohol withdrawal":                     ["alcohol withdrawal", "etoh withdrawal", "delirium tremens", "dts", "ciwa", "alcohol use", "etoh abuse", "seizure from alcohol"]
+};
+
+function getRelevantKB(noteText, kb) {
+  if (!kb || !kb.diagnoses) return {};
+  const text = noteText.toLowerCase();
+  const matched = {};
+  for (const [dxKey, keywords] of Object.entries(KEYWORD_MAP)) {
+    if (keywords.some(kw => text.includes(kw))) {
+      if (kb.diagnoses[dxKey]) {
+        matched[dxKey] = kb.diagnoses[dxKey];
+      }
+    }
+  }
+  return matched;
+}
+
+function withSelectiveKB(systemPrompt, noteText) {
+  if (!FOUNDATION_KB) return systemPrompt;
+  const kb = FOUNDATION_KB;
+  const relevantDx = getRelevantKB(noteText || '', kb);
+  const matchCount = Object.keys(relevantDx).length;
+  const trimmedKB = {
+    global_rules: kb.global_rules,
+    diagnoses: relevantDx,
+    fallback_cc_mcc_table: kb.fallback_cc_mcc_table
+  };
+  const kbHeader = matchCount > 0
+    ? `SELECTIVE FOUNDATION KB (FY2026) — ${matchCount} of 32 diagnoses matched from note content. Global rules and fallback table always included.`
+    : `SELECTIVE FOUNDATION KB (FY2026) — No specific diagnosis ladders matched; global rules and fallback table included for reference.`;
+  return systemPrompt + '\n\n' + kbHeader + '\n' + JSON.stringify(trimmedKB, null, 0);
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+
 // Kick off load immediately
 loadFoundationKB();
 
@@ -1055,7 +1130,7 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
 
     await loadFoundationKB();
     const [analysisRaw, apRaw] = await Promise.all([
-      callAPI(SYSTEM_ANALYSIS, context, 8000),
+      callAPI(withSelectiveKB(SYSTEM_ANALYSIS, context), context, 8000),
       callAPI(SYSTEM_AP,
         inputs.freeform
           ? `NOTE TYPE: ${inputs.type}\n\nCHART CONTENT (free-form — extract A&P and context from this):\n${inputs.freeform}\n\nIs this a discharge note? NO`
@@ -1503,7 +1578,7 @@ async function generateDCSummary() {
   try {
     prog(true, 30, 'Synthesizing hospital course and diagnoses...');
     await loadFoundationKB();
-    const raw = await callAPI(withKB(SYSTEM_DC_SUMMARY), context, 8000);
+    const raw = await callAPI(withSelectiveKB(SYSTEM_DC_SUMMARY, context), context, 8000);
     prog(true, 85, 'Rendering discharge summary...');
 
     let data;
@@ -1677,7 +1752,7 @@ async function generateAPB() {
     prog(true, 40, 'Synthesizing problems and generating A&P in your style...');
 
     await loadFoundationKB();
-    const raw = await callAPI(withKB(SYSTEM_AP_BUILDER), notes, 8000);
+    const raw = await callAPI(withSelectiveKB(SYSTEM_AP_BUILDER, notes), notes, 8000);
 
     prog(true, 90, 'Done ✓');
     apbText = raw.trim();
