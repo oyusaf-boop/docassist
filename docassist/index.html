@@ -1139,12 +1139,11 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
 
     await loadFoundationKB();
     const [analysisRaw, apRaw] = await Promise.all([
-      callAPI(withSelectiveKB(SYSTEM_ANALYSIS, context), context, 8000),
+      callAPI(withSelectiveKB(SYSTEM_ANALYSIS, context), context, 4500),
       callAPI(SYSTEM_AP,
         inputs.freeform
           ? `NOTE TYPE: ${inputs.type}\n\nCHART CONTENT (free-form — extract A&P and context from this):\n${inputs.freeform}\n\nIs this a discharge note? NO`
-          : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
-        4000)
+          : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`, 2500)
     ]);
 
     prog(true, 80, 'Rendering results...');
@@ -1587,7 +1586,7 @@ async function generateDCSummary() {
   try {
     prog(true, 30, 'Synthesizing hospital course and diagnoses...');
     await loadFoundationKB();
-    const raw = await callAPI(withSelectiveKB(SYSTEM_DC_SUMMARY, context), context, 8000);
+    const raw = await callAPI(withSelectiveKB(SYSTEM_DC_SUMMARY, context), context, 4500);
     prog(true, 85, 'Rendering discharge summary...');
 
     let data;
@@ -1761,7 +1760,7 @@ async function generateAPB() {
     prog(true, 40, 'Synthesizing problems and generating A&P in your style...');
 
     await loadFoundationKB();
-    const raw = await callAPI(withSelectiveKB(SYSTEM_AP_BUILDER, notes), notes, 8000);
+    const raw = await callAPI(withSelectiveKB(SYSTEM_AP_BUILDER, notes), notes, 4500);
 
     prog(true, 90, 'Done ✓');
     apbText = raw.trim();
