@@ -737,6 +737,10 @@ async function callAPI(system, user, maxTokens) {
   }
   const data = await res.json();
   if (data.error) throw new Error(data.error);
+  if (data.stop_reason === 'max_tokens') {
+    console.warn('[API] Response TRUNCATED at token limit (' + (maxTokens||2500) + '). Length: ' + (data.text||'').length + ' chars');
+    throw new Error('The AI response was cut off at the length limit before finishing. Please retry — if it persists, trim the pasted note.');
+  }
   return data.text;
 }
 
@@ -1160,7 +1164,7 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
       ? '\n\nPRIOR RECORDS (baseline/chronic context only — DO NOT pull active diagnoses from here):\n' + inputs.prior
       : '';
     const [analysisRaw, apRaw] = await Promise.all([
-      callAPI(withSelectiveKB(SYSTEM_ANALYSIS, context), context, 6000),
+      callAPI(withSelectiveKB(SYSTEM_ANALYSIS, context), context, 8000),
       callAPI(SYSTEM_AP,
         inputs.freeform
           ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
