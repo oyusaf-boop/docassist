@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     }
 
     const text = data.content.map(b => b.text || '').join('').trim();
-    return res.status(200).json({ text });
+    return res.status(200).json({ text, stop_reason: data.stop_reason || null });
 
   } catch (err) {
     return res.status(500).json({ error: err.message || 'Server error' });
