@@ -836,7 +836,16 @@ This is per AHA Coding Clinic and Brundage Group CDI guidance.
 const OUTPUT_STYLE_RULES = `OUTPUT DENSITY RULES:
 - No preamble, no markdown, no backticks — raw JSON only.
 - Internal data fields (values, verdicts, codes, levels) must be terse and dense.
-- Physician-facing prose fields (rationale, body, action, note, documentation_tips) remain clear, complete sentences — never thin clinical justification.`;
+- Physician-facing prose fields (rationale, body, action, note, documentation_tips) remain clear, complete sentences — never thin clinical justification.
+
+HARD OUTPUT LIMITS (latency budget — rank by impact, highest first):
+- cdi_alerts: max 6 (highest revenue/compliance impact first)
+- icd_codes: max 8
+- gaps: max 5, one sentence each
+- already_documented / add_to_upgrade: max 6 items each, short phrases
+- each rationale: max 2 sentences; each body: max 3 sentences; each action: 1 sentence
+- documentation_tips: max 4
+Stay well under the token ceiling — finish the JSON completely. An unfinished response is worthless.`;
 
 const SYSTEM_EM = `You are an E&M coding expert for hospitalist physicians using AMA 2023 MDM rules and Prime Health quality documentation standards.
 
@@ -1206,9 +1215,9 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     const priorForAP = inputs.prior
       ? '\n\nPRIOR RECORDS (baseline/chronic context only — DO NOT pull active diagnoses from here):\n' + inputs.prior
       : '';
-    const [emRaw, cdiRaw, sepsisRaw, apRaw] = await Promise.all([
-      callAPI(SYSTEM_EM, context, 2500),
-      callAPI(withSelectiveKB(SYSTEM_CDI, context), context, 4000),
+    const settled = await Promise.allSettled([
+      callAPI(SYSTEM_EM, context, 3500),
+      callAPI(withSelectiveKB(SYSTEM_CDI, context), context, 5000),
       callAPI(SYSTEM_SEPSIS, context, 2200),
       callAPI(SYSTEM_AP,
         inputs.freeform
@@ -1219,53 +1228,63 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
 
     prog(true, 80, 'Rendering results...');
 
-    let analysis = {}, apData;
-    try { Object.assign(analysis, parseJSON(emRaw)); } catch(e) { throw new Error('E&M analysis parse failed: ' + emRaw.slice(0,300)); }
-    try { Object.assign(analysis, parseJSON(cdiRaw)); } catch(e) { throw new Error('CDI analysis parse failed: ' + cdiRaw.slice(0,300)); }
-    try { Object.assign(analysis, parseJSON(sepsisRaw)); } catch(e) { throw new Error('Sepsis analysis parse failed: ' + sepsisRaw.slice(0,300)); }
-    try { apData = parseJSON(apRaw); } catch(e) { throw new Error('A&P parse failed: ' + apRaw.slice(0,300)); }
+    const takeResult = (r, label) => {
+      if (r.status !== 'fulfilled') { console.warn('[' + label + '] call failed: ' + r.reason.message); return { __err: r.reason.message }; }
+      try { return parseJSON(r.value); }
+      catch(e) { console.warn('[' + label + '] parse failed. Raw head: ' + r.value.slice(0,200)); return { __err: label + ' output could not be read \u2014 please retry the analysis.' }; }
+    };
+    const emP = takeResult(settled[0], 'E&M');
+    const cdiP = takeResult(settled[1], 'CDI');
+    const sepP = takeResult(settled[2], 'Sepsis');
+    const apP = takeResult(settled[3], 'A&P');
 
-    // Compose summary client-side from the three micro-results (deterministic)
+    let analysis = {};
+    [emP, cdiP, sepP].forEach(p => { if (!p.__err) Object.assign(analysis, p); });
+    let apData = apP.__err ? null : apP;
+
+    // Compose summary client-side (deterministic)
     analysis.summary = {
-      em_code: (analysis.em||{}).justified_code || '—',
-      complexity: (((analysis.em||{}).justified_level)||'—').replace(' Complexity','').replace(' MDM',''),
-      mcc_cc_count: ((analysis.summary||{}).mcc_cc_count) || '—',
-      drg_opportunity: (analysis.drg||{}).revenue_impact || '—',
+      em_code: (analysis.em||{}).justified_code || '\u2014',
+      complexity: (((analysis.em||{}).justified_level)||'\u2014').replace(' Complexity','').replace(' MDM',''),
+      mcc_cc_count: ((analysis.summary||{}).mcc_cc_count) || '\u2014',
+      drg_opportunity: (analysis.drg||{}).revenue_impact || '\u2014',
       alert_count: (analysis.cdi_alerts||[]).length
     };
 
-    setSpinners(false);
-    renderEM(analysis.em);
-    renderCDI(analysis.cdi_alerts);
-    renderDRG(analysis.drg, analysis.icd_codes, analysis.gaps);
-    renderRevBar(analysis.summary);
-    renderSepsis(analysis.sepsis);
+    // Per-panel rendering: each section succeeds or fails independently
+    if (emP.__err) panelError('em-body', emP.__err); else renderEM(analysis.em);
+    if (cdiP.__err) { panelError('cdi-body', cdiP.__err); panelError('drg-body', cdiP.__err); }
+    else { renderCDI(analysis.cdi_alerts); renderDRG(analysis.drg, analysis.icd_codes, analysis.gaps || []); }
+    if (sepP.__err) panelError('sepsis-body', sepP.__err); else renderSepsis(analysis.sepsis);
+    if (!emP.__err || !cdiP.__err) renderRevBar(analysis.summary);
 
-    // Apply lab placeholder substitution (trop / BNP / D-dimer)
     if (apData && apData.ap_text) {
       const chartContent = [inputs.freeform, inputs.prior, inputs.hpi, inputs.labs, inputs.ap].filter(Boolean).join('\n');
       apData.ap_text = processLabPlaceholders(apData.ap_text, chartContent);
     }
+    if (apP.__err) panelError('ap-body', apP.__err); else renderAP(apData, inputs.ap);
 
-    renderAP(apData, inputs.ap);
-
-    // Capture de-identified metrics for ROI tracking
-    captureMetrics(analysis);
+    try { captureMetrics(analysis); } catch(e) { console.warn('metrics capture skipped: ' + e.message); }
 
     // Update tab badges
     const alertCount = (analysis.cdi_alerts||[]).length;
     document.getElementById('ap-tab-btn').innerHTML =
-      `✏️ Optimized A&P${alertCount>0?`<span class="otab-badge">${alertCount}</span>`:''}`;
+      `\u270f\ufe0f Optimized A&P${alertCount>0?`<span class="otab-badge">${alertCount}</span>`:''}`;
     if (analysis.sepsis?.detected) {
-      document.getElementById('sepsis-tab-btn').innerHTML = '🦠 Sepsis Criteria <span class="otab-badge">!</span>';
+      document.getElementById('sepsis-tab-btn').innerHTML = '\ud83e\udda0 Sepsis Criteria <span class="otab-badge">!</span>';
     }
 
-    prog(true, 100, 'Analysis complete ✓');
-    setTimeout(() => prog(false), 1500);
+    const failCount = [emP, cdiP, sepP, apP].filter(p => p.__err).length;
+    if (failCount > 0) {
+      prog(true, 100, failCount + ' of 4 sections failed \u2014 see panels');
+      setTimeout(() => prog(false), 3000);
+    } else {
+      prog(true, 100, 'Analysis complete \u2713');
+      setTimeout(() => prog(false), 1500);
+    }
 
   } catch(err) {
-    setSpinners(false);
-    document.getElementById('em-body').innerHTML = `<div style="background:#fde;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#8b0000;font-size:13px;">⚠️ ${esc(err.message)}</div>`;
+    ['em-body','cdi-body','drg-body','sepsis-body','ap-body'].forEach(id => panelError(id, err.message));
     prog(false);
   }
   setBusy(false);
@@ -1623,6 +1642,11 @@ function setSpinners(on) {
   ['em-body','cdi-body','drg-body'].forEach(id => document.getElementById(id).innerHTML='<div class="spin-wrap"><div class="spin"></div>Analyzing...</div>');
   document.getElementById('ap-body').innerHTML='<div class="spin-wrap"><div class="spin"></div>Generating optimized A&P...</div>';
   document.getElementById('sepsis-body').innerHTML='<div class="spin-wrap"><div class="spin"></div>Evaluating sepsis criteria...</div>';
+}
+
+function panelError(id, msg) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = '<div style="background:#fde;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#8b0000;font-size:13px;">\u26a0\ufe0f ' + esc(msg) + '</div>';
 }
 
 function resetOutputs() {
