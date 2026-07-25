@@ -284,7 +284,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 <!-- LOGIN OVERLAY -->
 <div id="login-overlay">
   <div id="login-box">
-    <div id="login-logo">\u2695 Doc<span>Assist</span></div>
+    <div id="login-logo">⚕ Doc<span>Assist</span></div>
     <div id="login-sub">CDI &amp; E&amp;M Companion &middot; Private Beta</div>
     <input id="login-input" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()" autofocus />
     <button id="login-btn" onclick="doLogin()">Access DocAssist</button>
@@ -509,13 +509,11 @@ async function loadFoundationKB() {
 
 // Build a compact prompt-injectable reference from full KB.
 // Keeps token cost reasonable while surfacing CC/MCC capture targets per dx.
-function buildKBSummary(kb, onlyDxKeys) {
+function buildKBSummary(kb) {
   if (!kb || !kb.diagnoses) return '';
-  const filterSet = (onlyDxKeys && onlyDxKeys.length) ? new Set(onlyDxKeys) : null;
-  const dxCount = filterSet ? filterSet.size : Object.keys(kb.diagnoses).length;
   const lines = [];
   lines.push('═══════════════════════════════════════════════');
-  lines.push('FOUNDATION CDI REFERENCE — FY2026 (' + dxCount + ' relevant hospitalist dx)');
+  lines.push('FOUNDATION CDI REFERENCE — FY2026 (32 hospitalist dx)');
   lines.push('Use this as authoritative ladder for CC/MCC capture suggestions.');
   lines.push('Each dx lists base code, top capture rungs, hard rules, common misses.');
   lines.push('═══════════════════════════════════════════════');
@@ -533,7 +531,6 @@ function buildKBSummary(kb, onlyDxKeys) {
 
   // Per-dx condensed
   Object.entries(kb.diagnoses).forEach(([dxName, dx]) => {
-    if (filterSet && !filterSet.has(dxName)) return;
     lines.push('── ' + dxName + ' ──');
     lines.push('  Base: ' + (dx.base_code || '?') + ' = ' + (dx.cc_mcc || '?'));
 
@@ -596,73 +593,6 @@ function withKB(systemPrompt) {
   return systemPrompt + '\n\n' + FOUNDATION_KB_SUMMARY;
 }
 
-// ═══════════════════════════════════════════════
-// SELECTIVE KB INJECTION (Option C)
-// Only inject dx ladders whose keywords appear in the note.
-// Global rules always injected. False positives are cheap;
-// keywords are intentionally broad to avoid silent misses.
-// ═══════════════════════════════════════════════
-const KEYWORD_MAP = {
-  'AKI': ['aki','acute kidney injury','acute renal failure','atn','acute tubular necrosis','azotemia','creatinine'],
-  'Sepsis': ['sepsis','septic','septicemia','bacteremia','sirs','lactate'],
-  'Heart failure': ['heart failure','chf','hfref','hfpef','hfmref','cardiomyopathy','volume overload','pulmonary edema','bnp','nt-probnp','ef of','ejection fraction'],
-  'Pneumonia': ['pneumonia','pna','infiltrate','consolidation','aspiration','empyema'],
-  'COPD exacerbation': ['copd','emphysema','chronic bronchitis','obstructive pulmonary'],
-  'Asthma exacerbation': ['asthma','bronchospasm','status asthmaticus','wheez'],
-  'Encephalopathy': ['encephalopath'],
-  'Acute respiratory failure': ['respiratory failure','hypoxic','hypoxemic','hypoxia','hypercapnic','hypercarbic','bipap','high-flow','high flow','hfnc','intubat','ventilator','mechanical ventilation','nasal cannula'],
-  'Malnutrition': ['malnutrition','malnourish','cachexia','cachectic','protein-calorie','protein calorie','underweight','poor oral intake','aspen'],
-  'Pressure injury': ['pressure injury','pressure ulcer','decubitus','sacral ulcer','sacral wound','bedsore','stage 3','stage 4','unstageable'],
-  'Delirium / AMS': ['delirium','altered mental status','ams','confusion','confused','disoriented','sundowning'],
-  'DKA / HHS': ['dka','diabetic ketoacidosis','hhs','hyperosmolar','ketoacidosis','anion gap','ketones','ketonemia'],
-  'Diabetes with complications': ['diabetes','diabetic','t2dm','t1dm','dm2','iddm','niddm','hyperglycemia','insulin','a1c','hemoglobin a1c'],
-  'CKD': ['ckd','chronic kidney disease','esrd','end-stage renal','end stage renal','dialysis','hemodialysis','gfr'],
-  'Atrial fibrillation': ['atrial fibrillation','afib','a-fib','a fib','atrial flutter','rvr'],
-  'NSTEMI / STEMI / Type 2 MI': ['nstemi','stemi','myocardial infarction','troponin','acs','acute coronary','demand ischemia','chest pain','cath lab','heart cath'],
-  'PE / DVT': ['pulmonary embolism','pe','dvt','deep vein','deep venous','venous thromboembolism','vte','d-dimer','d dimer','saddle embol','thrombus','thrombosis'],
-  'GI bleed': ['gi bleed','gib','gastrointestinal bleed','melena','hematemesis','hematochezia','brbpr','coffee ground','variceal bleed','ugib','lgib'],
-  'Cirrhosis with decompensation': ['cirrhosis','cirrhotic','ascites','hepatic encephalopathy','varices','esophageal varices','meld','paracentesis','sbp','spontaneous bacterial'],
-  'Hyponatremia': ['hyponatremia','hyponatremic','siadh','low sodium','sodium of 1'],
-  'UTI / pyelonephritis / urosepsis': ['uti','urinary tract infection','pyelonephritis','urosepsis','cystitis','pyuria','urine culture'],
-  'Cellulitis': ['cellulitis','erysipelas','abscess','skin and soft tissue','ssti','necrotizing'],
-  'COVID-19': ['covid','sars-cov-2','sars cov','coronavirus'],
-  'Stroke / TIA': ['stroke','cva','tia','transient ischemic','cerebrovascular','hemiparesis','aphasia','dysarthria','facial droop','thrombectomy','tpa','tnk','tenecteplase','alteplase'],
-  'Hypertensive emergency': ['hypertensive emergency','hypertensive urgency','hypertensive crisis','malignant hypertension','htn emergency','htn urgency'],
-  'Shock': ['shock','hypotension','hypotensive','pressor','vasopressor','norepinephrine','levophed','vasopressin','phenylephrine','map <','map<'],
-  'Pancreatitis': ['pancreatitis','lipase'],
-  'C diff': ['c diff','c. diff','cdiff','clostridioides','clostridium difficile','pseudomembranous'],
-  'Anemia': ['anemia','anemic','hemoglobin of','hgb of','transfus','prbc','blood loss'],
-  'Hyperkalemia / electrolyte disturbances': ['hyperkalemia','hypokalemia','hyperkalemic','potassium of','k of 6','k of 5','hypomagnesemia','hypocalcemia','hypophosphatemia','electrolyte'],
-  'Rhabdomyolysis': ['rhabdomyolysis','rhabdo','creatine kinase','ck of','cpk','myoglobin'],
-  'Alcohol withdrawal': ['alcohol withdrawal','etoh withdrawal','etoh','ciwa','delirium tremens','dts','alcohol use disorder','alcoholism','drinks per day']
-};
-
-// Returns array of dx keys whose keywords appear in the note (word-boundary match)
-function getMatchedDxKeys(noteText) {
-  if (!noteText) return [];
-  const text = noteText.toLowerCase();
-  const matched = [];
-  Object.entries(KEYWORD_MAP).forEach(([dxKey, keywords]) => {
-    for (const kw of keywords) {
-      const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // Word boundary for short tokens to avoid substring false hits ("pe" in "type")
-      const pattern = kw.length <= 4 ? '\\b' + escaped + '\\b' : escaped;
-      if (new RegExp(pattern, 'i').test(text)) { matched.push(dxKey); break; }
-    }
-  });
-  return matched;
-}
-
-// Selective wrapper: global rules always, dx ladders only if matched in note
-function withSelectiveKB(systemPrompt, noteText) {
-  if (!FOUNDATION_KB) return withKB(systemPrompt); // fallback to full summary if raw KB unavailable
-  const matched = getMatchedDxKeys(noteText);
-  const summary = buildKBSummary(FOUNDATION_KB, matched.length ? matched : null);
-  console.log('[KB] Selective injection: ' + (matched.length ? matched.length + ' dx matched — ' + matched.join(', ') : 'no keyword match, full KB injected') + ' (' + summary.length + ' chars)');
-  if (!summary) return systemPrompt;
-  return systemPrompt + '\n\n' + summary;
-}
-
 // Kick off load immediately
 loadFoundationKB();
 
@@ -721,26 +651,42 @@ function getInputs() {
 }
 function v(id) { const el=document.getElementById(id); return el ? el.value.trim() : ''; }
 
-async function callAPI(system, user, maxTokens) {
-  const res = await fetch('/api/analyze', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ system, user, maxTokens: maxTokens||2500 })
-  });
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error('Server error ' + res.status + ': ' + errText.substring(0, 120));
+// ═══════════════════════════════════════════════
+// API CALL — with hard timeout + honest error surfacing.
+// A stalled or failed request can no longer leave the UI spinning forever.
+// ═══════════════════════════════════════════════
+async function callAPI(system, user, maxTokens, timeoutMs) {
+  const limit = timeoutMs || 90000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), limit);
+
+  let res;
+  try {
+    res = await fetch('/api/analyze', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ system, user, maxTokens: maxTokens||2500 }),
+      signal: controller.signal
+    });
+  } catch(e) {
+    clearTimeout(timer);
+    if (e && e.name === 'AbortError') {
+      throw new Error('Request timed out after ' + Math.round(limit/1000) + 's — the server took too long. Try again, or shorten the note.');
+    }
+    throw new Error('Network error contacting the server. Check your connection and try again.');
   }
-  const contentType = res.headers.get('content-type') || '';
-  if (!contentType.includes('application/json')) {
-    const errText = await res.text();
-    throw new Error('Unexpected response (not JSON) ' + res.status + ': ' + errText.substring(0, 120));
+  clearTimeout(timer);
+
+  if (res.status === 401) throw new Error('Your session expired. Refresh the page and log in again.');
+
+  const raw = await res.text();
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch(e) {
+    if (res.status === 504) throw new Error('The analysis timed out on the server (504). Try again, or shorten the note.');
+    throw new Error('Server returned an unexpected response (HTTP ' + res.status + ').');
   }
-  const data = await res.json();
-  if (data.error) throw new Error(data.error);
-  if (data.stop_reason === 'max_tokens') {
-    console.warn('[API] Response TRUNCATED at token limit (' + (maxTokens||2500) + '). Length: ' + (data.text||'').length + ' chars');
-    throw new Error('The AI response was cut off at the length limit before finishing. Please retry — if it persists, trim the pasted note.');
-  }
+  if (!res.ok || data.error) throw new Error(data.error || ('Server error (HTTP ' + res.status + ').'));
   return data.text;
 }
 
@@ -771,8 +717,9 @@ function sanitizeJSON(s) {
 // SYSTEM PROMPTS
 // ═══════════════════════════════════════════════
 
-// ═══ SPLIT ANALYSIS ARCHITECTURE (v12): three parallel micro-prompts ═══
-const CTX_CLASSIFY = `════════════════════════════════
+const SYSTEM_ANALYSIS = `You are a combined CDI specialist, E&M coding expert, and inpatient medical coding specialist for hospitalist physicians. You use FY2026 ICD-10-CM guidelines, CC/MCC classifications, and evidence-based clinical criteria.
+
+════════════════════════════════
 STEP 1 — CLASSIFY THE FREE-FORM INPUT
 ════════════════════════════════
 The physician may paste raw chart content in any order — ER physician note, HPI, labs, imaging, consult notes (cardiology, nephrology, etc.), A&P sections. Multiple notes may be pasted together without labels.
@@ -806,50 +753,6 @@ CONSULTANT INTELLIGENCE:
 - Flag consultant diagnosis upgrades the physician should incorporate
 
 PHYSICAL EXAM, PMH, PSH, MEDICATIONS, ALLERGIES, ROS are ASSUMED DOCUMENTED — never flag these.
-`;
-
-const CTX_CODING_CORE = `════════════════════════════════
-PRINCIPAL DIAGNOSIS RULES
-════════════════════════════════
-- Principal dx = condition that "bought the bed" — chiefly responsible for occasioning the ADMISSION
-- A condition developing after admission CANNOT become principal dx
-- When 2 conditions both present at admission, the one requiring more resources may be principal
-- Flag if physician's A&P order doesn't match likely admission reason
-- DISCHARGE NOTES: flag any unresolved "vs." differentials — physician must give final diagnosis at discharge
-
-
-════════════════════════════════
-M.E.A.T. RULE
-════════════════════════════════
-A secondary diagnosis is only codeable if there is evidence it was Monitored, Evaluated, Assessed, or Treated during THIS encounter. Coders cannot code from problem lists alone. Flag diagnoses listed without any M.E.A.T. element.
-
-
-════════════════════════════════
-"EVIDENCE OF" DOCUMENTATION TIP
-════════════════════════════════
-"Evidence of [diagnosis]" = NOT an uncertain diagnosis = codeable in ANY note (progress notes AND discharge).
-"Probable/possible/suspected/likely" = uncertain = ONLY codeable if at discharge summary (inpatient rule).
-Strategy: Recommend "evidence of metabolic encephalopathy" in progress notes rather than waiting for discharge.
-This is per AHA Coding Clinic and Brundage Group CDI guidance.
-`;
-
-const OUTPUT_STYLE_RULES = `OUTPUT DENSITY RULES:
-- No preamble, no markdown, no backticks — raw JSON only.
-- Internal data fields (values, verdicts, codes, levels) must be terse and dense.
-- Physician-facing prose fields (rationale, body, action, note, documentation_tips) remain clear, complete sentences — never thin clinical justification.
-
-HARD OUTPUT LIMITS (latency budget — rank by impact, highest first):
-- cdi_alerts: max 6 (highest revenue/compliance impact first)
-- icd_codes: max 8
-- gaps: max 5, one sentence each
-- already_documented / add_to_upgrade: max 6 items each, short phrases
-- each rationale: max 2 sentences; each body: max 3 sentences; each action: 1 sentence
-- documentation_tips: max 4
-Stay well under the token ceiling — finish the JSON completely. An unfinished response is worthless.`;
-
-const SYSTEM_EM = `You are an E&M coding expert for hospitalist physicians using AMA 2023 MDM rules and Prime Health quality documentation standards.
-
-` + CTX_CLASSIFY + `
 
 ════════════════════════════════
 E&M CODING (AMA 2023 MDM Rules)
@@ -860,8 +763,19 @@ Need 2/3 MDM elements: Problems, Data, Risk
 High MDM: 1+ highly complex problem OR severe exacerbation of chronic illness threatening life/function
 Moderate: 1 acute/chronic illness with exacerbation OR 2+ stable chronic
 
+════════════════════════════════
+PRINCIPAL DIAGNOSIS RULES
+════════════════════════════════
+- Principal dx = condition that "bought the bed" — chiefly responsible for occasioning the ADMISSION
+- A condition developing after admission CANNOT become principal dx
+- When 2 conditions both present at admission, the one requiring more resources may be principal
+- Flag if physician's A&P order doesn't match likely admission reason
+- DISCHARGE NOTES: flag any unresolved "vs." differentials — physician must give final diagnosis at discharge
 
-` + CTX_CODING_CORE + `
+════════════════════════════════
+M.E.A.T. RULE
+════════════════════════════════
+A secondary diagnosis is only codeable if there is evidence it was Monitored, Evaluated, Assessed, or Treated during THIS encounter. Coders cannot code from problem lists alone. Flag diagnoses listed without any M.E.A.T. element.
 
 ════════════════════════════════
 QUALITY OF CARE DOCUMENTATION (Prime Health Framework)
@@ -874,30 +788,13 @@ For every progress note, check and flag if missing:
 5. NEW DEVELOPMENTS/COMPLICATIONS: Are new complications or developments affecting care or length of stay documented with POA status? Flag new issues without clear documentation.
 6. HOSPITAL ACQUIRED CONDITIONS (HAC): Was each complication present on admission (POA=Y) or acquired after admission (POA=N)? Flag any complication without clear POA documentation.
 
-
-` + OUTPUT_STYLE_RULES + `
-
-Return ONLY raw JSON:
-{
-  "em": {
-    "note_type":"...", "justified_code":"99223", "justified_level":"High Complexity",
-    "current_likely_code":"99222", "upgrade_available":true, "revenue_gap_per_note":"$65",
-    "mdm":{
-      "problems":{"level":"High","rationale":"..."},
-      "data":{"level":"Moderate","rationale":"..."},
-      "risk":{"level":"High","rationale":"..."}
-    },
-    "already_documented":["..."],
-    "add_to_upgrade":["..."]
-  },
-  "gaps":["quality-of-care documentation gaps from the Prime Health framework, empty array if none"]
-}`;
-
-const SYSTEM_CDI = `You are a CDI and inpatient coding specialist for hospitalist physicians. You use FY2026 ICD-10-CM guidelines, CC/MCC classifications, and evidence-based clinical criteria. Every suggested diagnosis requires specific evidence from the note — if unsure, flag and ask, never assert.
-
-` + CTX_CLASSIFY + `
-
-` + CTX_CODING_CORE + `
+════════════════════════════════
+"EVIDENCE OF" DOCUMENTATION TIP
+════════════════════════════════
+"Evidence of [diagnosis]" = NOT an uncertain diagnosis = codeable in ANY note (progress notes AND discharge).
+"Probable/possible/suspected/likely" = uncertain = ONLY codeable if at discharge summary (inpatient rule).
+Strategy: Recommend "evidence of metabolic encephalopathy" in progress notes rather than waiting for discharge.
+This is per AHA Coding Clinic and Brundage Group CDI guidance.
 
 ════════════════════════════════
 FY2026 CC/MCC RULES
@@ -980,7 +877,6 @@ HTN COMBO CODES:
 
 PRESSURE ULCERS: Stage 3-4 = MCC; Stage 1-2 = NON-CC. Document stage and POA.
 
-
 ════════════════════════════════
 PHSI ADDITIONAL CC/MCC — FY2026 VERIFIED (Prime Health Reference)
 ════════════════════════════════
@@ -1021,7 +917,6 @@ CC CONDITIONS (commonly missed):
 - Pressure Ulcer Stage III = CC (SOI=2); Stage IV = MCC (SOI=3)
 - Non-Ischemic Myocardial Injury Non-Traumatic (I5A) = CC (SOI=2)* — new FY2026 code
 
-
 ════════════════════════════════
 PHSI NON-CC LIST — HIGH SOI BUT NOT CC/MCC (FY2026 Verified)
 ════════════════════════════════
@@ -1050,11 +945,18 @@ UNCERTAIN DIAGNOSIS (inpatient only):
 - Recommend "evidence of" language in progress notes for diagnoses not yet fully confirmed
 
 Return ONLY raw JSON, no markdown, no backticks:
-
-` + OUTPUT_STYLE_RULES + `
-
-Return ONLY raw JSON:
 {
+  "em": {
+    "note_type":"...", "justified_code":"99223", "justified_level":"High Complexity",
+    "current_likely_code":"99222", "upgrade_available":true, "revenue_gap_per_note":"$65",
+    "mdm":{
+      "problems":{"level":"High","rationale":"..."},
+      "data":{"level":"Moderate","rationale":"..."},
+      "risk":{"level":"High","rationale":"..."}
+    },
+    "already_documented":["..."],
+    "add_to_upgrade":["..."]
+  },
   "cdi_alerts":[
     {"severity":"critical","title":"...","body":"...","action":"..."}
   ],
@@ -1066,24 +968,12 @@ Return ONLY raw JSON:
   "icd_codes":[
     {"code":"J18.9","description":"Pneumonia, unspecified","type":"principal","note":"Specify organism"}
   ],
-  "summary":{"mcc_cc_count":"1 MCC, 2 CC"}
-}
-
-GMLOS values: use real approximate Medicare geometric mean LOS for the DRG numbers you cite.
-severity: critical = revenue >$1000 or DRG shift or MCC; warning = CC or specificity; info = quality/documentation`;
-
-const SYSTEM_SEPSIS = `You are a sepsis documentation auditor for hospitalist physicians. Evaluate the pasted chart against Sepsis-2 (SIRS) and Sepsis-3 (SOFA) criteria using DOCUMENTED values only — never invent values; mark undocumented items as "not documented". Use the FIRST/earliest values (ER arrival vitals, first lactate, ER creatinine baseline) when assessing criteria.
-
-` + OUTPUT_STYLE_RULES + `
-
-Return ONLY raw JSON:
-{
   "sepsis":{
     "detected":true,
     "sepsis2":{
       "infection_documented":true,
       "sirs_criteria":[
-        {"name":"Temp >38\u00b0C or <36\u00b0C","met":true,"value":"39.1\u00b0C"},
+        {"name":"Temp >38°C or <36°C","met":true,"value":"39.1°C"},
         {"name":"HR >90","met":true,"value":"112"},
         {"name":"RR >20 or PaCO2 <32","met":false,"value":"not documented"},
         {"name":"WBC >12k, <4k, or >10% bands","met":true,"value":"WBC 14.2"}
@@ -1102,16 +992,20 @@ Return ONLY raw JSON:
         {"system":"CNS (GCS)","met":false,"value":"GCS 15"},
         {"system":"Renal (Creatinine/UOP)","met":true,"value":"Cr 2.8, baseline 1.0"}
       ],
-      "sofa_score_estimated":"\u22652",
+      "sofa_score_estimated":"≥2",
       "verdict":"met"
     },
     "organ_dysfunction_documented":true,
     "denial_risk":"low",
     "documentation_tips":["Document lactate level","Specify causative organism","Link organ dysfunction explicitly to sepsis in A&P"]
-  }
+  },
+  "gaps":["..."],
+  "summary":{"em_code":"99223","complexity":"High","mcc_cc_count":"1 MCC, 2 CC","drg_opportunity":"+$3,200","alert_count":3}
 }
 
-If sepsis is not present/suspected in the note, set sepsis.detected = false and provide empty arrays.`;
+If sepsis not present/suspected in note, set sepsis.detected = false and provide empty arrays.
+GMLOS values: use real approximate Medicare geometric mean LOS for the DRG numbers you cite.
+severity: critical = revenue >$1000 or DRG shift or MCC; warning = CC or specificity; info = quality/documentation`;
 
 const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing. You apply FY2026 ICD-10 rules, Prime Health documentation standards, and KDIGO/ASPEN clinical criteria.
 
@@ -1171,7 +1065,9 @@ Return ONLY raw JSON, no markdown:
 }`;
 
 // ═══════════════════════════════════════════════
-// MAIN ANALYZE
+// MAIN ANALYZE — progressive rendering
+// Each of the two AI calls renders its own panels the moment it returns and
+// surfaces its own error. One slow/failed call can no longer freeze the UI.
 // ═══════════════════════════════════════════════
 async function analyze() {
   const inputs = getInputs();
@@ -1179,9 +1075,9 @@ async function analyze() {
   if (!hasContent) { alert('Please paste chart content first.'); return; }
 
   setBusy(true); setSpinners(true); resetOutputs();
-  prog(true, 0, 'Starting analysis...');
+  prog(true, 10, 'Analyzing — each section appears as soon as it is ready...');
 
-  // Build context — freeform tabs pass raw paste; structured tabs (discharge) pass labeled sections
+  // Build context — freeform tabs pass raw paste; structured tabs pass labeled sections
   let context;
   if (inputs.freeform !== undefined) {
     const priorBlock = inputs.prior
@@ -1204,90 +1100,73 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     ].filter(Boolean).join('');
   }
 
+  const priorForAP = inputs.prior
+    ? '\n\nPRIOR RECORDS (baseline/chronic context only — DO NOT pull active diagnoses from here):\n' + inputs.prior
+    : '';
+  const apUser = inputs.freeform
+    ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
+    : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`;
+
   try {
-    prog(true, 15, 'Running CDI analysis and optimizing A&P in parallel...');
-
     await loadFoundationKB();
-    const matchedDx = getMatchedDxKeys(context);
-    if (matchedDx.length >= 5) {
-      prog(true, 15, 'Complex chart detected (' + matchedDx.length + ' systems) — this may take 1–2 minutes...');
-    }
-    const priorForAP = inputs.prior
-      ? '\n\nPRIOR RECORDS (baseline/chronic context only — DO NOT pull active diagnoses from here):\n' + inputs.prior
-      : '';
-    const settled = await Promise.allSettled([
-      callAPI(SYSTEM_EM, context, 3500),
-      callAPI(withSelectiveKB(SYSTEM_CDI, context), context, 5000),
-      callAPI(SYSTEM_SEPSIS, context, 2200),
-      callAPI(SYSTEM_AP,
-        inputs.freeform
-          ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
-          : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
-        2500)
-    ]);
 
-    prog(true, 80, 'Rendering results...');
+    // CALL 1 — CDI / E&M / DRG analysis. Renders the Analysis + Sepsis panels.
+    const analysisPromise = callAPI(withKB(SYSTEM_ANALYSIS), context, 3000)
+      .then(raw => {
+        const analysis = parseJSON(raw);
+        renderEM(analysis.em);
+        renderCDI(analysis.cdi_alerts);
+        renderDRG(analysis.drg, analysis.icd_codes, analysis.gaps);
+        renderRevBar(analysis.summary);
+        renderSepsis(analysis.sepsis);
+        captureMetrics(analysis);
+        if (analysis.sepsis && analysis.sepsis.detected) {
+          document.getElementById('sepsis-tab-btn').innerHTML = '🦠 Sepsis Criteria <span class="otab-badge">!</span>';
+        }
+        return analysis;
+      })
+      .catch(err => {
+        setBodyError('em-body', err.message);
+        setBodyError('cdi-body', 'Analysis did not complete.');
+        setBodyError('drg-body', 'Analysis did not complete.');
+        renderSepsis(null);
+        return null;
+      });
 
-    const takeResult = (r, label) => {
-      if (r.status !== 'fulfilled') { console.warn('[' + label + '] call failed: ' + r.reason.message); return { __err: r.reason.message }; }
-      try { return parseJSON(r.value); }
-      catch(e) { console.warn('[' + label + '] parse failed. Raw head: ' + r.value.slice(0,200)); return { __err: label + ' output could not be read \u2014 please retry the analysis.' }; }
-    };
-    const emP = takeResult(settled[0], 'E&M');
-    const cdiP = takeResult(settled[1], 'CDI');
-    const sepP = takeResult(settled[2], 'Sepsis');
-    const apP = takeResult(settled[3], 'A&P');
+    // CALL 2 — A&P rewrite. Renders the Optimized A&P panel.
+    const apPromise = callAPI(withKB(SYSTEM_AP), apUser, 2500)
+      .then(raw => {
+        const apData = parseJSON(raw);
+        if (apData && apData.ap_text) {
+          const chartContent = [inputs.freeform, inputs.prior, inputs.hpi, inputs.labs, inputs.ap].filter(Boolean).join('\n');
+          apData.ap_text = processLabPlaceholders(apData.ap_text, chartContent);
+        }
+        renderAP(apData, inputs.ap);
+        return apData;
+      })
+      .catch(err => {
+        setBodyError('ap-body', err.message);
+        return null;
+      });
 
-    let analysis = {};
-    [emP, cdiP, sepP].forEach(p => { if (!p.__err) Object.assign(analysis, p); });
-    let apData = apP.__err ? null : apP;
+    const [analysis] = await Promise.all([analysisPromise, apPromise]);
 
-    // Compose summary client-side (deterministic)
-    analysis.summary = {
-      em_code: (analysis.em||{}).justified_code || '\u2014',
-      complexity: (((analysis.em||{}).justified_level)||'\u2014').replace(' Complexity','').replace(' MDM',''),
-      mcc_cc_count: ((analysis.summary||{}).mcc_cc_count) || '\u2014',
-      drg_opportunity: (analysis.drg||{}).revenue_impact || '\u2014',
-      alert_count: (analysis.cdi_alerts||[]).length
-    };
-
-    // Per-panel rendering: each section succeeds or fails independently
-    if (emP.__err) panelError('em-body', emP.__err); else renderEM(analysis.em);
-    if (cdiP.__err) { panelError('cdi-body', cdiP.__err); panelError('drg-body', cdiP.__err); }
-    else { renderCDI(analysis.cdi_alerts); renderDRG(analysis.drg, analysis.icd_codes, analysis.gaps || []); }
-    if (sepP.__err) panelError('sepsis-body', sepP.__err); else renderSepsis(analysis.sepsis);
-    if (!emP.__err || !cdiP.__err) renderRevBar(analysis.summary);
-
-    if (apData && apData.ap_text) {
-      const chartContent = [inputs.freeform, inputs.prior, inputs.hpi, inputs.labs, inputs.ap].filter(Boolean).join('\n');
-      apData.ap_text = processLabPlaceholders(apData.ap_text, chartContent);
-    }
-    if (apP.__err) panelError('ap-body', apP.__err); else renderAP(apData, inputs.ap);
-
-    try { captureMetrics(analysis); } catch(e) { console.warn('metrics capture skipped: ' + e.message); }
-
-    // Update tab badges
-    const alertCount = (analysis.cdi_alerts||[]).length;
-    document.getElementById('ap-tab-btn').innerHTML =
-      `\u270f\ufe0f Optimized A&P${alertCount>0?`<span class="otab-badge">${alertCount}</span>`:''}`;
-    if (analysis.sepsis?.detected) {
-      document.getElementById('sepsis-tab-btn').innerHTML = '\ud83e\udda0 Sepsis Criteria <span class="otab-badge">!</span>';
+    // A&P tab badge reflects the analysis alert count (only known once analysis resolves)
+    if (analysis) {
+      const alertCount = (analysis.cdi_alerts || []).length;
+      document.getElementById('ap-tab-btn').innerHTML =
+        '✏️ Optimized A&P' + (alertCount > 0 ? '<span class="otab-badge">' + alertCount + '</span>' : '');
     }
 
-    const failCount = [emP, cdiP, sepP, apP].filter(p => p.__err).length;
-    if (failCount > 0) {
-      prog(true, 100, failCount + ' of 4 sections failed \u2014 see panels');
-      setTimeout(() => prog(false), 3000);
-    } else {
-      prog(true, 100, 'Analysis complete \u2713');
-      setTimeout(() => prog(false), 1500);
-    }
-
+    prog(true, 100, 'Analysis complete ✓');
+    setTimeout(() => prog(false), 1200);
   } catch(err) {
-    ['em-body','cdi-body','drg-body','sepsis-body','ap-body'].forEach(id => panelError(id, err.message));
+    // Setup-level failure (e.g., building context) — the calls handle their own errors.
+    setBodyError('em-body', err.message);
     prog(false);
+  } finally {
+    setBusy(false);
   }
-  setBusy(false);
 }
 
 // ═══════════════════════════════════════════════
@@ -1629,7 +1508,10 @@ function copyAP() {
 function setBusy(on) {
   const btn = document.getElementById('analyze-btn');
   btn.disabled = on;
-  btn.innerHTML = on ? '<div class="spin" style="border-color:rgba(255,255,255,0.3);border-top-color:white;width:16px;height:16px;"></div> Analyzing...' : '<span>⚡</span> Analyze Note';
+  btn.innerHTML = on ? '<div class="spin" style="border-color:rgba(255,255,255,0.3);border-top-color:white;width:16px;height:16px;"></div> Analyzing...' : '<span>⚡</span> <span id="analyze-btn-label">Analyze Note</span>';
+  // Restore correct label for the active tab
+  const lbl = document.getElementById('analyze-btn-label');
+  if (lbl && !on) lbl.textContent = currentTab==='dcsummary' ? 'Generate DC Summary' : 'Analyze Note';
 }
 
 function prog(show, pct, txt) {
@@ -1644,9 +1526,10 @@ function setSpinners(on) {
   document.getElementById('sepsis-body').innerHTML='<div class="spin-wrap"><div class="spin"></div>Evaluating sepsis criteria...</div>';
 }
 
-function panelError(id, msg) {
+// Show an inline error inside a specific card body (used by progressive rendering)
+function setBodyError(id, msg) {
   const el = document.getElementById(id);
-  if (el) el.innerHTML = '<div style="background:#fde;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#8b0000;font-size:13px;">\u26a0\ufe0f ' + esc(msg) + '</div>';
+  if (el) el.innerHTML = '<div style="background:#fde;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#8b0000;font-size:13px;">⚠️ ' + esc(msg) + '</div>';
 }
 
 function resetOutputs() {
@@ -1669,7 +1552,7 @@ function clearAll() {
   document.getElementById('dc-course-body').innerHTML='<div class="empty"><div class="empty-ico">🏥</div><div class="empty-ttl">Hospital Course</div><div class="empty-sub">Paste source notes on the left and click Generate DC Summary</div></div>';
   document.getElementById('dc-dx-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">Discharge Diagnoses</div><div class="empty-sub">CDI-optimized diagnosis list appears here</div></div>';
   document.getElementById('dc-cdi-body').innerHTML='<div class="empty"><div class="empty-ico">⚡</div><div class="empty-ttl">CDI Flags</div><div class="empty-sub">Last-chance documentation opportunities appear here</div></div>';
-  const lbl = document.getElementById('analyze-btn-label'); if (lbl) lbl.textContent='Analyze Note';
+  const lbl = document.getElementById('analyze-btn-label'); if (lbl) lbl.textContent = currentTab==='dcsummary' ? 'Generate DC Summary' : 'Analyze Note';
 }
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1785,52 +1668,49 @@ async function generateDCSummary() {
     inputs.progress ? `\nLAST PROGRESS NOTE:\n${inputs.progress}` : '',
   ].filter(Boolean).join('');
 
+  // Two independent calls. Each renders its own section as it returns, and each
+  // surfaces its own error — a slow/failed call can't freeze the summary.
+  const coursePromise = callAPI(SYSTEM_DC_COURSE, context, 2500)
+    .then(raw => {
+      const courseData = parseJSON(raw);
+      renderDCCourse(courseData.hospital_course || '');
+      return courseData;
+    })
+    .catch(err => {
+      setBodyError('dc-course-body', err.message);
+      return null;
+    });
+
+  const dxPromise = callAPI(SYSTEM_DC_DX, context, 3000)
+    .then(raw => {
+      const dxData = parseJSON(raw);
+      renderDCDiagnoses(dxData.discharge_diagnoses || [], dxData.cdi_flags || []);
+      return dxData;
+    })
+    .catch(err => {
+      setBodyError('dc-dx-body', err.message);
+      setBodyError('dc-cdi-body', 'Diagnoses did not complete.');
+      return null;
+    });
+
   try {
-    prog(true, 30, 'Synthesizing hospital course and diagnoses...');
-
-    // Two independent calls, each safely under the token ceiling — avoids timeout/truncation on long summaries
-    const [courseRaw, dxRaw] = await Promise.all([
-      callAPI(SYSTEM_DC_COURSE, context, 4500),
-      callAPI(SYSTEM_DC_DX, context, 4500)
-    ]);
-    prog(true, 85, 'Rendering discharge summary...');
-
-    let courseData, dxData;
-    try { courseData = parseJSON(courseRaw); }
-    catch(e) { throw new Error('Course parse error: ' + courseRaw.slice(0,150) + '  …[TAIL]… ' + courseRaw.slice(-120)); }
-    try { dxData = parseJSON(dxRaw); }
-    catch(e) { throw new Error('Diagnoses parse error: ' + dxRaw.slice(0,150) + '  …[TAIL]… ' + dxRaw.slice(-120)); }
-
-    const data = {
-      hospital_course: courseData.hospital_course || '',
-      discharge_diagnoses: dxData.discharge_diagnoses || [],
-      cdi_flags: dxData.cdi_flags || []
-    };
-
-    renderDCSummary(data);
+    await Promise.all([coursePromise, dxPromise]);
     prog(true, 100, 'DC Summary ready ✓');
     setTimeout(() => prog(false), 1200);
-
-  } catch(err) {
-    document.getElementById('dc-course-body').innerHTML =
-      `<div style="background:#f8d7da;border:1px solid #f0a0a0;border-radius:8px;padding:12px;color:#842029;font-size:13px;">⚠️ ${esc(err.message)}</div>`;
-    prog(false);
+  } finally {
+    setBusy(false);
   }
-  setBusy(false);
 }
 
-function renderDCSummary(data) {
-  if (!data) return;
-
-  // Hospital Course
-  const courseText = data.hospital_course || '';
+function renderDCCourse(courseText) {
   document.getElementById('dc-course-body').innerHTML =
     `<div id="dc-course-text">${esc(courseText)}</div>`;
   const copyCoursBtn = document.getElementById('copy-course-btn');
   if (copyCoursBtn) copyCoursBtn.style.display = 'inline-flex';
+}
 
+function renderDCDiagnoses(dx, flags) {
   // Discharge Diagnoses
-  const dx = data.discharge_diagnoses || [];
   if (dx.length) {
     let dxPlain = dx.map(d => `${d.number}. ${d.name}`).join('\n');
     let dxHtml = `<div id="dc-dx-text" style="display:none">${esc(dxPlain)}</div><ul class="dc-dx-list">`;
@@ -1852,10 +1732,11 @@ function renderDCSummary(data) {
     document.getElementById('dc-dx-body').innerHTML = dxHtml;
     const copyDxBtn = document.getElementById('copy-dx-btn');
     if (copyDxBtn) copyDxBtn.style.display = 'inline-flex';
+  } else {
+    document.getElementById('dc-dx-body').innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">No diagnoses generated</div></div>';
   }
 
   // CDI Flags
-  const flags = data.cdi_flags || [];
   if (flags.length) {
     let fHtml = '';
     flags.forEach(f => {
@@ -2196,11 +2077,11 @@ function exportMetricsCSV() {
   const csv = [cols.join(',')];
   recs.forEach(r => {
     const row = cols.map(c => {
-      let v = r[c];
-      if (Array.isArray(v)) v = '"' + v.join(';') + '"';
-      else if (v === null || v === undefined) v = '';
-      else if (typeof v === 'string' && (v.includes(',') || v.includes('"'))) v = '"' + v.replace(/"/g, '""') + '"';
-      return v;
+      let val = r[c];
+      if (Array.isArray(val)) val = '"' + val.join(';') + '"';
+      else if (val === null || val === undefined) val = '';
+      else if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) val = '"' + val.replace(/"/g, '""') + '"';
+      return val;
     });
     csv.push(row.join(','));
   });
