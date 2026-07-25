@@ -353,13 +353,38 @@
                 });
 
             // Clear Button
-            document.getElementById('clear-btn').addEventListener('click', () => {
-                document.getElementById('input-current').value = '';
-                document.getElementById('input-prior').value = '';
-                document.getElementById('dc-hp').value = '';
-                document.getElementById('dc-consult').value = '';
-                document.getElementById('dc-progress').value = '';
-            });
+document.getElementById('clear-btn').addEventListener('click', () => {
+  // 1. Clear Left Pane Inputs
+  document.getElementById('input-current').value = '';
+  document.getElementById('input-prior').value = '';
+  document.getElementById('dc-hp').value = '';
+  document.getElementById('dc-consult').value = '';
+  document.getElementById('dc-progress').value = '';
+
+  // 2. Reset Revenue & Status Summary Bar
+  document.getElementById('sum-em').textContent = '—';
+  document.getElementById('sum-complexity').textContent = '—';
+  document.getElementById('sum-cc-mcc').textContent = '—';
+  document.getElementById('sum-drg').textContent = '—';
+  document.getElementById('sum-alerts').textContent = '—';
+
+  // 3. Reset Right Pane Tab Containers
+  document.getElementById('out-em-content').innerHTML = 
+    '<p class="text-slate-400 italic">Run analysis to populate medical decision making breakdown, justification, and upgrade revenue gap.</p>';
+  document.getElementById('out-alerts-content').innerHTML = 
+    '<p class="text-xs text-slate-400 italic">No CDI alerts generated yet.</p>';
+  document.getElementById('out-drg-content').innerHTML = 
+    '<p class="text-slate-400 italic">DRG optimization and ICD-10 code table will appear here.</p>';
+  document.getElementById('out-sirs-content').innerHTML = 
+    '<p class="text-slate-400 italic">Populated when SIRS/sepsis keywords or vitals are detected.</p>';
+  document.getElementById('out-sofa-content').innerHTML = 
+    '<p class="text-slate-400 italic">Populated when organ dysfunction parameters or sepsis language is present.</p>';
+  document.getElementById('out-ap-text').textContent = 
+    'Awaiting record analysis...';
+  document.getElementById('out-ap-meta').innerHTML = '';
+  document.getElementById('out-dc-text').textContent = 
+    "Switch to DC Builder mode on the left and click 'Generate DC Summary' to build discharge components.";
+});
 
             // Metrics Management in localStorage
             function updateMetricsDisplay() {
