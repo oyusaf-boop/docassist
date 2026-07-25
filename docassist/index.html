@@ -744,6 +744,39 @@ async function callAPI(system, user, maxTokens) {
   return data.text;
 }
 
+function parseAPText(raw) {
+  var s = String(raw || '').split('```').join('').trim();
+  if (!s) throw new Error('empty A&P response');
+  var hasMarkers = /===[A-Z_]+===/.test(s);
+  function grab(name) {
+    var re = new RegExp('===' + name + '===([\\s\\S]*?)(?====[A-Z_]+===|$)');
+    var m = s.match(re);
+    return m ? m[1].trim() : '';
+  }
+  function lines(block) {
+    return block.split('\n')
+      .map(function(l){ return l.replace(/^[-\u2022*]\s*/, '').trim(); })
+      .filter(function(l){ return l.length > 0; });
+  }
+  var apText = grab('AP_TEXT');
+  if (!apText) {
+    if (hasMarkers) throw new Error('AP_TEXT section missing');
+    apText = s;
+  }
+  var suggested = lines(grab('SUGGESTED')).map(function(l){
+    var parts = l.split('|||');
+    return { name: (parts[0]||'').trim(), rationale: (parts[1]||'').trim() };
+  }).filter(function(x){ return x.name.length > 0; });
+  return {
+    ap_text: apText,
+    suggested_diagnoses: suggested,
+    changes_made: lines(grab('CHANGES')),
+    meat_additions: lines(grab('MEAT')),
+    quality_flags: lines(grab('QUALITY')),
+    unresolved_differentials: lines(grab('UNRESOLVED'))
+  };
+}
+
 function parseJSON(raw) {
   let s = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
   if (!s.startsWith('{')) { const m=s.match(/\{[\s\S]*\}/); if(m) s=m[0]; }
@@ -1158,17 +1191,41 @@ LAB PROMPT PLACEHOLDERS (CRITICAL — physician will write diagnoses manually):
 - If a lab value is not present in the chart, do not insert any placeholder for that lab.
 - If a placeholder is appropriate but no clear cardiac/HF problem exists, place it under the closest related problem.
 
-Return ONLY raw JSON, no markdown:
-{
-  "ap_text": "full rewritten A&P as plain text preserving original formatting",
-  "suggested_diagnoses": [
-    {"name":"Protein-Calorie Malnutrition, Moderate","rationale":"Albumin 2.9, poor PO x5d, weight loss documented"}
-  ],
-  "changes_made": ["CHF upgraded to Acute on Chronic Systolic CHF","AMS upgraded to Metabolic Encephalopathy"],
-  "meat_additions": ["Added monitoring plan for CKD Stage 3","Added assessment line for HTN"],
-  "quality_flags": ["Response to treatment not documented for pneumonia","Medical necessity for continued stay not stated"],
-  "unresolved_differentials": []
-}`;
+OUTPUT FORMAT — PLAIN TEXT ONLY. No JSON. No markdown code fences.
+Use the exact section markers below, in this exact order.
+Write the A&P first. If a section has no content, still emit its marker with nothing under it.
+Do not add any text before ===AP_TEXT=== or after ===END===.
+
+===AP_TEXT===
+(the full rewritten A&P as plain text, preserving line breaks and the physician house style)
+===SUGGESTED===
+(one per line: Diagnosis name ||| rationale citing specific evidence from the note)
+===CHANGES===
+(one per line)
+===MEAT===
+(one per line)
+===QUALITY===
+(one per line)
+===UNRESOLVED===
+(one per line)
+===END===
+
+EXAMPLE OUTPUT:
+===AP_TEXT===
+68 YO male with:
+
+Acute on Chronic Systolic Heart Failure: Patient presented with volume overload...
+===SUGGESTED===
+Protein-Calorie Malnutrition, Moderate ||| Albumin 2.9, poor PO intake x5d, documented weight loss
+===CHANGES===
+CHF upgraded to Acute on Chronic Systolic CHF
+AMS upgraded to Metabolic Encephalopathy
+===MEAT===
+Added monitoring plan for CKD Stage 3
+===QUALITY===
+Response to treatment not documented for pneumonia
+===UNRESOLVED===
+===END===`;
 
 // ═══════════════════════════════════════════════
 // MAIN ANALYZE
@@ -1236,7 +1293,12 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     const emP = takeResult(settled[0], 'E&M');
     const cdiP = takeResult(settled[1], 'CDI');
     const sepP = takeResult(settled[2], 'Sepsis');
-    const apP = takeResult(settled[3], 'A&P');
+    const takeAP = (r) => {
+      if (r.status !== 'fulfilled') { console.warn('[A&P] call failed: ' + r.reason.message); return { __err: r.reason.message }; }
+      try { return parseAPText(r.value); }
+      catch(e) { console.warn('[A&P] parse failed. Raw head: ' + String(r.value).slice(0,200)); return { __err: 'A&P output could not be read \u2014 please retry the analysis.' }; }
+    };
+    const apP = takeAP(settled[3]);
 
     let analysis = {};
     [emP, cdiP, sepP].forEach(p => { if (!p.__err) Object.assign(analysis, p); });
