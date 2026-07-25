@@ -1,21 +1,24 @@
 // DocAssist — /api/analyze  (Vercel serverless)
 // FY2026 CDI + E&M analysis proxy to the Anthropic Messages API.
 //
-// Changes vs prior build:
-//  - Model updated to claude-sonnet-5 (claude-sonnet-4-6 is now legacy)
-//  - Prompt caching (cache_control) on the large static system prompt → faster/cheaper repeats
-//  - Hard timeout (AbortController) so a slow upstream call fails cleanly instead of hanging
-//  - Honest error surfacing (never returns a silent/ambiguous body)
+// Model is overridable at runtime via the ANTHROPIC_MODEL env var (Vercel →
+// Project → Settings → Environment Variables). No code change needed to switch.
+//   e.g. ANTHROPIC_MODEL = claude-sonnet-5   (default)
+//        ANTHROPIC_MODEL = claude-opus-4-8
+//        ANTHROPIC_MODEL = claude-haiku-4-5
+//
+// If the model returns no text, the error now reports WHY (stop_reason + the
+// block types that came back) so the cause is visible instead of generic.
 
-const MODEL = 'claude-sonnet-5';
-const ANTHROPIC_TIMEOUT_MS = 55000; // stay just under Vercel's 60s function ceiling
+const DEFAULT_MODEL = 'claude-sonnet-5';
+const ANTHROPIC_TIMEOUT_MS = 55000; // just under Vercel's 60s function ceiling
+const MIN_MAX_TOKENS = 4096;        // floor so a verbose model can't truncate to empty
 
 export const config = {
-  maxDuration: 60, // ask Vercel for the full 60s window (see vercel.json note)
+  maxDuration: 60, // see vercel.json note
 };
 
 export default async function handler(req, res) {
-  // CORS (same-origin in practice, harmless here)
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -25,7 +28,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Session cookie check
   const cookies = req.headers.cookie || '';
   const authenticated = cookies.split(';').some(c => c.trim() === 'da_session=authenticated');
   if (!authenticated) {
@@ -36,13 +38,16 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Server is missing ANTHROPIC_API_KEY. Set it in Vercel project settings.' });
   }
 
+  const MODEL = process.env.ANTHROPIC_MODEL || DEFAULT_MODEL;
+
   try {
     const { system, user, maxTokens } = req.body || {};
     if (!system || !user) {
       return res.status(400).json({ error: 'Missing system or user prompt' });
     }
 
-    // Timeout guard so the browser never waits forever on a stalled upstream call.
+    const outTokens = Math.max(parseInt(maxTokens, 10) || 2500, MIN_MAX_TOKENS);
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), ANTHROPIC_TIMEOUT_MS);
 
@@ -58,9 +63,8 @@ export default async function handler(req, res) {
         signal: controller.signal,
         body: JSON.stringify({
           model: MODEL,
-          max_tokens: maxTokens || 2500,
-          // System prompt sent as a cacheable block. It is large and static per
-          // analysis type, so caching cuts latency + cost on repeat analyses.
+          max_tokens: outTokens,
+          // Large static system prompt sent as a cacheable block → faster/cheaper repeats.
           system: [
             { type: 'text', text: String(system), cache_control: { type: 'ephemeral' } },
           ],
@@ -81,18 +85,33 @@ export default async function handler(req, res) {
     try {
       data = JSON.parse(raw);
     } catch (e) {
-      return res.status(502).json({ error: 'Unexpected upstream response (HTTP ' + response.status + ').' });
+      return res.status(502).json({ error: 'Unexpected upstream response (HTTP ' + response.status + '): ' + raw.slice(0, 200) });
     }
 
     if (!response.ok || data.error) {
       const msg = (data.error && (data.error.message || data.error.type)) || ('Upstream error HTTP ' + response.status);
-      return res.status(response.status === 200 ? 500 : response.status).json({ error: msg });
+      // Surface the model name so a bad/unavailable model ID is obvious.
+      return res.status(response.status === 200 ? 500 : response.status)
+                .json({ error: msg + ' [model: ' + MODEL + ']' });
     }
 
-    const text = (data.content || []).map(b => b.text || '').join('').trim();
+    // Robust extraction: concatenate every text block, ignore non-text blocks.
+    const blocks = Array.isArray(data.content) ? data.content : [];
+    const text = blocks
+      .map(b => (b && typeof b.text === 'string') ? b.text : '')
+      .join('')
+      .trim();
+
     if (!text) {
-      return res.status(502).json({ error: 'Model returned an empty response. Try again.' });
+      // Report exactly why nothing came back, so it can be diagnosed at a glance.
+      const blockTypes = blocks.map(b => (b && b.type) ? b.type : 'unknown').join(',') || 'none';
+      const stop = data.stop_reason || 'unknown';
+      console.warn('[analyze] empty text', { model: MODEL, stop_reason: stop, blocks: blockTypes, usage: data.usage });
+      return res.status(502).json({
+        error: 'Model returned no text [model: ' + MODEL + ', stop_reason: ' + stop + ', blocks: ' + blockTypes + ']. If stop_reason is max_tokens, the note may be too long; try again or shorten it.'
+      });
     }
+
     return res.status(200).json({ text });
 
   } catch (err) {
