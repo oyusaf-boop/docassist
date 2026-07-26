@@ -22,6 +22,7 @@
 // If the model returns no text, the error reports WHY (stop_reason + block types).
 
 import { hasValidSession } from './session.js';
+import { validateAnalysisRequest } from './requestValidation.js';
 
 const DEFAULT_MODEL    = 'claude-sonnet-5';
 const DEFAULT_THINKING = 'disabled';
@@ -31,8 +32,6 @@ const VALID_EFFORT   = ['low', 'medium', 'high', 'xhigh', 'max'];
 const VALID_THINKING = ['disabled', 'adaptive'];
 
 const ANTHROPIC_TIMEOUT_MS = 55000; // just under Vercel's 60s function ceiling
-const MIN_MAX_TOKENS = 4096;        // floor so a verbose model can't truncate to empty
-
 export const config = {
   maxDuration: 60, // see vercel.json note
 };
@@ -64,21 +63,21 @@ export default async function handler(req, res) {
   const EFFORT = VALID_EFFORT.indexOf(rawEffort) !== -1 ? rawEffort : DEFAULT_EFFORT;
 
   try {
-    const { system, user, maxTokens } = req.body || {};
-    if (!system || !user) {
-      return res.status(400).json({ error: 'Missing system or user prompt' });
+    const validated = validateAnalysisRequest(req);
+    if (validated.error) {
+      return res.status(validated.status).json({ error: validated.error });
     }
-
-    const outTokens = Math.max(parseInt(maxTokens, 10) || 2500, MIN_MAX_TOKENS);
+    const { task, taskId, encounter } = validated;
+    const system = task.buildSystem ? task.buildSystem(encounter) : task.system;
 
     const payload = {
       model: MODEL,
-      max_tokens: outTokens,
+      max_tokens: task.maxTokens,
       // Large static system prompt sent as a cacheable block → faster/cheaper repeats.
       system: [
-        { type: 'text', text: String(system), cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: system, cache_control: { type: 'ephemeral' } },
       ],
-      messages: [{ role: 'user', content: String(user) }],
+      messages: [{ role: 'user', content: encounter }],
       // Effort governs ALL token spend (thinking + text). Low keeps these
       // schema-bound extraction calls fast and inside the max_tokens ceiling.
       output_config: { effort: EFFORT },
@@ -134,7 +133,7 @@ export default async function handler(req, res) {
     if (!text) {
       const blockTypes = blocks.map(b => (b && b.type) ? b.type : 'unknown').join(',') || 'none';
       const stop = data.stop_reason || 'unknown';
-      console.warn('[analyze] empty text', { model: MODEL, thinking: THINKING, effort: EFFORT, stop_reason: stop, blocks: blockTypes, usage: data.usage });
+      console.warn('[analyze] empty text', { taskId, model: MODEL, thinking: THINKING, effort: EFFORT, stop_reason: stop, blocks: blockTypes, usage: data.usage });
       return res.status(502).json({
         error: 'Model returned no text [model: ' + MODEL + ', thinking: ' + THINKING + ', effort: ' + EFFORT +
                ', stop_reason: ' + stop + ', blocks: ' + blockTypes +
