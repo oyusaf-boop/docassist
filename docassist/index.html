@@ -7,41 +7,42 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --navy: #0f2d48; --navy2: #1a4a6b;
-  --blue-light: #e8f2fb; --blue-mid: #aacbe8;
+  --navy: #102f49; --navy2: #245d80;
+  --blue-light: #edf5fa; --blue-mid: #b8d3e2;
   --green: #0f5132; --green-light: #d1e7dd;
   --amber: #7a4f00; --amber-light: #fff3cd;
   --red: #842029; --red-light: #f8d7da;
   --purple-light: #f0eaff; --purple: #5b21b6;
-  --border: #e0d9d0; --text: #1a1714;
-  --text2: #5a5450; --text3: #9a9490;
-  --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
+  --border: #dfe5e8; --text: #17232c;
+  --text2: #53616b; --text3: #7b8992;
+  --surface: #ffffff; --surface-muted: #f7f9fa;
+  --shadow: 0 1px 2px rgba(16,47,73,0.05), 0 8px 24px rgba(16,47,73,0.06);
 }
-body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min-height:100vh; color:var(--text); font-size:14px; line-height:1.5; }
+body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f1f4f5; min-height:100vh; color:var(--text); font-size:14px; line-height:1.5; }
 
 /* HEADER */
-#hdr { background:var(--navy); height:56px; display:flex; align-items:center; padding:0 28px; justify-content:space-between; position:sticky; top:0; z-index:50; box-shadow:0 2px 12px rgba(0,0,0,0.2); }
+#hdr { background:rgba(16,47,73,0.98); height:62px; display:flex; align-items:center; padding:0 30px; justify-content:space-between; position:sticky; top:0; z-index:50; box-shadow:0 6px 20px rgba(16,47,73,0.18); backdrop-filter:blur(12px); }
 #logo { font-size:17px; font-weight:800; color:white; letter-spacing:-0.4px; display:flex; align-items:center; gap:10px; }
 #logo-icon { width:30px; height:30px; background:#2a7abf; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; }
 #logo span { color:#60b0f0; }
 #hdr-meta { font-size:11px; color:rgba(255,255,255,0.35); }
 
 /* MAIN LAYOUT */
-#wrap { max-width:1440px; margin:0 auto; padding:24px 22px 60px; display:grid; grid-template-columns:480px 1fr; gap:20px; align-items:start; }
+#wrap { max-width:1480px; margin:0 auto; padding:28px 28px 72px; display:grid; grid-template-columns:minmax(390px, 470px) minmax(0, 1fr); gap:24px; align-items:start; }
 
 /* LEFT */
 #left { display:flex; flex-direction:column; gap:0; position:sticky; top:70px; }
 .type-tabs { display:flex; gap:0; }
-.ntab { flex:1; padding:10px 8px; border:1.5px solid var(--border); border-bottom:none; background:#f4f1ec; color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.12s; text-align:center; }
+.ntab { flex:1; padding:11px 10px; border:1px solid var(--border); border-bottom:none; background:#e9eef0; color:var(--text2); font-size:12px; font-weight:650; cursor:pointer; font-family:inherit; transition:all 0.15s; text-align:center; }
 .ntab:first-child { border-radius:10px 0 0 0; }
 .ntab:last-child { border-radius:0 10px 0 0; }
 .ntab.on { background:white; color:var(--navy); border-bottom-color:white; z-index:2; position:relative; }
-#input-card { background:white; border-radius:0 10px 10px 10px; border:1.5px solid var(--border); box-shadow:var(--shadow); padding:18px; display:flex; flex-direction:column; }
+#input-card { background:white; border-radius:0 12px 12px 12px; border:1px solid var(--border); box-shadow:var(--shadow); padding:20px; display:flex; flex-direction:column; }
 .input-section { display:flex; flex-direction:column; }
 .input-section + .input-section { margin-top:14px; }
-.inp-label { font-size:10px; font-weight:800; color:var(--text3); text-transform:uppercase; letter-spacing:1px; padding:8px 12px; background:#f4f1ec; border:1.5px solid var(--border); border-bottom:none; border-radius:8px 8px 0 0; display:flex; align-items:center; gap:6px; }
+.inp-label { font-size:10px; font-weight:750; color:var(--text3); text-transform:uppercase; letter-spacing:0.85px; padding:9px 12px; background:var(--surface-muted); border:1px solid var(--border); border-bottom:none; border-radius:8px 8px 0 0; display:flex; align-items:center; gap:7px; }
 .lbl-hint { font-size:10px; color:#b0a8a0; font-weight:400; margin-left:auto; font-style:italic; }
-.inp-area { width:100%; border:1.5px solid var(--border); border-top:none; border-radius:0 0 8px 8px; padding:11px 13px; font-family:'SF Mono',ui-monospace,monospace; font-size:12.5px; line-height:1.7; color:var(--text); background:#faf8f5; resize:vertical; outline:none; transition:border-color 0.15s,background 0.15s; min-height:100px; }
+.inp-area { width:100%; border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; padding:13px 14px; font-family:'SF Mono',ui-monospace,monospace; font-size:12.5px; line-height:1.7; color:var(--text); background:#fbfcfc; resize:vertical; outline:none; transition:border-color 0.15s,background 0.15s,box-shadow 0.15s; min-height:100px; }
 .inp-area:focus { border-color:var(--navy2); background:white; }
 .inp-area.tall { min-height:160px; }
 .connector { width:2px; height:12px; background:var(--border); margin:0 auto; }
@@ -69,7 +70,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 
 /* OUTPUT TABS */
 .out-tabs { display:flex; gap:0; flex-wrap:wrap; }
-.otab { padding:10px 16px; border:1.5px solid var(--border); border-bottom:none; background:#f4f1ec; color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.12s; white-space:nowrap; }
+.otab { padding:11px 17px; border:1px solid var(--border); border-bottom:none; background:#e9eef0; color:var(--text2); font-size:12px; font-weight:650; cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap; }
 .otab:first-child { border-radius:10px 0 0 0; }
 .otab:last-child { border-radius:0 10px 0 0; }
 .otab.on { background:white; color:var(--navy); border-bottom-color:white; z-index:2; position:relative; }
@@ -80,13 +81,13 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 /* CARDS */
 .card { background:white; border-radius:0 14px 14px 14px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
 .card-first { border-radius:0 0 14px 14px; }
-.card-hdr { padding:13px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:#faf8f5; }
-.card-title { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.9px; }
-.card-body { padding:18px; }
+.card-hdr { padding:14px 19px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:16px; background:var(--surface-muted); }
+.card-title { font-size:11px; font-weight:750; color:#51616c; text-transform:uppercase; letter-spacing:0.8px; }
+.card-body { padding:20px; }
 
 /* SPINNERS / EMPTY */
-.empty { text-align:center; padding:36px 20px; color:var(--text3); }
-.empty-ico { font-size:28px; margin-bottom:8px; }
+.empty { text-align:center; padding:42px 20px; color:var(--text3); }
+.empty-ico { width:38px; height:38px; margin:0 auto 11px; border-radius:11px; display:flex; align-items:center; justify-content:center; background:var(--blue-light); color:var(--navy2); font-size:11px; font-weight:800; letter-spacing:0.4px; }
 .empty-ttl { font-size:13px; font-weight:600; color:var(--text2); margin-bottom:4px; }
 .empty-sub { font-size:11.5px; }
 .spin-wrap { display:flex; align-items:center; gap:10px; padding:24px 0; color:var(--text3); font-size:13px; }
@@ -277,6 +278,39 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
 .met-pitch-text { flex:1; font-size:12px; line-height:1.5; color:rgba(255,255,255,0.92); }
 .met-pitch-text strong { color:white; font-weight:800; }
 @media (max-width: 1100px) { .met-grid { grid-template-columns:repeat(2, 1fr); } }
+@media (max-width: 1050px) {
+  #wrap { grid-template-columns:1fr; padding:22px 20px 56px; }
+  #left { position:static; }
+  #apgen-freeform { min-height:260px !important; }
+}
+@media (max-width: 680px) {
+  #hdr { height:56px; padding:0 16px; }
+  #hdr-meta { display:none; }
+  #wrap { padding:16px 12px 40px; gap:16px; }
+  #input-card { padding:14px; }
+  .type-tabs,.out-tabs { overflow-x:auto; flex-wrap:nowrap; scrollbar-width:none; }
+  .type-tabs::-webkit-scrollbar,.out-tabs::-webkit-scrollbar { display:none; }
+  .ntab,.otab { flex:0 0 auto; min-width:max-content; }
+  .type-tabs .ntab { flex:1 1 50%; }
+  .card-hdr { align-items:flex-start; flex-direction:column; gap:3px; }
+  .card-body { padding:15px; }
+  .mdm-grid,.sepsis-cols,.drg-gmlos { grid-template-columns:1fr; }
+  .drg-compare { grid-template-columns:1fr; }
+  .drg-arrow { transform:rotate(90deg); }
+  #rev-bar { display:none !important; }
+  .met-grid { grid-template-columns:1fr; }
+  .met-toolbar { align-items:stretch; }
+  .met-filter { overflow-x:auto; }
+  #login-box { width:calc(100% - 28px); padding:34px 24px; }
+}
+
+.ui-icon { width:18px; height:18px; border-radius:5px; display:inline-flex; align-items:center; justify-content:center; background:rgba(36,93,128,0.1); color:var(--navy2); font-size:9px; font-weight:800; letter-spacing:0; flex-shrink:0; }
+.ntab.on .ui-icon,.otab.on .ui-icon { background:var(--blue-light); }
+.panel-error { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; background:#fff7f7; border:1px solid #efc6ca; border-radius:9px; padding:14px 15px; color:#6f2027; }
+.panel-error-title { font-size:12.5px; font-weight:750; margin-bottom:3px; }
+.panel-error-msg { font-size:11.5px; color:#885158; line-height:1.5; }
+.panel-retry { border:1px solid #d9aeb2; background:white; color:#6f2027; border-radius:7px; padding:7px 11px; font:600 11px inherit; cursor:pointer; white-space:nowrap; }
+.panel-retry:hover { background:#fff0f1; }
 </style>
 </head>
 <body>
@@ -301,14 +335,14 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
   <!-- LEFT INPUT -->
   <div id="left">
     <div class="type-tabs">
-      <button class="ntab on" onclick="setTab(this,'apgen')">✏️ Generate A&P</button>
-      <button class="ntab"    onclick="setTab(this,'dcsummary')">🏥 DC Builder</button>
+      <button class="ntab on" onclick="setTab(this,'apgen')"><span class="ui-icon">A&amp;P</span> Generate A&amp;P</button>
+      <button class="ntab"    onclick="setTab(this,'dcsummary')"><span class="ui-icon">DC</span> DC Builder</button>
     </div>
     <div id="input-card">
       <!-- Generate A&P -->
       <div id="inputs-apgen">
         <div class="input-section">
-          <div class="inp-label"><span>📋</span> Current Encounter<span class="lbl-hint">ER note · HPI · labs · consults · progress notes · any order</span></div>
+          <div class="inp-label"><span class="ui-icon">01</span> Current Encounter<span class="lbl-hint">ER note · HPI · labs · consults · progress notes · any order</span></div>
           <textarea id="apgen-freeform" class="inp-area tall" style="min-height:340px;" placeholder="Paste anything from this encounter — ER note, admitting H&P, today's progress note, labs, imaging, consult notes. Any order, no labels needed. AI auto-detects whether it's a new admit, overnight admit, or takeover."></textarea>
         </div>
         <div class="input-section">
@@ -338,7 +372,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
       <div class="assumption-note"><strong>Tip:</strong> Paste in any order — ER note, HPI, labs, consult notes, A&P. Multiple pastes are fine. AI classifies everything automatically.</div>
 
       <div id="btn-row">
-        <button id="analyze-btn" onclick="handleAnalyze()"><span>⚡</span> <span id="analyze-btn-label">Analyze Note</span></button>
+        <button id="analyze-btn" onclick="handleAnalyze()"><span id="analyze-btn-label">Analyze Note</span></button>
         <button id="clear-btn" onclick="clearAll()">Clear</button>
       </div>
       <div id="prog"><div id="prog-bg"><div id="prog-fill"></div></div><div id="prog-txt"></div></div>
@@ -363,35 +397,35 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
     <!-- Output Tabs -->
     <div>
       <div class="out-tabs">
-        <button class="otab on"  onclick="setOutTab(this,'analysis')">📊 Analysis</button>
-        <button class="otab"     onclick="setOutTab(this,'sepsis')" id="sepsis-tab-btn">🦠 Sepsis Criteria</button>
-        <button class="otab"     onclick="setOutTab(this,'ap')" id="ap-tab-btn">✏️ Optimized A&P</button>
-        <button class="otab"     onclick="setOutTab(this,'dcsummary')" id="dcsummary-tab-btn" style="display:none">🏥 DC Summary</button>
-        <button class="otab"     onclick="setOutTab(this,'metrics')" id="metrics-tab-btn">📈 Metrics</button>
+        <button class="otab on"  onclick="setOutTab(this,'analysis')"><span class="ui-icon">AN</span> Analysis</button>
+        <button class="otab"     onclick="setOutTab(this,'sepsis')" id="sepsis-tab-btn"><span class="ui-icon">SP</span> Sepsis Criteria</button>
+        <button class="otab"     onclick="setOutTab(this,'ap')" id="ap-tab-btn"><span class="ui-icon">A&amp;P</span> Optimized A&amp;P</button>
+        <button class="otab"     onclick="setOutTab(this,'dcsummary')" id="dcsummary-tab-btn" style="display:none"><span class="ui-icon">DC</span> DC Summary</button>
+        <button class="otab"     onclick="setOutTab(this,'metrics')" id="metrics-tab-btn"><span class="ui-icon">MX</span> Metrics</button>
       </div>
 
       <!-- ANALYSIS PANEL -->
       <div id="panel-analysis" class="out-panel on">
         <div class="card card-first">
           <div class="card-hdr"><span class="card-title">E&M Level Analysis</span><span style="font-size:11px;color:var(--text3)">Medical Decision Making (MDM)</span></div>
-          <div class="card-body" id="em-body"><div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">E&M Level Analysis</div><div class="empty-sub">Paste your note and click Analyze</div></div></div>
+          <div class="card-body" id="em-body"><div class="empty"><div class="empty-ico">E&amp;M</div><div class="empty-ttl">E&amp;M Level Analysis</div><div class="empty-sub">Paste your note and click Analyze</div></div></div>
         </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">CDI Alerts</span><span style="font-size:11px;color:var(--text3)">Clinical Documentation Integrity</span></div>
-          <div class="card-body" id="cdi-body"><div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div></div>
+          <div class="card-body" id="cdi-body"><div class="empty"><div class="empty-ico">CDI</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div></div>
         </div>
         <div class="card">
           <div class="card-hdr"><span class="card-title">DRG & ICD-10 Optimization</span><span style="font-size:11px;color:var(--text3)">Revenue impact + GMLOS</span></div>
-          <div class="card-body" id="drg-body"><div class="empty"><div class="empty-ico">💰</div><div class="empty-ttl">DRG & ICD-10 Analysis</div><div class="empty-sub">DRG comparison, GMLOS, and ICD-10 codes appear here</div></div></div>
+          <div class="card-body" id="drg-body"><div class="empty"><div class="empty-ico">DRG</div><div class="empty-ttl">DRG &amp; ICD-10 Analysis</div><div class="empty-sub">DRG comparison, GMLOS, and ICD-10 codes appear here</div></div></div>
         </div>
       </div>
 
       <!-- SEPSIS CRITERIA PANEL -->
       <div id="panel-sepsis" class="out-panel">
         <div class="card card-first">
-          <div class="card-hdr"><span class="card-title">🦠 Sepsis Criteria Assessment</span><span style="font-size:11px;color:var(--text3)">Denial Prevention Tool</span></div>
+          <div class="card-hdr"><span class="card-title">Sepsis Criteria Assessment</span><span style="font-size:11px;color:var(--text3)">Denial Prevention Tool</span></div>
           <div class="card-body" id="sepsis-body">
-            <div class="empty"><div class="empty-ico">🦠</div><div class="empty-ttl">Sepsis Criteria</div><div class="empty-sub">Run analysis first — sepsis criteria will be evaluated based on your note data</div></div>
+            <div class="empty"><div class="empty-ico">SP</div><div class="empty-ttl">Sepsis Criteria</div><div class="empty-sub">Run analysis first — sepsis criteria will be evaluated based on your note data</div></div>
           </div>
         </div>
       </div>
@@ -406,7 +440,7 @@ body { font-family: system-ui,-apple-system,sans-serif; background: #eee9e2; min
             </div>
             <button id="copy-btn" onclick="copyAP()">📋 Copy A&P</button>
           </div>
-          <div id="ap-body"><div class="empty"><div class="empty-ico">✏️</div><div class="empty-ttl">Optimized A&P</div><div class="empty-sub">Run analysis first — your CDI-optimized note appears here ready to paste into MT</div></div></div>
+          <div id="ap-body"><div class="empty"><div class="empty-ico">A&amp;P</div><div class="empty-ttl">Optimized A&amp;P</div><div class="empty-sub">Run analysis first — your CDI-optimized note appears here ready to paste into MT</div></div></div>
         </div>
       </div>
 
@@ -726,17 +760,13 @@ async function callAPI(taskId, encounter) {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ taskId, encounter })
   });
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error('Server error ' + res.status + ': ' + errText.substring(0, 120));
-  }
   const contentType = res.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
     const errText = await res.text();
-    throw new Error('Unexpected response (not JSON) ' + res.status + ': ' + errText.substring(0, 120));
+    throw new Error(res.ok ? 'The server returned an unexpected response.' : 'This section could not be completed. Please retry.');
   }
   const data = await res.json();
-  if (data.error) throw new Error(data.error);
+  if (!res.ok || data.error) throw new Error(data.error || 'This section could not be completed. Please retry.');
   if (data.stop_reason === 'max_tokens') {
     console.warn('[API] Response TRUNCATED. Length: ' + (data.text||'').length + ' chars');
     throw new Error('The AI response was cut off at the length limit before finishing. Please retry — if it persists, trim the pasted note.');
@@ -1331,9 +1361,9 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     // Update tab badges
     const alertCount = (analysis.cdi_alerts||[]).length;
     document.getElementById('ap-tab-btn').innerHTML =
-      `\u270f\ufe0f Optimized A&P${alertCount>0?`<span class="otab-badge">${alertCount}</span>`:''}`;
+      `<span class="ui-icon">A&amp;P</span> Optimized A&amp;P${alertCount>0?`<span class="otab-badge">${alertCount}</span>`:''}`;
     if (analysis.sepsis?.detected) {
-      document.getElementById('sepsis-tab-btn').innerHTML = '\ud83e\udda0 Sepsis Criteria <span class="otab-badge">!</span>';
+      document.getElementById('sepsis-tab-btn').innerHTML = '<span class="ui-icon">SP</span> Sepsis Criteria <span class="otab-badge">!</span>';
     }
 
     const failCount = [emP, cdiP, sepP, apP].filter(p => p.__err).length;
@@ -1691,7 +1721,7 @@ function copyAP() {
 function setBusy(on) {
   const btn = document.getElementById('analyze-btn');
   btn.disabled = on;
-  btn.innerHTML = on ? '<div class="spin" style="border-color:rgba(255,255,255,0.3);border-top-color:white;width:16px;height:16px;"></div> Analyzing...' : '<span>⚡</span> Analyze Note';
+  btn.innerHTML = on ? '<div class="spin" style="border-color:rgba(255,255,255,0.3);border-top-color:white;width:16px;height:16px;"></div> Analyzing...' : '<span id="analyze-btn-label">Analyze Note</span>';
 }
 
 function prog(show, pct, txt) {
@@ -1708,14 +1738,17 @@ function setSpinners(on) {
 
 function panelError(id, msg) {
   const el = document.getElementById(id);
-  if (el) el.innerHTML = '<div style="background:#fde;border:1px solid #f0a0a0;border-radius:8px;padding:14px;color:#8b0000;font-size:13px;">\u26a0\ufe0f ' + esc(msg) + '</div>';
+  if (el) el.innerHTML =
+    '<div class="panel-error"><div><div class="panel-error-title">Section unavailable</div>' +
+    '<div class="panel-error-msg">' + esc(msg) + '</div></div>' +
+    '<button class="panel-retry" type="button" onclick="handleAnalyze()">Retry analysis</button></div>';
 }
 
 function resetOutputs() {
   document.getElementById('rev-bar').classList.remove('on');
   apPlainText = '';
-  document.getElementById('ap-tab-btn').innerHTML = '✏️ Optimized A&P';
-  document.getElementById('sepsis-tab-btn').innerHTML = '🦠 Sepsis Criteria';
+  document.getElementById('ap-tab-btn').innerHTML = '<span class="ui-icon">A&amp;P</span> Optimized A&amp;P';
+  document.getElementById('sepsis-tab-btn').innerHTML = '<span class="ui-icon">SP</span> Sepsis Criteria';
   const dcBtn = document.getElementById('copy-course-btn'); if (dcBtn) dcBtn.style.display='none';
   const dxBtn = document.getElementById('copy-dx-btn'); if (dxBtn) dxBtn.style.display='none';
 }
@@ -1723,11 +1756,11 @@ function resetOutputs() {
 function clearAll() {
   ['apgen-freeform','apgen-prior','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   resetOutputs(); prog(false);
-  document.getElementById('em-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">E&M Level Analysis</div><div class="empty-sub">Paste your note and click Analyze</div></div>';
-  document.getElementById('cdi-body').innerHTML='<div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div>';
-  document.getElementById('drg-body').innerHTML='<div class="empty"><div class="empty-ico">💰</div><div class="empty-ttl">DRG & ICD-10 Analysis</div><div class="empty-sub">DRG comparison, GMLOS, and ICD-10 codes appear here</div></div>';
-  document.getElementById('sepsis-body').innerHTML='<div class="empty"><div class="empty-ico">🦠</div><div class="empty-ttl">Sepsis Criteria</div><div class="empty-sub">Run analysis first — sepsis criteria will be evaluated based on your note data</div></div>';
-  document.getElementById('ap-body').innerHTML='<div class="empty"><div class="empty-ico">✏️</div><div class="empty-ttl">Optimized A&P</div><div class="empty-sub">Run analysis first — your CDI-optimized note appears here ready to paste into MT</div></div>';
+  document.getElementById('em-body').innerHTML='<div class="empty"><div class="empty-ico">E&amp;M</div><div class="empty-ttl">E&amp;M Level Analysis</div><div class="empty-sub">Paste your note and click Analyze</div></div>';
+  document.getElementById('cdi-body').innerHTML='<div class="empty"><div class="empty-ico">CDI</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div>';
+  document.getElementById('drg-body').innerHTML='<div class="empty"><div class="empty-ico">DRG</div><div class="empty-ttl">DRG &amp; ICD-10 Analysis</div><div class="empty-sub">DRG comparison, GMLOS, and ICD-10 codes appear here</div></div>';
+  document.getElementById('sepsis-body').innerHTML='<div class="empty"><div class="empty-ico">SP</div><div class="empty-ttl">Sepsis Criteria</div><div class="empty-sub">Run analysis first — sepsis criteria will be evaluated based on your note data</div></div>';
+  document.getElementById('ap-body').innerHTML='<div class="empty"><div class="empty-ico">A&amp;P</div><div class="empty-ttl">Optimized A&amp;P</div><div class="empty-sub">Run analysis first — your CDI-optimized note appears here ready to paste into MT</div></div>';
   document.getElementById('dc-course-body').innerHTML='<div class="empty"><div class="empty-ico">🏥</div><div class="empty-ttl">Hospital Course</div><div class="empty-sub">Paste source notes on the left and click Generate DC Summary</div></div>';
   document.getElementById('dc-dx-body').innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">Discharge Diagnoses</div><div class="empty-sub">CDI-optimized diagnosis list appears here</div></div>';
   document.getElementById('dc-cdi-body').innerHTML='<div class="empty"><div class="empty-ico">⚡</div><div class="empty-ttl">CDI Flags</div><div class="empty-sub">Last-chance documentation opportunities appear here</div></div>';

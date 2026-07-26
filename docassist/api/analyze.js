@@ -123,7 +123,12 @@ export default async function handler(req, res) {
       if (err && err.name === 'AbortError') {
         return res.status(504).json({ error: 'The analysis timed out upstream. Try again, or shorten the note.' });
       }
-      return res.status(502).json({ error: 'Could not reach the analysis service: ' + (err.message || 'network error') });
+      console.error('[analyze] upstream request failed', {
+        taskId,
+        model: MODEL,
+        reason: err && err.message ? err.message : 'network error',
+      });
+      return res.status(502).json({ error: 'The analysis service is temporarily unavailable. Please retry.' });
     }
     clearTimeout(timer);
 
@@ -132,14 +137,26 @@ export default async function handler(req, res) {
     try {
       data = JSON.parse(raw);
     } catch (e) {
-      return res.status(502).json({ error: 'Unexpected upstream response (HTTP ' + response.status + '): ' + raw.slice(0, 200) });
+      console.warn('[analyze] non-JSON upstream response', {
+        taskId,
+        model: MODEL,
+        status: response.status,
+        responseHead: raw.slice(0, 200),
+      });
+      return res.status(502).json({ error: 'The analysis service returned an invalid response. Please retry.' });
     }
 
     if (!response.ok || data.error) {
       const msg = (data.error && (data.error.message || data.error.type)) || ('Upstream error HTTP ' + response.status);
-      // Surface model + thinking/effort so a bad combination is obvious.
-      return res.status(response.status === 200 ? 500 : response.status)
-                .json({ error: msg + ' [model: ' + MODEL + ', thinking: ' + THINKING + ', effort: ' + EFFORT + ']' });
+      console.warn('[analyze] upstream error', {
+        taskId,
+        model: MODEL,
+        thinking: THINKING,
+        effort: EFFORT,
+        status: response.status,
+        reason: msg,
+      });
+      return res.status(502).json({ error: 'The analysis service could not complete this section. Please retry.' });
     }
 
     // Robust extraction: concatenate every text block, ignore non-text blocks.
@@ -153,11 +170,7 @@ export default async function handler(req, res) {
       const blockTypes = blocks.map(b => (b && b.type) ? b.type : 'unknown').join(',') || 'none';
       const stop = data.stop_reason || 'unknown';
       console.warn('[analyze] empty text', { taskId, model: MODEL, thinking: THINKING, effort: EFFORT, stop_reason: stop, blocks: blockTypes, usage: data.usage });
-      return res.status(502).json({
-        error: 'Model returned no text [model: ' + MODEL + ', thinking: ' + THINKING + ', effort: ' + EFFORT +
-               ', stop_reason: ' + stop + ', blocks: ' + blockTypes +
-               ']. If blocks include thinking, lower ANTHROPIC_EFFORT or set ANTHROPIC_THINKING=disabled.'
-      });
+      return res.status(502).json({ error: 'The analysis service returned an incomplete result. Please retry.' });
     }
 
     let validatedText;
@@ -178,7 +191,10 @@ export default async function handler(req, res) {
     return res.status(200).json({ text: validatedText });
 
   } catch (err) {
-    return res.status(500).json({ error: err.message || 'Server error' });
+    console.error('[analyze] unexpected error', {
+      reason: err && err.message ? err.message : 'unknown error',
+    });
+    return res.status(500).json({ error: 'The analysis could not be completed. Please retry.' });
   } finally {
     releaseAnalysisSlot();
   }

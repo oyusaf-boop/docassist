@@ -74,3 +74,17 @@ Any time you push changes to GitHub, Vercel auto-deploys within 30 seconds.
 These in-memory controls protect each active function instance. Add a shared,
 durable rate-limit store before a multi-region or horizontally scaled production
 rollout.
+
+## Local Regression Tests
+
+Run the security, request-boundary, model-output, API integration, and
+deterministic E&M checks before publishing:
+
+```bash
+node test_session.mjs
+node test_request_validation.mjs
+node test_rate_limit.mjs
+node test_output_validation.mjs
+node test_analyze_integration.mjs
+node test_em.js
+```
