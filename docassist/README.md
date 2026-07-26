@@ -64,3 +64,13 @@ Any time you push changes to GitHub, Vercel auto-deploys within 30 seconds.
 - The API key lives ONLY in Vercel's environment variables
 - It is never sent to the browser or visible to users
 - All Anthropic API calls happen server-side via `/api/analyze`
+
+## Abuse Controls
+
+- Authentication failures: 5 attempts per client in 15 minutes
+- Authenticated analysis: 20 requests per client per minute
+- Concurrent analysis: 2 requests per client and 4 per warm serverless instance
+
+These in-memory controls protect each active function instance. Add a shared,
+durable rate-limit store before a multi-region or horizontally scaled production
+rollout.

@@ -4,6 +4,12 @@ import {
   hasValidSession,
   sessionCookie,
 } from './session.js';
+import {
+  clearLoginFailures,
+  clientKey,
+  loginAttemptAllowed,
+  recordLoginFailure,
+} from './rateLimit.js';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -21,10 +27,19 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Authentication is temporarily unavailable' });
   }
 
+  const key = clientKey(req);
+  const limit = loginAttemptAllowed(key);
+  if (!limit.allowed) {
+    res.setHeader('Retry-After', String(limit.retryAfter));
+    return res.status(429).json({ error: 'Too many login attempts. Try again later.' });
+  }
+
   const password = req.body && req.body.password;
   if (credentialsMatch(password, process.env.APP_PASSWORD)) {
+    clearLoginFailures(key);
     res.setHeader('Set-Cookie', sessionCookie(createSessionToken(process.env.SESSION_SECRET)));
     return res.status(200).json({ authenticated: true });
   }
+  recordLoginFailure(key);
   return res.status(401).json({ error: 'Incorrect password' });
 }

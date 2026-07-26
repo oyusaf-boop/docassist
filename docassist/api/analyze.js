@@ -23,6 +23,11 @@
 
 import { hasValidSession } from './session.js';
 import { validateAnalysisRequest } from './requestValidation.js';
+import {
+  acquireAnalysisSlot,
+  analysisRequestAllowed,
+  clientKey,
+} from './rateLimit.js';
 
 const DEFAULT_MODEL    = 'claude-sonnet-5';
 const DEFAULT_THINKING = 'disabled';
@@ -50,6 +55,20 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
 
+  const key = clientKey(req);
+  const limit = analysisRequestAllowed(key);
+  if (!limit.allowed) {
+    res.setHeader('Retry-After', String(limit.retryAfter));
+    return res.status(429).json({ error: 'Too many analysis requests. Try again shortly.' });
+  }
+
+  const releaseAnalysisSlot = acquireAnalysisSlot(key);
+  if (!releaseAnalysisSlot) {
+    res.setHeader('Retry-After', '2');
+    return res.status(429).json({ error: 'Analysis capacity is busy. Try again shortly.' });
+  }
+
+  try {
   if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: 'Server is missing ANTHROPIC_API_KEY. Set it in Vercel project settings.' });
   }
@@ -62,7 +81,6 @@ export default async function handler(req, res) {
   const rawEffort = (process.env.ANTHROPIC_EFFORT || DEFAULT_EFFORT).toLowerCase().trim();
   const EFFORT = VALID_EFFORT.indexOf(rawEffort) !== -1 ? rawEffort : DEFAULT_EFFORT;
 
-  try {
     const validated = validateAnalysisRequest(req);
     if (validated.error) {
       return res.status(validated.status).json({ error: validated.error });
@@ -145,5 +163,7 @@ export default async function handler(req, res) {
 
   } catch (err) {
     return res.status(500).json({ error: err.message || 'Server error' });
+  } finally {
+    releaseAnalysisSlot();
   }
 }
