@@ -55,6 +55,15 @@
     return fam.codes_by_level[level] || null;
   }
 
+  function lowestSupportedLevel(family, mdm) {
+    var fam = mdm.code_families[family];
+    if (!fam) return null;
+    for (var i = 0; i < ORDER.length; i++) {
+      if (fam.codes_by_level[ORDER[i]]) return ORDER[i];
+    }
+    return null;
+  }
+
   // time path: highest code in family whose threshold <= documented minutes
   function codeByTime(family, minutes, mdm) {
     if (minutes == null) return null;
@@ -97,7 +106,10 @@
     var dLevel = dRes.level;
     var rLevel = highestTier(facts.risk_matches);
 
-    var mdmLevel = twoOfThree(pLevel, dLevel, rLevel);
+    var calculatedMdmLevel = twoOfThree(pLevel, dLevel, rLevel);
+    var familyFloor = lowestSupportedLevel(family, mdm);
+    var mdmLevel = calculatedMdmLevel;
+    if (familyFloor && rank(mdmLevel) < rank(familyFloor)) mdmLevel = familyFloor;
     var mdmCode = codeForLevel(family, mdmLevel, mdm);
 
     var timeRes = codeByTime(family, facts.total_time_minutes, mdm);
@@ -116,10 +128,12 @@
       family: family,
       element_levels: { problems: pLevel, data: dLevel, risk: rLevel },
       data_categories_met: dRes.satisfied,
+      calculated_mdm_level: calculatedMdmLevel,
       mdm_level: mdmLevel,
       mdm_code: mdmCode,
       time_supports: timeRes,
       supported_code: supportedCode,
+      supported_level: levelOfCode(family, supportedCode, mdm),
       basis: basis,
       upgrade_gap: upgradeGap(family, mdmLevel, pLevel, dLevel, rLevel, mdm),
       low_confidence_flags: lowConf

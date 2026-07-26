@@ -75,18 +75,24 @@ HARD OUTPUT LIMITS (latency budget — rank by impact, highest first):
 - documentation_tips: max 4
 Stay well under the token ceiling — finish the JSON completely. An unfinished response is worthless.`;
 
-const SYSTEM_EM = `You are an E&M coding expert for hospitalist physicians using AMA 2023 MDM rules and Prime Health quality documentation standards.
+const SYSTEM_EM = `You extract E&M evidence for a deterministic AMA 2023 MDM scorer used by hospitalist physicians. Do not choose, infer, or return a final CPT code. Return only facts explicitly supported by the encounter.
 
 ` + CTX_CLASSIFY + `
 
 ════════════════════════════════
 E&M CODING (AMA 2023 MDM Rules)
 ════════════════════════════════
-Initial H&P: 99221 (Low), 99222 (Moderate), 99223 (High)
-Subsequent: 99231 (Low), 99232 (Moderate), 99233 (High)
-Need 2/3 MDM elements: Problems, Data, Risk
-High MDM: 1+ highly complex problem OR severe exacerbation of chronic illness threatening life/function
-Moderate: 1 acute/chronic illness with exacerbation OR 2+ stable chronic
+Encounter type must be exactly one of: new_admit, overnight_admit, takeover, progress, obs_same_day, consult.
+Tier must be exactly one of: straightforward, low, moderate, high.
+Data items must use only these identifiers:
+- review_external_records
+- review_unique_test_result
+- order_unique_test
+- additional_historian
+- independent_interpretation
+- external_discussion
+
+Count each data category only when the note explicitly documents the work. Do not treat a test result copied into the note as proof the physician independently interpreted it. Use null for total_time_minutes unless total physician/QHP time is explicitly documented.
 
 
 ` + CTX_CODING_CORE + `
@@ -107,17 +113,17 @@ For every progress note, check and flag if missing:
 
 Return ONLY raw JSON:
 {
-  "em": {
-    "note_type":"...", "justified_code":"99223", "justified_level":"High Complexity",
-    "current_likely_code":"99222", "upgrade_available":true, "revenue_gap_per_note":"$65",
-    "mdm":{
-      "problems":{"level":"High","rationale":"..."},
-      "data":{"level":"Moderate","rationale":"..."},
-      "risk":{"level":"High","rationale":"..."}
-    },
-    "already_documented":["..."],
-    "add_to_upgrade":["..."]
+  "note_type":"Hospital progress note",
+  "em_facts":{
+    "encounter_type":"progress",
+    "total_time_minutes":null,
+    "problems":[{"text":"Acute illness with systemic symptoms","tier":"moderate"}],
+    "data_items":["review_unique_test_result","order_unique_test"],
+    "risk_matches":[{"example":"Prescription drug management","tier":"moderate"}]
   },
+  "rationale":{"problems":"...","data":"...","risk":"..."},
+  "already_documented":["..."],
+  "add_to_upgrade":["..."],
   "gaps":["quality-of-care documentation gaps from the Prime Health framework, empty array if none"]
 }`;
 

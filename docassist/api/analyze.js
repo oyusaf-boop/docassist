@@ -23,6 +23,7 @@
 
 import { hasValidSession } from './session.js';
 import { validateAnalysisRequest } from './requestValidation.js';
+import { ModelOutputError, validateModelOutput } from './outputValidation.js';
 import {
   acquireAnalysisSlot,
   analysisRequestAllowed,
@@ -159,7 +160,22 @@ export default async function handler(req, res) {
       });
     }
 
-    return res.status(200).json({ text });
+    let validatedText;
+    try {
+      validatedText = validateModelOutput(taskId, text);
+    } catch (err) {
+      if (!(err instanceof ModelOutputError)) throw err;
+      console.warn('[analyze] invalid model output', {
+        taskId,
+        model: MODEL,
+        reason: err.message,
+      });
+      return res.status(502).json({
+        error: 'The analysis service returned an incomplete or invalid result. Please retry.',
+      });
+    }
+
+    return res.status(200).json({ text: validatedText });
 
   } catch (err) {
     return res.status(500).json({ error: err.message || 'Server error' });
