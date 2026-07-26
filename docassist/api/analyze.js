@@ -21,6 +21,8 @@
 //
 // If the model returns no text, the error reports WHY (stop_reason + block types).
 
+import { hasValidSession } from './session.js';
+
 const DEFAULT_MODEL    = 'claude-sonnet-5';
 const DEFAULT_THINKING = 'disabled';
 const DEFAULT_EFFORT   = 'low';
@@ -45,9 +47,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const cookies = req.headers.cookie || '';
-  const authenticated = cookies.split(';').some(c => c.trim() === 'da_session=authenticated');
-  if (!authenticated) {
+  if (!hasValidSession(req)) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
 

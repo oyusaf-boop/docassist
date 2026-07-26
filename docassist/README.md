@@ -35,6 +35,12 @@ docassist/
    - **Name:** `ANTHROPIC_API_KEY`
    - **Value:** your Anthropic API key (sk-ant-...)
    - **Environment:** Production, Preview, Development (check all)
+   - **Name:** `APP_PASSWORD`
+   - **Value:** the password used to access DocAssist
+   - **Environment:** Production, Preview, Development (check all)
+   - **Name:** `SESSION_SECRET`
+   - **Value:** a randomly generated secret of at least 32 bytes
+   - **Environment:** Production, Preview, Development (check all)
 3. Click **Save**
 4. Go to **Deployments** → click the 3 dots → **Redeploy**
 
