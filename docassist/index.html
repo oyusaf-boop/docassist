@@ -7,33 +7,34 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --navy: #102f49; --navy2: #245d80;
-  --blue-light: #edf5fa; --blue-mid: #b8d3e2;
+  --navy: #123f45; --navy2: #1d6970;
+  --blue-light: #edf7f6; --blue-mid: #b8dcd8;
   --green: #0f5132; --green-light: #d1e7dd;
   --amber: #7a4f00; --amber-light: #fff3cd;
   --red: #842029; --red-light: #f8d7da;
   --purple-light: #f0eaff; --purple: #5b21b6;
-  --border: #dfe5e8; --text: #17232c;
-  --text2: #53616b; --text3: #7b8992;
-  --surface: #ffffff; --surface-muted: #f7f9fa;
-  --shadow: 0 1px 2px rgba(16,47,73,0.05), 0 8px 24px rgba(16,47,73,0.06);
+  --border: #dce7e5; --text: #172927;
+  --text2: #536865; --text3: #788d89;
+  --surface: #ffffff; --surface-muted: #f5f9f8;
+  --shadow: 0 1px 2px rgba(18,63,69,0.04), 0 10px 28px rgba(18,63,69,0.055);
 }
-body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f1f4f5; min-height:100vh; color:var(--text); font-size:14px; line-height:1.5; }
+body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f3f7f6; min-height:100vh; color:var(--text); font-size:14px; line-height:1.5; }
 
 /* HEADER */
-#hdr { background:rgba(16,47,73,0.98); height:62px; display:flex; align-items:center; padding:0 30px; justify-content:space-between; position:sticky; top:0; z-index:50; box-shadow:0 6px 20px rgba(16,47,73,0.18); backdrop-filter:blur(12px); }
+#hdr { background:rgba(18,63,69,0.98); height:68px; display:flex; align-items:center; padding:0 32px; justify-content:space-between; position:sticky; top:0; z-index:50; box-shadow:0 8px 24px rgba(12,48,52,0.16); backdrop-filter:blur(12px); }
 #logo { font-size:17px; font-weight:800; color:white; letter-spacing:-0.4px; display:flex; align-items:center; gap:10px; }
-#logo-icon { width:30px; height:30px; background:#2a7abf; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; }
-#logo span { color:#60b0f0; }
-#hdr-meta { font-size:11px; color:rgba(255,255,255,0.35); }
+#logo-icon { width:32px; height:32px; background:#e9f6f3; color:var(--navy); border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:15px; }
+#logo span { color:#8fd7ce; }
+#hdr-meta { font-size:11px; color:rgba(255,255,255,0.7); display:flex; align-items:center; gap:10px; }
+.beta-pill { border:1px solid rgba(255,255,255,0.22); background:rgba(255,255,255,0.09); color:#e7f8f5; border-radius:999px; padding:4px 9px; font-size:9px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
 
 /* MAIN LAYOUT */
-#wrap { max-width:1480px; margin:0 auto; padding:28px 28px 72px; display:grid; grid-template-columns:minmax(390px, 470px) minmax(0, 1fr); gap:24px; align-items:start; }
+#wrap { max-width:1680px; margin:0 auto; padding:24px 26px 72px; display:grid; grid-template-columns:minmax(360px, 430px) minmax(0, 1fr); gap:20px; align-items:start; }
 
 /* LEFT */
 #left { display:flex; flex-direction:column; gap:0; position:sticky; top:70px; }
 .type-tabs { display:flex; gap:0; }
-.ntab { flex:1; padding:11px 10px; border:1px solid var(--border); border-bottom:none; background:#e9eef0; color:var(--text2); font-size:12px; font-weight:650; cursor:pointer; font-family:inherit; transition:all 0.15s; text-align:center; }
+.ntab { flex:1; padding:11px 10px; border:1px solid var(--border); border-bottom:none; background:#eaf1f0; color:var(--text2); font-size:12px; font-weight:650; cursor:pointer; font-family:inherit; transition:all 0.15s; text-align:center; }
 .ntab:first-child { border-radius:10px 0 0 0; }
 .ntab:last-child { border-radius:0 10px 0 0; }
 .ntab.on { background:white; color:var(--navy); border-bottom-color:white; z-index:2; position:relative; }
@@ -70,7 +71,7 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
 
 /* OUTPUT TABS */
 .out-tabs { display:flex; gap:0; flex-wrap:wrap; }
-.otab { padding:11px 17px; border:1px solid var(--border); border-bottom:none; background:#e9eef0; color:var(--text2); font-size:12px; font-weight:650; cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap; }
+.otab { padding:11px 17px; border:1px solid var(--border); border-bottom:none; background:#eaf1f0; color:var(--text2); font-size:12px; font-weight:650; cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap; }
 .otab:first-child { border-radius:10px 0 0 0; }
 .otab:last-child { border-radius:0 10px 0 0; }
 .otab.on { background:white; color:var(--navy); border-bottom-color:white; z-index:2; position:relative; }
@@ -79,9 +80,9 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
 .out-panel.on { display:flex; flex-direction:column; gap:16px; }
 
 /* CARDS */
-.card { background:white; border-radius:0 14px 14px 14px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
+.card { background:white; border-radius:14px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; min-width:0; }
 .card-first { border-radius:0 0 14px 14px; }
-.card-hdr { padding:14px 19px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:16px; background:var(--surface-muted); }
+.card-hdr { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:16px; background:#fbfdfc; }
 .card-title { font-size:11px; font-weight:750; color:#51616c; text-transform:uppercase; letter-spacing:0.8px; }
 .card-body { padding:20px; }
 
@@ -283,6 +284,11 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
   #left { position:static; }
   #apgen-freeform { min-height:260px !important; }
 }
+@media (min-width: 1250px) {
+  #panel-analysis.on { display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr); gap:14px; align-items:start; }
+  #panel-analysis .card-first { grid-row:span 2; border-radius:0 0 14px 14px; }
+  #panel-analysis .card:not(.card-first) { border-radius:14px; }
+}
 @media (max-width: 680px) {
   #hdr { height:56px; padding:0 16px; }
   #hdr-meta { display:none; }
@@ -311,6 +317,8 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
 .panel-error-msg { font-size:11.5px; color:#885158; line-height:1.5; }
 .panel-retry { border:1px solid #d9aeb2; background:white; color:#6f2027; border-radius:7px; padding:7px 11px; font:600 11px inherit; cursor:pointer; white-space:nowrap; }
 .panel-retry:hover { background:#fff0f1; }
+.evidence-chip { display:inline-flex; align-items:center; gap:5px; max-width:100%; margin:6px 5px 0 0; padding:5px 8px; border-radius:999px; border:1px solid #c9dfdc; background:#f1f8f7; color:#315f5b; font-size:10.5px; font-weight:650; line-height:1.25; }
+.evidence-chip::before { content:""; width:5px; height:5px; border-radius:50%; background:#2e8b83; flex:0 0 auto; }
 </style>
 </head>
 <body>
@@ -318,7 +326,7 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
 <!-- LOGIN OVERLAY -->
 <div id="login-overlay">
   <div id="login-box">
-    <div id="login-logo">\u2695 Doc<span>Assist</span></div>
+    <div id="login-logo">Doc<span>Assist</span></div>
     <div id="login-sub">CDI &amp; E&amp;M Companion &middot; Private Beta</div>
     <input id="login-input" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()" autofocus />
     <button id="login-btn" onclick="doLogin()">Access DocAssist</button>
@@ -327,8 +335,8 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
 </div>
 
 <div id="hdr">
-  <div id="logo"><div id="logo-icon">⚕</div>Doc<span>Assist</span></div>
-  <div id="hdr-meta">CDI & E&M Companion · Beta v11</div>
+  <div id="logo"><div id="logo-icon">DA</div>Doc<span>Assist</span></div>
+  <div id="hdr-meta"><span>Clinical documentation workspace</span><span class="beta-pill">Private beta</span></div>
 </div>
 
 <div id="wrap">
@@ -354,17 +362,17 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
       <!-- DC Summary Builder -->
       <div id="inputs-dcsummary" style="display:none">
         <div class="input-section">
-          <div class="inp-label"><span>1️⃣</span> Initial H&P<span class="lbl-hint">paste from MT</span></div>
+          <div class="inp-label"><span class="ui-icon">01</span> Initial H&P<span class="lbl-hint">paste from MT</span></div>
           <textarea id="dc2-hp" class="inp-area" placeholder="Paste the admitting H&P here..."></textarea>
         </div>
         <div class="connector"></div>
         <div class="input-section">
-          <div class="inp-label"><span>2️⃣</span> Consult Note(s) <span class="lbl-hint">optional</span></div>
+          <div class="inp-label"><span class="ui-icon">02</span> Consult Note(s) <span class="lbl-hint">optional</span></div>
           <textarea id="dc2-consult" class="inp-area" placeholder="Paste any relevant consult notes here (cardiology, nephrology, etc.)..."></textarea>
         </div>
         <div class="connector"></div>
         <div class="input-section">
-          <div class="inp-label"><span>3️⃣</span> Last Progress Note<span class="lbl-hint">paste from MT</span></div>
+          <div class="inp-label"><span class="ui-icon">03</span> Last Progress Note<span class="lbl-hint">paste from MT</span></div>
           <textarea id="dc2-progress" class="inp-area tall" placeholder="Paste the most recent progress note here..."></textarea>
         </div>
       </div>
@@ -1368,8 +1376,11 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
 
     const failCount = [emP, cdiP, sepP, apP].filter(p => p.__err).length;
     if (failCount > 0) {
-      prog(true, 100, failCount + ' of 4 sections failed \u2014 see panels');
-      setTimeout(() => prog(false), 3000);
+      const message = failCount === 4
+        ? 'Analysis service unavailable — verify the beta API key and model settings'
+        : failCount + ' of 4 sections need a retry';
+      prog(true, 100, message);
+      setTimeout(() => prog(false), failCount === 4 ? 7000 : 3500);
     } else {
       prog(true, 100, 'Analysis complete \u2713');
       setTimeout(() => prog(false), 1500);
@@ -1421,11 +1432,10 @@ function renderCDI(alerts) {
   let h = '';
   alerts.forEach(a => {
     const cls = a.severity==='critical'?'a-red':a.severity==='warning'?'a-amber':a.severity==='purple'?'a-purple':'a-blue';
-    const ico = a.severity==='critical'?'🔴':a.severity==='warning'?'🟡':a.severity==='purple'?'🟣':'🔵';
     const status = a.status ? `<span class="badge b-sec" style="margin-left:6px;">${esc(a.status.toUpperCase())}</span>` : '';
-    h += `<div class="alert-block ${cls}"><div class="alert-title">${ico} ${esc(a.title)}${status}</div><div>${esc(a.body)}</div>`;
+    h += `<div class="alert-block ${cls}"><div class="alert-title">${esc(a.title)}${status}</div><div>${esc(a.body)}</div>`;
     if (a.evidence?.length) {
-      h += `<div class="alert-action"><strong>Evidence:</strong> ${a.evidence.map(esc).join(' · ')}</div>`;
+      h += `<div class="alert-action"><strong>Evidence</strong><div>${a.evidence.map(item => `<span class="evidence-chip">${esc(item)}</span>`).join('')}</div></div>`;
     }
     if (a.missing_evidence?.length) {
       h += `<div class="alert-action"><strong>Missing:</strong> ${a.missing_evidence.map(esc).join(' · ')}</div>`;
@@ -1450,7 +1460,7 @@ function renderDRG(drg, codes, gaps) {
           <div class="drg-num">${esc(number)}</div>
           <div class="drg-desc">${esc(desc)}</div>
         </div>`;
-      if (drg.evidence?.length) h += `<div class="alert-action"><strong>Evidence:</strong> ${drg.evidence.map(esc).join(' · ')}</div>`;
+      if (drg.evidence?.length) h += `<div class="alert-action"><strong>Evidence</strong><div>${drg.evidence.map(item => `<span class="evidence-chip">${esc(item)}</span>`).join('')}</div></div>`;
       if (drg.missing_evidence?.length) h += `<div class="alert-action"><strong>Still needed:</strong> ${drg.missing_evidence.map(esc).join(' · ')}</div>`;
       h += `<div class="em-ok" style="margin:12px 0 14px;">${esc(drg.verification_note || 'Verify with an approved MS-DRG grouper and qualified coder.')}</div>`;
     } else {
@@ -1464,7 +1474,7 @@ function renderDRG(drg, codes, gaps) {
       const bc = {mcc:'b-mcc',cc:'b-cc'}[c.cc_mcc_status] || ({principal_candidate:'b-pri'}[c.type] || 'b-sec');
       const status = c.support_status === 'confirmed' ? 'SUPPORTED' : c.support_status === 'query' ? 'QUERY' : 'UNSUPPORTED';
       h += `<tr><td class="icd-code">${esc(c.code)}</td><td>${esc(c.description)}
-        ${c.evidence?.length ? `<div class="icd-sub"><strong>Evidence:</strong> ${c.evidence.map(esc).join(' · ')}</div>` : ''}
+        ${c.evidence?.length ? `<div class="icd-sub">${c.evidence.map(item => `<span class="evidence-chip">${esc(item)}</span>`).join('')}</div>` : ''}
         ${c.missing_evidence?.length ? `<div class="icd-sub"><strong>Missing:</strong> ${c.missing_evidence.map(esc).join(' · ')}</div>` : ''}
         ${c.note?`<div class="icd-sub">${esc(c.note)}</div>`:''}</td>
         <td><span class="badge ${bc}">${esc(status)}</span><div class="icd-sub">${esc((c.cc_mcc_status||'unknown').toUpperCase())}</div></td></tr>`;

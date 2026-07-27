@@ -1,0 +1,32 @@
+[
+  {
+    "id": "progress-pneumonia-aki",
+    "expected_focus": ["progress E&M", "AKI query", "pneumonia coding evidence"],
+    "note": "Hospital day 2 progress note. Admitted with right lower lobe pneumonia. Afebrile today, oxygen saturation 94% on 2 L nasal cannula. Creatinine increased from documented baseline 1.0 to 2.1 mg/dL today. Ceftriaxone and azithromycin continued. IV fluids started and BMP will be repeated this afternoon. Patient remains inpatient for oxygen requirement and renal monitoring."
+  },
+  {
+    "id": "sepsis-complete-values",
+    "expected_focus": ["deterministic SIRS", "deterministic SOFA", "SEP-1 separated"],
+    "note": "Initial H&P. Suspected bacterial pneumonia with sepsis. Temperature 39.2 C, heart rate 118, respiratory rate 26, WBC 16.0. PaO2 70 on FiO2 0.40 with respiratory support. Platelets 88, bilirubin 2.4, MAP 62, GCS 14, creatinine 2.6. Baseline platelets 210, bilirubin 0.7, MAP 82, GCS 15, creatinine 0.9, and room air FiO2 0.21. Blood cultures and lactate obtained before antibiotics."
+  },
+  {
+    "id": "sepsis-missing-baseline",
+    "expected_focus": ["indeterminate acute SOFA change", "missing evidence"],
+    "note": "Progress note. Possible urinary infection. Temperature 38.3 C, heart rate 104, WBC 13.2. Creatinine 2.0 and platelets 120. No prior laboratory values or chronic baseline are available. Ceftriaxone started. The note does not diagnose sepsis or link organ dysfunction to infection."
+  },
+  {
+    "id": "heart-failure-specificity",
+    "expected_focus": ["heart failure specificity", "M.E.A.T.", "evidence-bound CDI"],
+    "note": "Initial hospital care. Acute decompensated HFrEF with EF 30%, pulmonary edema, and new 3 L oxygen requirement. IV furosemide ordered with strict intake and output, daily weights, telemetry, and repeat BMP. Cardiology consulted. Patient remains admitted for IV diuresis and oxygen weaning."
+  },
+  {
+    "id": "low-complexity-progress",
+    "expected_focus": ["low-complexity MDM", "no invented CDI"],
+    "note": "Progress note. Mild cellulitis is improving on oral cephalexin. Afebrile, tolerating diet, and ambulating. No new tests reviewed or ordered. Continue current medication and discharge home tomorrow if improvement continues."
+  },
+  {
+    "id": "sparse-and-contradictory",
+    "expected_focus": ["safe unknowns", "unsupported claims", "no DRG assignment"],
+    "note": "Brief note. Patient feels better. Problem list includes sepsis and acute kidney injury, but today the physician documents no infection source, no abnormal vital signs, no laboratory values, no treatment, and no assessment linking either diagnosis to the current encounter."
+  }
+]

@@ -97,4 +97,10 @@ node test_output_validation.mjs
 node test_analyze_integration.mjs
 node test_em.js
 node test_sepsis.js
+node test_dummy_notes.mjs
 ```
+
+`dummy_notes.json` contains six fictional regression scenarios for beta smoke
+testing. Model-output normalization tolerates minor formatting and optional-field
+omissions, while unsupported CDI, ICD-10, and DRG claims are conservatively
+downgraded instead of displayed as confirmed.

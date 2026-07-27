@@ -100,29 +100,39 @@ equal(cdi.icd_codes[0].support_status, 'query', 'ICD support state is preserved'
 equal(cdi.cdi_alerts[0].status, 'query', 'CDI evidence state is preserved');
 equal(cdi.cdi_alerts[0].evidence.length, 1, 'CDI alert requires traceable evidence');
 
-rejects(() => validateModelOutput('cdi', JSON.stringify({
+const unsupportedAlert = JSON.parse(validateModelOutput('cdi', JSON.stringify({
   cdi_alerts: [{ severity: 'warning', title: 'AKI', body: 'Possible.', action: 'Clarify.', status: 'query', evidence: [], missing_evidence: [], meat_status: 'partial' }],
   drg: { status: 'not_grouped', current_number: '', current_desc: '', candidate_number: '', candidate_desc: '', principal_diagnosis: '', evidence: [], missing_evidence: [], verified_by: '', verification_note: 'Insufficient data.' },
   icd_codes: [], summary: { coding_note: 'Review required.' },
-})), 'CDI query without evidence is rejected');
+})));
+equal(unsupportedAlert.cdi_alerts[0].status, 'unsupported', 'CDI query without evidence is safely downgraded');
 
 rejects(() => validateModelOutput('cdi', JSON.stringify({
   cdi_alerts: new Array(7).fill({ severity: 'info', title: 'x', body: 'x', action: 'x', status: 'confirmed', evidence: ['x'], missing_evidence: [], meat_status: 'met' }),
   drg: {}, icd_codes: [], summary: {},
 })), 'CDI alert cap is enforced');
 
-rejects(() => validateModelOutput('cdi', JSON.stringify({
+const ungroundedDrg = JSON.parse(validateModelOutput('cdi', JSON.stringify({
   cdi_alerts: [],
   drg: { status: 'candidate', current_number: '', current_desc: '', candidate_number: '177', candidate_desc: 'Respiratory infections', principal_diagnosis: 'Pneumonia', evidence: [], missing_evidence: [], verified_by: '', verification_note: 'Candidate.' },
   icd_codes: [], summary: { coding_note: 'Review required.' },
-})), 'candidate DRG without evidence is rejected');
+})));
+equal(ungroundedDrg.drg.status, 'not_grouped', 'candidate DRG without evidence is safely downgraded');
 
-rejects(() => validateModelOutput('cdi', JSON.stringify({
+const incompleteCode = JSON.parse(validateModelOutput('cdi', JSON.stringify({
   cdi_alerts: [],
   drg: { status: 'not_grouped', current_number: '', current_desc: '', candidate_number: '', candidate_desc: '', principal_diagnosis: '', evidence: [], missing_evidence: [], verified_by: '', verification_note: 'Insufficient data.' },
   icd_codes: [{ code: 'N17.9', description: 'Acute kidney failure', type: 'secondary', cc_mcc_status: 'cc', support_status: 'query', evidence: ['Creatinine elevated'], missing_evidence: [], note: 'Clarify acuity.' }],
   summary: { coding_note: 'Review required.' },
-})), 'ICD query without missing evidence is rejected');
+})));
+equal(incompleteCode.icd_codes[0].support_status, 'unsupported', 'ICD query without missing evidence is safely downgraded');
+
+const sparseCdi = JSON.parse(validateModelOutput('cdi', JSON.stringify({
+  cdi_alerts: [],
+  icd_codes: [{ code: 'R69', description: 'Unspecified illness' }],
+})));
+equal(sparseCdi.drg.status, 'not_grouped', 'missing DRG fields normalize to not grouped');
+equal(sparseCdi.icd_codes[0].support_status, 'unsupported', 'sparse ICD suggestion cannot become a supported claim');
 
 const sepsis = JSON.parse(validateModelOutput('sepsis', JSON.stringify({
   sepsis_facts: {
@@ -146,6 +156,12 @@ equal(sepsis.sepsis.sepsis3.baseline_sofa_score, 0, 'SOFA baseline is determinis
 equal(sepsis.sepsis.sepsis3.verdict, 'met', 'Sepsis-3 verdict uses deterministic acute SOFA change');
 equal(sepsis.sepsis.sep1.status, 'indeterminate', 'SEP-1 stays separate from diagnosis criteria');
 
+const sparseSepsis = JSON.parse(validateModelOutput('sepsis', JSON.stringify({
+  sepsis_facts: {},
+})));
+equal(sparseSepsis.sepsis.sepsis3.verdict, 'indeterminate', 'sparse sepsis extraction remains indeterminate');
+equal(sparseSepsis.sepsis.sep1.status, 'indeterminate', 'missing SEP-1 fields normalize safely');
+
 rejects(() => validateModelOutput('sepsis', JSON.stringify({
   sepsis_facts: { sepsis_or_infection_suspected: true, infection_documented: true, fio2: 40 },
   organ_dysfunction_documented: false, denial_risk: 'unknown', documentation_tips: [],
@@ -156,6 +172,6 @@ const course = JSON.parse(validateModelOutput('discharge_course', '{"hospital_co
 equal(course.hospital_course, 'Patient improved and was discharged.', 'discharge course validates');
 
 equal(validateModelOutput('optimized_ap', '===AP_TEXT===\\n# Problem\\nPlan\\n===END===').includes('# Problem'), true, 'complete A&P markers validate');
-rejects(() => validateModelOutput('optimized_ap', '# Problem\\nPlan'), 'incomplete A&P markers are rejected');
+equal(validateModelOutput('optimized_ap', '# Problem\\nPlan').startsWith('===AP_TEXT==='), true, 'missing A&P transport markers are restored');
 
 console.log(`model output validation: ${assertions} assertions passed`);
