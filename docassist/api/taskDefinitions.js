@@ -306,18 +306,37 @@ Return ONLY raw JSON:
     }
   ],
   "drg":{
-    "current_number":"193","current_desc":"Simple Pneumonia w/o MCC/CC","current_gmlos":"3.2",
-    "optimized_number":"177","optimized_desc":"Resp Infections w MCC","optimized_gmlos":"5.8",
-    "revenue_impact":"+$3,200","impact_available":true
+    "status":"candidate",
+    "current_number":"","current_desc":"",
+    "candidate_number":"","candidate_desc":"",
+    "principal_diagnosis":"Pneumonia",
+    "evidence":["Admitted for treatment of pneumonia"],
+    "missing_evidence":["Discharge diagnoses and complete procedure list"],
+    "verified_by":"",
+    "verification_note":"Candidate only; verify with an approved MS-DRG grouper and coder."
   },
   "icd_codes":[
-    {"code":"J18.9","description":"Pneumonia, unspecified","type":"principal","note":"Specify organism"}
+    {
+      "code":"J18.9","description":"Pneumonia, unspecified",
+      "type":"principal_candidate","cc_mcc_status":"unknown","support_status":"query",
+      "evidence":["Pneumonia documented in assessment"],
+      "missing_evidence":["Organism not documented"],
+      "note":"Confirm final principal diagnosis and sequencing."
+    }
   ],
-  "summary":{"mcc_cc_count":"1 MCC, 2 CC"}
+  "summary":{"coding_note":"Coding suggestions require physician/coder review."}
 }
 
-GMLOS values: use real approximate Medicare geometric mean LOS for the DRG numbers you cite.
-severity: critical = revenue >$1000 or DRG shift or MCC; warning = CC or specificity; info = quality/documentation`;
+DRG SAFETY RULES:
+- You are not an official MS-DRG grouper. Never invent or estimate GMLOS, reimbursement, revenue, relative weight, or financial impact.
+- Use status "not_grouped" unless the note contains enough principal-diagnosis, secondary-diagnosis, procedure, discharge-status, and POA context to name a candidate.
+- A candidate DRG is a review lead, not a final assignment. Leave candidate_number blank if uncertain.
+- Use status "verified" only when the note explicitly states that an approved grouper or coder verified it; identify that source in verified_by.
+- Never count CC/MCC totals. For each code, use "unknown" unless the classification is supported by the server-provided FY2026 reference.
+- Every confirmed or query code needs note evidence. A query also needs missing_evidence.
+- Do not recommend coding a suspected condition as confirmed except where inpatient uncertain-diagnosis rules are applicable at discharge; explain the condition in note.
+
+severity: critical = urgent compliance or patient-safety documentation issue; warning = meaningful specificity/query opportunity; info = quality/documentation`;
 
 const SYSTEM_SEPSIS = `You are a clinical data extractor for sepsis review. Extract documented values only. Do not calculate SIRS, SOFA, Sepsis-2, or Sepsis-3 and do not decide whether diagnostic criteria are met; the server does that deterministically. Use first/earliest acute values. Extract chronic/pre-illness baseline values separately. Use null when a value is absent. FiO2 must be a fraction from 0.21 to 1.0.
 

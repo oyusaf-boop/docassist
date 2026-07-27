@@ -81,6 +81,8 @@ rollout.
 - SIRS and all six SOFA organ components are calculated deterministically. Sepsis-3 requires documented infection plus a known acute SOFA increase; absent baseline data remains indeterminate.
 - CMS SEP-1 evidence is displayed separately as a quality-measure screen, not a diagnostic definition.
 - CDI alerts require note-grounded evidence, missing-evidence disclosure for queries, a support state, and M.E.A.T. status.
+- DRG output is a review candidate only unless the note explicitly identifies an approved grouper/coder verification source.
+- ICD-10 suggestions require note evidence and a support state. DocAssist does not estimate GMLOS, reimbursement, relative weight, or revenue.
 
 ## Local Regression Tests
 

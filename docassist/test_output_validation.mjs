@@ -80,27 +80,49 @@ const cdi = JSON.parse(validateModelOutput('cdi', JSON.stringify({
     meat_status: 'partial',
   }],
   drg: {
-    current_number: '', current_desc: '', current_gmlos: '',
-    optimized_number: '', optimized_desc: '', optimized_gmlos: '',
-    revenue_impact: '', impact_available: false,
+    status: 'candidate', current_number: '', current_desc: '',
+    candidate_number: '', candidate_desc: '', principal_diagnosis: 'Pneumonia',
+    evidence: ['Pneumonia documented'], missing_evidence: ['Discharge diagnoses'],
+    verified_by: '', verification_note: 'Verify with grouper.',
   },
-  icd_codes: [],
-  summary: { mcc_cc_count: '0' },
+  icd_codes: [{
+    code: 'J18.9', description: 'Pneumonia, unspecified', type: 'principal_candidate',
+    cc_mcc_status: 'unknown', support_status: 'query',
+    evidence: ['Pneumonia documented'], missing_evidence: ['Organism'],
+    note: 'Clarify organism.',
+  }],
+  summary: { coding_note: 'Coder review required.' },
 })));
 equal(cdi.drg.impact_available, false, 'valid CDI output is normalized');
+equal(cdi.drg.revenue_impact, '', 'model revenue estimates are discarded');
+equal(cdi.drg.current_gmlos, '', 'model GMLOS estimates are discarded');
+equal(cdi.icd_codes[0].support_status, 'query', 'ICD support state is preserved');
 equal(cdi.cdi_alerts[0].status, 'query', 'CDI evidence state is preserved');
 equal(cdi.cdi_alerts[0].evidence.length, 1, 'CDI alert requires traceable evidence');
 
 rejects(() => validateModelOutput('cdi', JSON.stringify({
   cdi_alerts: [{ severity: 'warning', title: 'AKI', body: 'Possible.', action: 'Clarify.', status: 'query', evidence: [], missing_evidence: [], meat_status: 'partial' }],
-  drg: { current_number: '', current_desc: '', current_gmlos: '', optimized_number: '', optimized_desc: '', optimized_gmlos: '', revenue_impact: '', impact_available: false },
-  icd_codes: [], summary: { mcc_cc_count: '0' },
+  drg: { status: 'not_grouped', current_number: '', current_desc: '', candidate_number: '', candidate_desc: '', principal_diagnosis: '', evidence: [], missing_evidence: [], verified_by: '', verification_note: 'Insufficient data.' },
+  icd_codes: [], summary: { coding_note: 'Review required.' },
 })), 'CDI query without evidence is rejected');
 
 rejects(() => validateModelOutput('cdi', JSON.stringify({
   cdi_alerts: new Array(7).fill({ severity: 'info', title: 'x', body: 'x', action: 'x', status: 'confirmed', evidence: ['x'], missing_evidence: [], meat_status: 'met' }),
   drg: {}, icd_codes: [], summary: {},
 })), 'CDI alert cap is enforced');
+
+rejects(() => validateModelOutput('cdi', JSON.stringify({
+  cdi_alerts: [],
+  drg: { status: 'candidate', current_number: '', current_desc: '', candidate_number: '177', candidate_desc: 'Respiratory infections', principal_diagnosis: 'Pneumonia', evidence: [], missing_evidence: [], verified_by: '', verification_note: 'Candidate.' },
+  icd_codes: [], summary: { coding_note: 'Review required.' },
+})), 'candidate DRG without evidence is rejected');
+
+rejects(() => validateModelOutput('cdi', JSON.stringify({
+  cdi_alerts: [],
+  drg: { status: 'not_grouped', current_number: '', current_desc: '', candidate_number: '', candidate_desc: '', principal_diagnosis: '', evidence: [], missing_evidence: [], verified_by: '', verification_note: 'Insufficient data.' },
+  icd_codes: [{ code: 'N17.9', description: 'Acute kidney failure', type: 'secondary', cc_mcc_status: 'cc', support_status: 'query', evidence: ['Creatinine elevated'], missing_evidence: [], note: 'Clarify acuity.' }],
+  summary: { coding_note: 'Review required.' },
+})), 'ICD query without missing evidence is rejected');
 
 const sepsis = JSON.parse(validateModelOutput('sepsis', JSON.stringify({
   sepsis_facts: {

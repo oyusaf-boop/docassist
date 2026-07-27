@@ -415,8 +415,8 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
           <div class="card-body" id="cdi-body"><div class="empty"><div class="empty-ico">CDI</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div></div>
         </div>
         <div class="card">
-          <div class="card-hdr"><span class="card-title">DRG & ICD-10 Optimization</span><span style="font-size:11px;color:var(--text3)">Revenue impact + GMLOS</span></div>
-          <div class="card-body" id="drg-body"><div class="empty"><div class="empty-ico">DRG</div><div class="empty-ttl">DRG &amp; ICD-10 Analysis</div><div class="empty-sub">DRG comparison, GMLOS, and ICD-10 codes appear here</div></div></div>
+          <div class="card-hdr"><span class="card-title">DRG & ICD-10 Optimization</span><span style="font-size:11px;color:var(--text3)">Evidence-backed review</span></div>
+          <div class="card-body" id="drg-body"><div class="empty"><div class="empty-ico">DRG</div><div class="empty-ttl">DRG &amp; ICD-10 Analysis</div><div class="empty-sub">Evidence-backed DRG candidates and ICD-10 suggestions appear here</div></div></div>
         </div>
       </div>
 
@@ -1339,7 +1339,7 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
       em_code: (analysis.em||{}).justified_code || '\u2014',
       complexity: (((analysis.em||{}).justified_level)||'\u2014').replace(' Complexity','').replace(' MDM',''),
       mcc_cc_count: ((analysis.summary||{}).mcc_cc_count) || '\u2014',
-      drg_opportunity: (analysis.drg||{}).revenue_impact || '\u2014',
+      drg_opportunity: (analysis.drg||{}).status === 'candidate' ? 'Review' : '\u2014',
       alert_count: (analysis.cdi_alerts||[]).length
     };
 
@@ -1440,36 +1440,34 @@ function renderCDI(alerts) {
 function renderDRG(drg, codes, gaps) {
   let h = '';
   if (drg) {
-    const hasDiff = drg.impact_available && drg.current_number !== drg.optimized_number;
-    if (hasDiff) {
-      h += `<div class="sec-lbl">DRG Comparison</div>
-        <div class="drg-compare">
-          <div class="drg-box drg-cur"><div class="drg-lbl">Current DRG</div><div class="drg-num">${esc(drg.current_number)}</div><div class="drg-desc">${esc(drg.current_desc)}</div></div>
-          <div class="drg-arrow">→</div>
-          <div class="drg-box drg-opt"><div class="drg-lbl">Optimized DRG</div><div class="drg-num">${esc(drg.optimized_number)}</div><div class="drg-desc">${esc(drg.optimized_desc)}</div></div>
+    const candidate = drg.status === 'candidate' || drg.status === 'verified';
+    if (candidate) {
+      const number = drg.candidate_number || drg.current_number || 'Review';
+      const desc = drg.candidate_desc || drg.current_desc || drg.principal_diagnosis || 'Candidate requires grouper verification';
+      h += `<div class="sec-lbl">MS-DRG Review Candidate</div>
+        <div class="drg-box drg-opt" style="text-align:left;margin-bottom:10px;">
+          <div class="drg-lbl">${drg.status === 'verified' ? 'Verified assignment' : 'Candidate — not a final assignment'}</div>
+          <div class="drg-num">${esc(number)}</div>
+          <div class="drg-desc">${esc(desc)}</div>
         </div>`;
-      // GMLOS comparison
-      if (drg.current_gmlos || drg.optimized_gmlos) {
-        h += `<div class="drg-gmlos">
-          <div class="gmlos-box"><div class="gmlos-lbl">Current GMLOS</div><div class="gmlos-val">${esc(drg.current_gmlos||'—')}</div><div class="gmlos-sub">days · DRG ${esc(drg.current_number)}</div></div>
-          <div class="gmlos-box" style="background:var(--blue-light);border-color:var(--blue-mid)"><div class="gmlos-lbl">Optimized GMLOS</div><div class="gmlos-val" style="color:var(--navy2)">${esc(drg.optimized_gmlos||'—')}</div><div class="gmlos-sub">days · DRG ${esc(drg.optimized_number)}</div></div>
-        </div>`;
-      }
-      h += `<div class="drg-impact"><div><div class="drg-impact-lbl">Potential Revenue Uplift</div><div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">With documentation improvements</div></div><div class="drg-impact-val">${esc(drg.revenue_impact)}</div></div>`;
+      if (drg.evidence?.length) h += `<div class="alert-action"><strong>Evidence:</strong> ${drg.evidence.map(esc).join(' · ')}</div>`;
+      if (drg.missing_evidence?.length) h += `<div class="alert-action"><strong>Still needed:</strong> ${drg.missing_evidence.map(esc).join(' · ')}</div>`;
+      h += `<div class="em-ok" style="margin:12px 0 14px;">${esc(drg.verification_note || 'Verify with an approved MS-DRG grouper and qualified coder.')}</div>`;
     } else {
-      h += `<div class="sec-lbl">DRG</div><div class="drg-box drg-cur" style="text-align:left;margin-bottom:10px;"><div class="drg-lbl">Assigned DRG</div><div class="drg-num">${esc(drg.current_number)}</div><div class="drg-desc">${esc(drg.current_desc)}</div></div>`;
-      if (drg.current_gmlos) {
-        h += `<div class="gmlos-box" style="margin-bottom:14px;display:inline-block;min-width:160px;"><div class="gmlos-lbl">GMLOS</div><div class="gmlos-val">${esc(drg.current_gmlos)}</div><div class="gmlos-sub">days</div></div>`;
-      }
-      h += `<div class="em-ok" style="margin-bottom:14px;">✅ DRG appears appropriately assigned</div>`;
+      h += `<div class="empty" style="padding:18px 8px;"><div class="empty-ico">DRG</div><div class="empty-ttl">Insufficient data to group</div><div class="empty-sub">${esc(drg.verification_note || 'A final DRG requires complete discharge diagnoses, procedures, POA status, and an approved grouper.')}</div></div>`;
     }
   }
   if (codes?.length) {
     h += `<div class="sec-lbl" style="margin-top:4px;">ICD-10 Suggestions</div>
-      <table class="icd-tbl"><thead><tr><th>Code</th><th>Description</th><th>CC/MCC</th></tr></thead><tbody>`;
+      <table class="icd-tbl"><thead><tr><th>Code</th><th>Description &amp; evidence</th><th>Status</th></tr></thead><tbody>`;
     codes.forEach(c => {
-      const bc = {mcc:'b-mcc',cc:'b-cc',principal:'b-pri',secondary:'b-sec'}[c.type]||'b-sec';
-      h += `<tr><td class="icd-code">${esc(c.code)}</td><td>${esc(c.description)}${c.note?`<div class="icd-sub">${esc(c.note)}</div>`:''}</td><td><span class="badge ${bc}">${esc((c.type||'').toUpperCase())}</span></td></tr>`;
+      const bc = {mcc:'b-mcc',cc:'b-cc'}[c.cc_mcc_status] || ({principal_candidate:'b-pri'}[c.type] || 'b-sec');
+      const status = c.support_status === 'confirmed' ? 'SUPPORTED' : c.support_status === 'query' ? 'QUERY' : 'UNSUPPORTED';
+      h += `<tr><td class="icd-code">${esc(c.code)}</td><td>${esc(c.description)}
+        ${c.evidence?.length ? `<div class="icd-sub"><strong>Evidence:</strong> ${c.evidence.map(esc).join(' · ')}</div>` : ''}
+        ${c.missing_evidence?.length ? `<div class="icd-sub"><strong>Missing:</strong> ${c.missing_evidence.map(esc).join(' · ')}</div>` : ''}
+        ${c.note?`<div class="icd-sub">${esc(c.note)}</div>`:''}</td>
+        <td><span class="badge ${bc}">${esc(status)}</span><div class="icd-sub">${esc((c.cc_mcc_status||'unknown').toUpperCase())}</div></td></tr>`;
     });
     h += `</tbody></table>`;
   }
@@ -2093,13 +2091,13 @@ function captureMetrics(analysis) {
     if (mccMatch) mcc = parseInt(mccMatch[1], 10);
     if (ccMatch) cc = parseInt(ccMatch[1], 10);
 
-    const drgRev = drg.impact_available ? _parseDollars(drg.revenue_impact) : 0;
+    const drgRev = 0;
     const emRev = em.upgrade_available ? _parseDollars(em.revenue_gap_per_note) : 0;
-    const drgShifted = !!(drg.impact_available && drg.current_number && drg.optimized_number && drg.current_number !== drg.optimized_number);
+    const drgShifted = drg.status === 'candidate';
 
-    const gmlosCur = _parseFloatLoose(drg.current_gmlos);
-    const gmlosOpt = _parseFloatLoose(drg.optimized_gmlos);
-    const gmlosDelta = (gmlosCur !== null && gmlosOpt !== null) ? +(gmlosOpt - gmlosCur).toFixed(2) : null;
+    const gmlosCur = null;
+    const gmlosOpt = null;
+    const gmlosDelta = null;
 
     const categories = alerts.map(a => _categorize(a.title)).filter(Boolean);
     const critCount = alerts.filter(a => a.severity === 'critical').length;
@@ -2108,7 +2106,7 @@ function captureMetrics(analysis) {
       id: 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
       ts: new Date().toISOString(),
       drg_current: drg.current_number || null,
-      drg_optimized: drg.optimized_number || null,
+      drg_optimized: drg.candidate_number || null,
       drg_shifted: drgShifted,
       drg_revenue_dollars: drgRev,
       gmlos_current_days: gmlosCur,

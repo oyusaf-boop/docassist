@@ -167,6 +167,15 @@ function validateEm(raw) {
 function validateCdi(raw) {
   const root = object(raw, 'output');
   const drg = object(root.drg, 'drg');
+  const drgStatus = enumValue(drg.status, 'drg.status', new Set(['not_grouped', 'candidate', 'verified']));
+  const drgEvidence = stringArray(drg.evidence, 'drg.evidence', 8, 500);
+  const drgMissingEvidence = stringArray(drg.missing_evidence, 'drg.missing_evidence', 8, 500);
+  if (drgStatus === 'candidate' && !drgEvidence.length) {
+    fail('drg.evidence', 'is required for a candidate DRG');
+  }
+  if (drgStatus === 'verified' && !drg.verified_by) {
+    fail('drg.verified_by', 'is required for a verified DRG');
+  }
   return {
     cdi_alerts: array(root.cdi_alerts, 'cdi_alerts', 6).map((item, index) => {
       const alert = validateAlert(item, `cdi_alerts[${index}]`);
@@ -174,26 +183,54 @@ function validateCdi(raw) {
       return alert;
     }),
     drg: {
+      status: drgStatus,
       current_number: string(drg.current_number, 'drg.current_number', 10, true),
       current_desc: string(drg.current_desc, 'drg.current_desc', 300, true),
-      current_gmlos: string(drg.current_gmlos, 'drg.current_gmlos', 20, true),
-      optimized_number: string(drg.optimized_number, 'drg.optimized_number', 10, true),
-      optimized_desc: string(drg.optimized_desc, 'drg.optimized_desc', 300, true),
-      optimized_gmlos: string(drg.optimized_gmlos, 'drg.optimized_gmlos', 20, true),
-      revenue_impact: string(drg.revenue_impact, 'drg.revenue_impact', 80, true),
-      impact_available: boolean(drg.impact_available, 'drg.impact_available'),
+      candidate_number: string(drg.candidate_number, 'drg.candidate_number', 10, true),
+      candidate_desc: string(drg.candidate_desc, 'drg.candidate_desc', 300, true),
+      principal_diagnosis: string(drg.principal_diagnosis, 'drg.principal_diagnosis', 300, true),
+      evidence: drgEvidence,
+      missing_evidence: drgMissingEvidence,
+      verified_by: string(drg.verified_by, 'drg.verified_by', 120, true),
+      verification_note: string(drg.verification_note, 'drg.verification_note', 500),
+      // Backward-compatible fields are deliberately blank. DocAssist is not an
+      // official grouper and must not manufacture GMLOS or revenue projections.
+      optimized_number: '',
+      optimized_desc: '',
+      current_gmlos: '',
+      optimized_gmlos: '',
+      revenue_impact: '',
+      impact_available: false,
     },
     icd_codes: array(root.icd_codes, 'icd_codes', 8).map((item, index) => {
       const value = object(item, `icd_codes[${index}]`);
+      const supportStatus = enumValue(
+        value.support_status,
+        `icd_codes[${index}].support_status`,
+        new Set(['confirmed', 'query', 'unsupported'])
+      );
+      const evidence = stringArray(value.evidence, `icd_codes[${index}].evidence`, 6, 500);
+      const missingEvidence = stringArray(value.missing_evidence, `icd_codes[${index}].missing_evidence`, 6, 500);
+      if (supportStatus !== 'unsupported' && !evidence.length) {
+        fail(`icd_codes[${index}].evidence`, 'is required for a supported code suggestion');
+      }
+      if (supportStatus === 'query' && !missingEvidence.length) {
+        fail(`icd_codes[${index}].missing_evidence`, 'is required for a query');
+      }
       return {
         code: string(value.code, `icd_codes[${index}].code`, 20),
         description: string(value.description, `icd_codes[${index}].description`, 300),
-        type: string(value.type, `icd_codes[${index}].type`, 40),
+        type: enumValue(value.type, `icd_codes[${index}].type`, new Set(['principal_candidate', 'secondary'])),
+        cc_mcc_status: enumValue(value.cc_mcc_status, `icd_codes[${index}].cc_mcc_status`, new Set(['mcc', 'cc', 'non_cc', 'unknown'])),
+        support_status: supportStatus,
+        evidence,
+        missing_evidence: missingEvidence,
         note: string(value.note, `icd_codes[${index}].note`, 800, true),
       };
     }),
     summary: {
-      mcc_cc_count: string(object(root.summary, 'summary').mcc_cc_count, 'summary.mcc_cc_count', 80),
+      mcc_cc_count: '',
+      coding_note: string(object(root.summary, 'summary').coding_note, 'summary.coding_note', 500),
     },
   };
 }
