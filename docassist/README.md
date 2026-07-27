@@ -75,6 +75,13 @@ These in-memory controls protect each active function instance. Add a shared,
 durable rate-limit store before a multi-region or horizontally scaled production
 rollout.
 
+## Clinical Scoring Boundaries
+
+- E&M codes are calculated on the server from validated model-extracted facts.
+- SIRS and all six SOFA organ components are calculated deterministically. Sepsis-3 requires documented infection plus a known acute SOFA increase; absent baseline data remains indeterminate.
+- CMS SEP-1 evidence is displayed separately as a quality-measure screen, not a diagnostic definition.
+- CDI alerts require note-grounded evidence, missing-evidence disclosure for queries, a support state, and M.E.A.T. status.
+
 ## Local Regression Tests
 
 Run the security, request-boundary, model-output, API integration, and
@@ -87,4 +94,5 @@ node test_rate_limit.mjs
 node test_output_validation.mjs
 node test_analyze_integration.mjs
 node test_em.js
+node test_sepsis.js
 ```

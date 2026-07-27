@@ -2,12 +2,15 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const emScorer = require('../emScorer.js');
+const sepsisScorer = require('../sepsisScorer.js');
 const emMdm = require('../em_mdm_FY2026.json');
 
 const LEVELS = new Set(['straightforward', 'low', 'moderate', 'high']);
 const ENCOUNTER_TYPES = new Set(Object.keys(emMdm.meta.encounter_type_map));
 const DATA_ITEMS = new Set(Object.keys(emMdm.elements.data.data_item_pool));
 const SEVERITIES = new Set(['critical', 'warning', 'info']);
+const CDI_STATES = new Set(['confirmed', 'query', 'unsupported']);
+const MEAT_STATES = new Set(['met', 'partial', 'absent', 'not_applicable']);
 
 class ModelOutputError extends Error {
   constructor(message) {
@@ -78,12 +81,25 @@ function parseJson(text) {
 
 function validateAlert(item, path) {
   const value = object(item, path);
-  return {
+  const result = {
     severity: enumValue(value.severity, `${path}.severity`, SEVERITIES),
     title: string(value.title, `${path}.title`, 200),
     body: string(value.body, `${path}.body`, 1200),
     action: string(value.action, `${path}.action`, 800),
   };
+  if (value.evidence !== undefined) {
+    result.evidence = stringArray(value.evidence, `${path}.evidence`, 6, 500);
+    result.missing_evidence = stringArray(value.missing_evidence || [], `${path}.missing_evidence`, 6, 500);
+    result.status = enumValue(value.status, `${path}.status`, CDI_STATES);
+    result.meat_status = enumValue(value.meat_status, `${path}.meat_status`, MEAT_STATES);
+    if (result.status !== 'unsupported' && result.evidence.length === 0) {
+      fail(`${path}.evidence`, 'must cite note evidence for confirmed or query alerts');
+    }
+    if (result.status === 'query' && result.missing_evidence.length === 0) {
+      fail(`${path}.missing_evidence`, 'must identify what is missing for a query');
+    }
+  }
+  return result;
 }
 
 function validateEm(raw) {
@@ -152,7 +168,11 @@ function validateCdi(raw) {
   const root = object(raw, 'output');
   const drg = object(root.drg, 'drg');
   return {
-    cdi_alerts: array(root.cdi_alerts, 'cdi_alerts', 6).map(validateAlert),
+    cdi_alerts: array(root.cdi_alerts, 'cdi_alerts', 6).map((item, index) => {
+      const alert = validateAlert(item, `cdi_alerts[${index}]`);
+      if (!alert.evidence) fail(`cdi_alerts[${index}].evidence`, 'is required');
+      return alert;
+    }),
     drg: {
       current_number: string(drg.current_number, 'drg.current_number', 10, true),
       current_desc: string(drg.current_desc, 'drg.current_desc', 300, true),
@@ -180,20 +200,42 @@ function validateCdi(raw) {
 
 function validateSepsis(raw) {
   const root = object(raw, 'output');
-  const sepsis = object(root.sepsis, 'sepsis');
-  boolean(sepsis.detected, 'sepsis.detected');
-  if (!sepsis.detected) {
-    return { sepsis: { ...sepsis, detected: false, documentation_tips: stringArray(sepsis.documentation_tips || [], 'sepsis.documentation_tips', 4) } };
+  const facts = object(root.sepsis_facts, 'sepsis_facts');
+  const nullableNumber = (value, path, min, max) =>
+    value == null ? null : number(value, path, min, max);
+  const normalized = {
+    sepsis_or_infection_suspected: boolean(facts.sepsis_or_infection_suspected, 'sepsis_facts.sepsis_or_infection_suspected'),
+    infection_documented: boolean(facts.infection_documented, 'sepsis_facts.infection_documented'),
+  };
+  const ranges = {
+    temperature_c: [25, 45], heart_rate: [0, 300], respiratory_rate: [0, 100],
+    paco2: [5, 150], wbc: [0, 200], bands_percent: [0, 100],
+    pao2: [10, 800], fio2: [0.21, 1], platelets: [0, 2000], bilirubin: [0, 100],
+    map: [0, 250], gcs: [3, 15], creatinine: [0, 30], urine_output_ml_day: [0, 20000],
+    dopamine_mcg_kg_min: [0, 100], dobutamine_mcg_kg_min: [0, 100],
+    epinephrine_mcg_kg_min: [0, 10], norepinephrine_mcg_kg_min: [0, 10],
+  };
+  for (const [name, range] of Object.entries(ranges)) {
+    normalized[name] = nullableNumber(facts[name], `sepsis_facts.${name}`, range[0], range[1]);
+    normalized[`baseline_${name}`] = nullableNumber(facts[`baseline_${name}`], `sepsis_facts.baseline_${name}`, range[0], range[1]);
   }
-  object(sepsis.sepsis2, 'sepsis.sepsis2');
-  object(sepsis.sepsis3, 'sepsis.sepsis3');
+  normalized.respiratory_support = facts.respiratory_support == null ? null : boolean(facts.respiratory_support, 'sepsis_facts.respiratory_support');
+  normalized.baseline_respiratory_support = facts.baseline_respiratory_support == null ? null : boolean(facts.baseline_respiratory_support, 'sepsis_facts.baseline_respiratory_support');
+  const scored = sepsisScorer.scoreSepsis(normalized);
+  const sep1 = object(root.sep1, 'sep1');
   return {
     sepsis: {
-      ...sepsis,
-      detected: true,
-      organ_dysfunction_documented: boolean(sepsis.organ_dysfunction_documented, 'sepsis.organ_dysfunction_documented'),
-      denial_risk: string(sepsis.denial_risk, 'sepsis.denial_risk', 40),
-      documentation_tips: stringArray(sepsis.documentation_tips, 'sepsis.documentation_tips', 4),
+      ...scored,
+      organ_dysfunction_documented: boolean(root.organ_dysfunction_documented, 'organ_dysfunction_documented'),
+      denial_risk: string(root.denial_risk, 'denial_risk', 40),
+      documentation_tips: stringArray(root.documentation_tips, 'documentation_tips', 4),
+      sep1: {
+        applicable: boolean(sep1.applicable, 'sep1.applicable'),
+        status: enumValue(sep1.status, 'sep1.status', new Set(['complete', 'incomplete', 'indeterminate', 'not_applicable'])),
+        evidence: stringArray(sep1.evidence, 'sep1.evidence', 8, 500),
+        missing: stringArray(sep1.missing, 'sep1.missing', 8, 500),
+        disclaimer: 'SEP-1 is a quality-measure screen, not a sepsis diagnosis.',
+      },
     },
   };
 }

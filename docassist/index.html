@@ -1422,7 +1422,17 @@ function renderCDI(alerts) {
   alerts.forEach(a => {
     const cls = a.severity==='critical'?'a-red':a.severity==='warning'?'a-amber':a.severity==='purple'?'a-purple':'a-blue';
     const ico = a.severity==='critical'?'🔴':a.severity==='warning'?'🟡':a.severity==='purple'?'🟣':'🔵';
-    h += `<div class="alert-block ${cls}"><div class="alert-title">${ico} ${esc(a.title)}</div><div>${esc(a.body)}</div>${a.action?`<div class="alert-action">→ ${esc(a.action)}</div>`:''}</div>`;
+    const status = a.status ? `<span class="badge b-sec" style="margin-left:6px;">${esc(a.status.toUpperCase())}</span>` : '';
+    h += `<div class="alert-block ${cls}"><div class="alert-title">${ico} ${esc(a.title)}${status}</div><div>${esc(a.body)}</div>`;
+    if (a.evidence?.length) {
+      h += `<div class="alert-action"><strong>Evidence:</strong> ${a.evidence.map(esc).join(' · ')}</div>`;
+    }
+    if (a.missing_evidence?.length) {
+      h += `<div class="alert-action"><strong>Missing:</strong> ${a.missing_evidence.map(esc).join(' · ')}</div>`;
+    }
+    if (a.meat_status) h += `<div class="alert-action"><strong>M.E.A.T.:</strong> ${esc(a.meat_status.replace('_',' '))}</div>`;
+    if (a.action) h += `<div class="alert-action">→ ${esc(a.action)}</div>`;
+    h += `</div>`;
   });
   document.getElementById('cdi-body').innerHTML = h;
 }
@@ -1522,13 +1532,27 @@ function renderSepsis(sep) {
         </div>
         <div class="sec-lbl" style="margin-top:6px;margin-bottom:6px;">SOFA Components (acute change ≥2 points total):</div>`;
     s3.sofa_components?.forEach(c => {
-      const icon = c.met ? '✓' : (c.value?.includes('not') ? '?' : '✗');
-      const cls = c.met ? 'crit-met' : (c.value?.includes('not') ? 'crit-unk' : 'crit-miss');
-      h += `<div class="criteria-row"><span class="${cls}">${icon}</span><span><strong>${esc(c.system)}</strong>${c.value?` — <em>${esc(c.value)}</em>`:''}</span></div>`;
+      const unknown = c.current_score == null;
+      const positive = !unknown && c.current_score > 0;
+      const icon = unknown ? '?' : (positive ? '✓' : '—');
+      const cls = unknown ? 'crit-unk' : (positive ? 'crit-met' : 'crit-miss');
+      const score = unknown ? '?' : c.current_score;
+      h += `<div class="criteria-row"><span class="${cls}">${icon}</span><span><strong>${esc(c.system)}</strong> — <em>${esc(c.value||'not documented')}</em> · ${score} point${score===1?'':'s'}</span></div>`;
     });
+    const sofaDisplay = s3.acute_sofa_change == null
+      ? `current score ${s3.sofa_score}; baseline incomplete`
+      : `acute change ${s3.acute_sofa_change} (current ${s3.sofa_score}, baseline ${s3.baseline_sofa_score})`;
     h += `<div class="sepsis-verdict ${s3met?'sv-met':'sv-partial'}">
-      ${s3met?'✅':'⚠️'} Sepsis-3: Estimated SOFA ${esc(s3.sofa_score_estimated||'?')} — ${s3met?'Threshold LIKELY MET':'Insufficient data to confirm'}
+      ${s3met?'✅':'⚠️'} Sepsis-3: SOFA ${esc(sofaDisplay)} — ${s3met?'acute increase threshold met':'not confirmed from documented data'}
     </div></div></div>`;
+  }
+
+  if (sep.sep1) {
+    h += `<div class="sepsis-denial-tip"><strong style="display:block;margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">CMS SEP-1 Screen · ${esc(sep.sep1.status)}</strong>
+      <div>${esc(sep.sep1.disclaimer||'SEP-1 is a quality-measure screen, not a diagnosis.')}</div>`;
+    sep.sep1.evidence?.forEach(t => h += `<div style="margin-top:3px;">✓ ${esc(t)}</div>`);
+    sep.sep1.missing?.forEach(t => h += `<div style="margin-top:3px;">? ${esc(t)}</div>`);
+    h += `</div>`;
   }
 
   // Organ dysfunction & denial tips

@@ -129,6 +129,15 @@ Return ONLY raw JSON:
 
 const SYSTEM_CDI = `You are a CDI and inpatient coding specialist for hospitalist physicians. You use FY2026 ICD-10-CM guidelines, CC/MCC classifications, and evidence-based clinical criteria. Every suggested diagnosis requires specific evidence from the note — if unsure, flag and ask, never assert.
 
+EVIDENCE CONTRACT:
+- Every alert must cite 1–6 specific facts actually present in the submitted note.
+- status="confirmed" only when the diagnosis and required supporting elements are explicitly documented.
+- status="query" when evidence suggests a clarification opportunity; list every material missing element.
+- status="unsupported" when a diagnosis appears in the note but its required support is absent or contradictory.
+- Never convert a clinical indicator into an asserted diagnosis.
+- Assess M.E.A.T. for each alert: met, partial, absent, or not_applicable.
+- Body and action must clearly distinguish documented fact from recommendation.
+
 ` + CTX_CLASSIFY + `
 
 ` + CTX_CODING_CORE + `
@@ -290,7 +299,11 @@ Return ONLY raw JSON, no markdown, no backticks:
 Return ONLY raw JSON:
 {
   "cdi_alerts":[
-    {"severity":"critical","title":"...","body":"...","action":"..."}
+    {
+      "severity":"critical","title":"...","body":"...","action":"...",
+      "status":"query","evidence":["Exact or faithful note fact"],"missing_evidence":["Required element not found"],
+      "meat_status":"partial"
+    }
   ],
   "drg":{
     "current_number":"193","current_desc":"Simple Pneumonia w/o MCC/CC","current_gmlos":"3.2",
@@ -306,46 +319,29 @@ Return ONLY raw JSON:
 GMLOS values: use real approximate Medicare geometric mean LOS for the DRG numbers you cite.
 severity: critical = revenue >$1000 or DRG shift or MCC; warning = CC or specificity; info = quality/documentation`;
 
-const SYSTEM_SEPSIS = `You are a sepsis documentation auditor for hospitalist physicians. Evaluate the pasted chart against Sepsis-2 (SIRS) and Sepsis-3 (SOFA) criteria using DOCUMENTED values only — never invent values; mark undocumented items as "not documented". Use the FIRST/earliest values (ER arrival vitals, first lactate, ER creatinine baseline) when assessing criteria.
+const SYSTEM_SEPSIS = `You are a clinical data extractor for sepsis review. Extract documented values only. Do not calculate SIRS, SOFA, Sepsis-2, or Sepsis-3 and do not decide whether diagnostic criteria are met; the server does that deterministically. Use first/earliest acute values. Extract chronic/pre-illness baseline values separately. Use null when a value is absent. FiO2 must be a fraction from 0.21 to 1.0.
 
 ` + OUTPUT_STYLE_RULES + `
 
 Return ONLY raw JSON:
 {
-  "sepsis":{
-    "detected":true,
-    "sepsis2":{
-      "infection_documented":true,
-      "sirs_criteria":[
-        {"name":"Temp >38\u00b0C or <36\u00b0C","met":true,"value":"39.1\u00b0C"},
-        {"name":"HR >90","met":true,"value":"112"},
-        {"name":"RR >20 or PaCO2 <32","met":false,"value":"not documented"},
-        {"name":"WBC >12k, <4k, or >10% bands","met":true,"value":"WBC 14.2"}
-      ],
-      "criteria_met":3,
-      "threshold":2,
-      "verdict":"met"
-    },
-    "sepsis3":{
-      "infection_documented":true,
-      "sofa_components":[
-        {"system":"Respiratory (PaO2/FiO2)","met":false,"value":"not documented"},
-        {"system":"Coagulation (Platelets)","met":false,"value":"Plt 210 - normal"},
-        {"system":"Liver (Bilirubin)","met":false,"value":"not documented"},
-        {"system":"Cardiovascular (MAP/vasopressors)","met":true,"value":"MAP 62, on norepinephrine"},
-        {"system":"CNS (GCS)","met":false,"value":"GCS 15"},
-        {"system":"Renal (Creatinine/UOP)","met":true,"value":"Cr 2.8, baseline 1.0"}
-      ],
-      "sofa_score_estimated":"\u22652",
-      "verdict":"met"
-    },
-    "organ_dysfunction_documented":true,
-    "denial_risk":"low",
-    "documentation_tips":["Document lactate level","Specify causative organism","Link organ dysfunction explicitly to sepsis in A&P"]
-  }
+  "sepsis_facts":{
+    "sepsis_or_infection_suspected":true,
+    "infection_documented":true,
+    "temperature_c":39.1,"heart_rate":112,"respiratory_rate":24,"paco2":null,"wbc":14.2,"bands_percent":null,
+    "pao2":80,"fio2":0.4,"respiratory_support":true,"platelets":210,"bilirubin":null,"map":62,"gcs":15,"creatinine":2.8,"urine_output_ml_day":null,
+    "dopamine_mcg_kg_min":null,"dobutamine_mcg_kg_min":null,"epinephrine_mcg_kg_min":null,"norepinephrine_mcg_kg_min":0.08,
+    "baseline_pao2":null,"baseline_fio2":null,"baseline_respiratory_support":null,"baseline_platelets":210,"baseline_bilirubin":0.8,"baseline_map":80,"baseline_gcs":15,"baseline_creatinine":1.0,"baseline_urine_output_ml_day":null,
+    "baseline_temperature_c":null,"baseline_heart_rate":null,"baseline_respiratory_rate":null,"baseline_paco2":null,"baseline_wbc":null,"baseline_bands_percent":null,
+    "baseline_dopamine_mcg_kg_min":0,"baseline_dobutamine_mcg_kg_min":0,"baseline_epinephrine_mcg_kg_min":0,"baseline_norepinephrine_mcg_kg_min":0
+  },
+  "organ_dysfunction_documented":true,
+  "denial_risk":"low",
+  "documentation_tips":["Link organ dysfunction explicitly to sepsis"],
+  "sep1":{"applicable":true,"status":"indeterminate","evidence":["Lactate documented"],"missing":["Unable to establish all bundle timestamps"]}
 }
 
-If sepsis is not present/suspected in the note, set sepsis.detected = false and provide empty arrays.`;
+SEP-1 is a CMS quality-measure screen, not a diagnostic definition. Report only directly documented bundle evidence/timestamps; use indeterminate when timing or applicability cannot be established.`;
 
 const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing. You apply FY2026 ICD-10 rules, Prime Health documentation standards, and KDIGO/ASPEN clinical criteria.
 

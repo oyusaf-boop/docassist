@@ -73,7 +73,12 @@ rejects(() => validateModelOutput('em', JSON.stringify({
 rejects(() => validateModelOutput('em', 'not json'), 'malformed JSON is rejected');
 
 const cdi = JSON.parse(validateModelOutput('cdi', JSON.stringify({
-  cdi_alerts: [],
+  cdi_alerts: [{
+    severity: 'warning', title: 'AKI clarification', body: 'Creatinine increased.',
+    action: 'Clarify acuity if clinically appropriate.', status: 'query',
+    evidence: ['Creatinine 2.0 from 1.0'], missing_evidence: ['Timing of change'],
+    meat_status: 'partial',
+  }],
   drg: {
     current_number: '', current_desc: '', current_gmlos: '',
     optimized_number: '', optimized_desc: '', optimized_gmlos: '',
@@ -83,11 +88,47 @@ const cdi = JSON.parse(validateModelOutput('cdi', JSON.stringify({
   summary: { mcc_cc_count: '0' },
 })));
 equal(cdi.drg.impact_available, false, 'valid CDI output is normalized');
+equal(cdi.cdi_alerts[0].status, 'query', 'CDI evidence state is preserved');
+equal(cdi.cdi_alerts[0].evidence.length, 1, 'CDI alert requires traceable evidence');
 
 rejects(() => validateModelOutput('cdi', JSON.stringify({
-  cdi_alerts: new Array(7).fill({ severity: 'info', title: 'x', body: 'x', action: 'x' }),
+  cdi_alerts: [{ severity: 'warning', title: 'AKI', body: 'Possible.', action: 'Clarify.', status: 'query', evidence: [], missing_evidence: [], meat_status: 'partial' }],
+  drg: { current_number: '', current_desc: '', current_gmlos: '', optimized_number: '', optimized_desc: '', optimized_gmlos: '', revenue_impact: '', impact_available: false },
+  icd_codes: [], summary: { mcc_cc_count: '0' },
+})), 'CDI query without evidence is rejected');
+
+rejects(() => validateModelOutput('cdi', JSON.stringify({
+  cdi_alerts: new Array(7).fill({ severity: 'info', title: 'x', body: 'x', action: 'x', status: 'confirmed', evidence: ['x'], missing_evidence: [], meat_status: 'met' }),
   drg: {}, icd_codes: [], summary: {},
 })), 'CDI alert cap is enforced');
+
+const sepsis = JSON.parse(validateModelOutput('sepsis', JSON.stringify({
+  sepsis_facts: {
+    sepsis_or_infection_suspected: true, infection_documented: true,
+    temperature_c: 39.1, heart_rate: 112, respiratory_rate: 24, paco2: null, wbc: 14.2, bands_percent: null,
+    pao2: 80, fio2: 0.4, respiratory_support: true, platelets: 90, bilirubin: 2.5,
+    map: 62, gcs: 14, creatinine: 2.8, urine_output_ml_day: null,
+    dopamine_mcg_kg_min: null, dobutamine_mcg_kg_min: null, epinephrine_mcg_kg_min: null, norepinephrine_mcg_kg_min: null,
+    baseline_pao2: 100, baseline_fio2: 0.21, baseline_respiratory_support: false,
+    baseline_platelets: 210, baseline_bilirubin: 0.8, baseline_map: 80, baseline_gcs: 15, baseline_creatinine: 1.0, baseline_urine_output_ml_day: null,
+    baseline_temperature_c: null, baseline_heart_rate: null, baseline_respiratory_rate: null, baseline_paco2: null, baseline_wbc: null, baseline_bands_percent: null,
+    baseline_dopamine_mcg_kg_min: 0, baseline_dobutamine_mcg_kg_min: 0, baseline_epinephrine_mcg_kg_min: 0, baseline_norepinephrine_mcg_kg_min: 0,
+  },
+  organ_dysfunction_documented: true, denial_risk: 'low',
+  documentation_tips: ['Link organ dysfunction to sepsis.'],
+  sep1: { applicable: true, status: 'indeterminate', evidence: ['Lactate obtained'], missing: ['Bundle timestamps'] },
+})));
+equal(sepsis.sepsis.sepsis2.criteria_met, 4, 'SIRS count is deterministic');
+equal(sepsis.sepsis.sepsis3.sofa_score, 10, 'SOFA current score is deterministic');
+equal(sepsis.sepsis.sepsis3.baseline_sofa_score, 0, 'SOFA baseline is deterministic');
+equal(sepsis.sepsis.sepsis3.verdict, 'met', 'Sepsis-3 verdict uses deterministic acute SOFA change');
+equal(sepsis.sepsis.sep1.status, 'indeterminate', 'SEP-1 stays separate from diagnosis criteria');
+
+rejects(() => validateModelOutput('sepsis', JSON.stringify({
+  sepsis_facts: { sepsis_or_infection_suspected: true, infection_documented: true, fio2: 40 },
+  organ_dysfunction_documented: false, denial_risk: 'unknown', documentation_tips: [],
+  sep1: { applicable: false, status: 'not_applicable', evidence: [], missing: [] },
+})), 'out-of-range FiO2 is rejected');
 
 const course = JSON.parse(validateModelOutput('discharge_course', '{"hospital_course":"Patient improved and was discharged."}'));
 equal(course.hospital_course, 'Patient improved and was discharged.', 'discharge course validates');
