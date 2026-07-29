@@ -127,6 +127,16 @@ const incompleteCode = JSON.parse(validateModelOutput('cdi', JSON.stringify({
 })));
 equal(incompleteCode.icd_codes[0].support_status, 'unsupported', 'ICD query without missing evidence is safely downgraded');
 
+const ccMccVariants = ['non-cc', 'Non-CC', 'NON CC', 'noncc', 'none'];
+for (const variant of ccMccVariants) {
+  const normalized = JSON.parse(validateModelOutput('cdi', JSON.stringify({
+    cdi_alerts: [],
+    drg: {},
+    icd_codes: [{ code: 'Z00.00', description: 'Non-CC example', cc_mcc_status: variant }],
+  })));
+  equal(normalized.icd_codes[0].cc_mcc_status, 'non_cc', `${variant} normalizes to non_cc`);
+}
+
 const sparseCdi = JSON.parse(validateModelOutput('cdi', JSON.stringify({
   cdi_alerts: [],
   icd_codes: [{ code: 'R69', description: 'Unspecified illness' }],
