@@ -25,6 +25,11 @@ import { hasValidSession } from './session.js';
 import { validateAnalysisRequest } from './requestValidation.js';
 import { ModelOutputError, validateModelOutput } from './outputValidation.js';
 import {
+  CDI_EXTRACTION_V2_INSTRUCTIONS,
+  CDI_EXTRACTION_V2_SCHEMA,
+  transformCdiExtractionV2,
+} from './cdiExtractionV2.js';
+import {
   acquireAnalysisSlot,
   analysisRequestAllowed,
   clientKey,
@@ -88,7 +93,11 @@ export default async function handler(req, res) {
       return res.status(validated.status).json({ error: validated.error });
     }
     const { task, taskId, encounter } = validated;
-    const system = task.buildSystem ? task.buildSystem(encounter) : task.system;
+    const useCdiV2 = taskId === 'cdi' && process.env.CDI_SCHEMA_VERSION !== '1';
+    const baseSystem = task.buildSystem ? task.buildSystem(encounter) : task.system;
+    const system = useCdiV2
+      ? baseSystem + CDI_EXTRACTION_V2_INSTRUCTIONS
+      : baseSystem;
 
     const payload = {
       model: MODEL,
@@ -100,7 +109,15 @@ export default async function handler(req, res) {
       messages: [{ role: 'user', content: encounter }],
       // Effort governs ALL token spend (thinking + text). Low keeps these
       // schema-bound extraction calls fast and inside the max_tokens ceiling.
-      output_config: { effort: EFFORT },
+      output_config: {
+        effort: EFFORT,
+        ...(useCdiV2 ? {
+          format: {
+            type: 'json_schema',
+            schema: CDI_EXTRACTION_V2_SCHEMA,
+          },
+        } : {}),
+      },
       thinking: { type: THINKING },
     };
 
@@ -160,6 +177,20 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'The analysis service could not complete this section. Please retry.' });
     }
 
+    if (data.stop_reason === 'max_tokens' || data.stop_reason === 'refusal') {
+      console.warn('[analyze] incomplete structured output', {
+        taskId,
+        model: MODEL,
+        stop_reason: data.stop_reason,
+        usage: data.usage,
+      });
+      return res.status(502).json({
+        error: data.stop_reason === 'max_tokens'
+          ? 'The analysis service returned an incomplete result. Please retry.'
+          : 'The analysis service could not complete this section.',
+      });
+    }
+
     // Robust extraction: concatenate every text block, ignore non-text blocks.
     const blocks = Array.isArray(data.content) ? data.content : [];
     const text = blocks
@@ -176,7 +207,9 @@ export default async function handler(req, res) {
 
     let validatedText;
     try {
-      validatedText = validateModelOutput(taskId, text);
+      validatedText = useCdiV2
+        ? JSON.stringify(transformCdiExtractionV2(text))
+        : validateModelOutput(taskId, text);
     } catch (err) {
       if (!(err instanceof ModelOutputError)) throw err;
       console.warn('[analyze] invalid model output', {
