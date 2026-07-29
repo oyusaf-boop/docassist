@@ -82,6 +82,17 @@ function enumValue(value, path, allowed, fallback) {
   return clean;
 }
 
+function sep1Status(value, path) {
+  if (value == null) return 'indeterminate';
+  const clean = string(value, path, 80).toLowerCase().trim();
+  const compact = clean.replace(/[\s_-]+/g, '');
+  if (compact === 'complete') return 'complete';
+  if (compact === 'incomplete') return 'incomplete';
+  if (compact === 'indeterminate' || compact === 'unknown') return 'indeterminate';
+  if (['notapplicable', 'na'].includes(compact)) return 'not_applicable';
+  fail(path, `contains unsupported value "${clean}"`);
+}
+
 function ccMccStatus(value, path) {
   if (value == null) return 'unknown';
   const clean = string(value, path, 80).toLowerCase().trim();
@@ -306,7 +317,7 @@ function validateSepsis(raw) {
       documentation_tips: stringArray(root.documentation_tips, 'documentation_tips', 4, 500, []),
       sep1: {
         applicable: boolean(sep1.applicable, 'sep1.applicable', false),
-        status: enumValue(sep1.status, 'sep1.status', new Set(['complete', 'incomplete', 'indeterminate', 'not_applicable']), 'indeterminate'),
+        status: sep1Status(sep1.status, 'sep1.status'),
         evidence: stringArray(sep1.evidence, 'sep1.evidence', 8, 500, []),
         missing: stringArray(sep1.missing, 'sep1.missing', 8, 500, []),
         disclaimer: 'SEP-1 is a quality-measure screen, not a sepsis diagnosis.',
