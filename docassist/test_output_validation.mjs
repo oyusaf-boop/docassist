@@ -137,6 +137,32 @@ for (const variant of ccMccVariants) {
   equal(normalized.icd_codes[0].cc_mcc_status, 'non_cc', `${variant} normalizes to non_cc`);
 }
 
+const boundedLists = JSON.parse(validateModelOutput('cdi', JSON.stringify({
+  cdi_alerts: [{
+    severity: 'warning', title: 'Complex chart', body: 'Multiple findings.', action: 'Review.',
+    status: 'confirmed', evidence: ['1','2','3','4','5','6','7','8'],
+    missing_evidence: [], meat_status: 'met',
+  }],
+  drg: {},
+  icd_codes: [{
+    code: 'J18.9', description: 'Pneumonia', type: 'secondary_candidate',
+    cc_mcc_status: 'non-cc', support_status: 'confirmed',
+    evidence: ['1','2','3','4','5','6','7'], missing_evidence: [], note: '',
+  }],
+})));
+equal(boundedLists.cdi_alerts[0].evidence.length, 6, 'excess CDI evidence is safely bounded');
+equal(boundedLists.icd_codes[0].evidence.length, 6, 'excess ICD evidence is safely bounded');
+equal(boundedLists.icd_codes[0].type, 'secondary', 'secondary_candidate normalizes to secondary');
+
+const boundedEm = JSON.parse(validateModelOutput('em', JSON.stringify({
+  note_type: 'Hospital progress note',
+  em_facts: { encounter_type: 'progress', total_time_minutes: null, problems: [], data_items: [], risk_matches: [] },
+  rationale: { problems: 'None.', data: 'None.', risk: 'None.' },
+  already_documented: ['1','2','3','4','5','6','7'],
+  add_to_upgrade: [], gaps: [],
+})));
+equal(boundedEm.em.already_documented.length, 6, 'excess E&M display items are safely bounded');
+
 const sparseCdi = JSON.parse(validateModelOutput('cdi', JSON.stringify({
   cdi_alerts: [],
   icd_codes: [{ code: 'R69', description: 'Unspecified illness' }],
