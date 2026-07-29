@@ -127,14 +127,15 @@ const incompleteCode = JSON.parse(validateModelOutput('cdi', JSON.stringify({
 })));
 equal(incompleteCode.icd_codes[0].support_status, 'unsupported', 'ICD query without missing evidence is safely downgraded');
 
-const ccMccVariants = ['non-cc', 'Non-CC', 'NON CC', 'noncc', 'none'];
+const ccMccVariants = ['non-cc', 'Non-CC', 'NON CC', 'noncc', 'none', 'non-cc as documented', 'CC as listed', 'MCC reported'];
 for (const variant of ccMccVariants) {
   const normalized = JSON.parse(validateModelOutput('cdi', JSON.stringify({
     cdi_alerts: [],
     drg: {},
     icd_codes: [{ code: 'Z00.00', description: 'Non-CC example', cc_mcc_status: variant }],
   })));
-  equal(normalized.icd_codes[0].cc_mcc_status, 'non_cc', `${variant} normalizes to non_cc`);
+  const expected = /^mcc/i.test(variant) ? 'mcc' : /^cc/i.test(variant) ? 'cc' : 'non_cc';
+  equal(normalized.icd_codes[0].cc_mcc_status, expected, `${variant} normalizes safely`);
 }
 
 const boundedLists = JSON.parse(validateModelOutput('cdi', JSON.stringify({
@@ -162,6 +163,18 @@ const boundedEm = JSON.parse(validateModelOutput('em', JSON.stringify({
   add_to_upgrade: [], gaps: [],
 })));
 equal(boundedEm.em.already_documented.length, 6, 'excess E&M display items are safely bounded');
+
+const repairedJson = JSON.parse(validateModelOutput('cdi', `{
+  "cdi_alerts": [],
+  "drg": {},
+  "icd_codes": [{
+    "code": "R69",
+    "description": "Line one
+Line two",
+    "cc_mcc_status": "unknown",
+  }],
+}`));
+equal(repairedJson.icd_codes[0].description, 'Line one\\nLine two', 'raw newlines and trailing commas are repaired deterministically');
 
 const sparseCdi = JSON.parse(validateModelOutput('cdi', JSON.stringify({
   cdi_alerts: [],
