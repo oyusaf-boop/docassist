@@ -1342,17 +1342,19 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     const priorForAP = inputs.prior
       ? '\n\nPRIOR RECORDS (baseline/chronic context only — DO NOT pull active diagnoses from here):\n' + inputs.prior
       : '';
-    // The API permits two concurrent requests per client. Keep the four
-    // independent panels within that contract instead of self-triggering 429s.
+    // The API permits two concurrent requests per client. Start the two
+    // historically longest tasks first so neither waits behind a short
+    // extraction. This removes the long CDI -> A&P queue tail while preserving
+    // the independent panel contracts and the server's concurrency guard.
     const settled = await allSettledWithConcurrency([
-      () => callAPI('em', context),
       () => callAPI('cdi', context),
-      () => callAPI('sepsis', context),
       () => callAPI('optimized_ap',
         inputs.freeform
           ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
           : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
-      )
+      ),
+      () => callAPI('em', context),
+      () => callAPI('sepsis', context)
     ], 2, (result) => {
       if (firstUsefulMs === null && result.status === 'fulfilled') {
         firstUsefulMs = Math.round(performance.now() - performanceStartedAt);
@@ -1384,15 +1386,15 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
       try { return parseJSON(r.value); }
       catch(e) { console.warn('[' + label + '] parse failed. Raw head: ' + r.value.slice(0,200)); return { __err: label + ' output could not be read \u2014 please retry the analysis.' }; }
     };
-    const emP = takeResult(settled[0], 'E&M');
-    const cdiP = takeResult(settled[1], 'CDI');
-    const sepP = takeResult(settled[2], 'Sepsis');
+    const cdiP = takeResult(settled[0], 'CDI');
     const takeAP = (r) => {
       if (r.status !== 'fulfilled') { console.warn('[A&P] call failed: ' + r.reason.message); return { __err: r.reason.message }; }
       try { return parseAPText(r.value); }
       catch(e) { console.warn('[A&P] parse failed. Raw head: ' + String(r.value).slice(0,200)); return { __err: 'A&P output could not be read \u2014 please retry the analysis.' }; }
     };
-    const apP = takeAP(settled[3]);
+    const apP = takeAP(settled[1]);
+    const emP = takeResult(settled[2], 'E&M');
+    const sepP = takeResult(settled[3], 'Sepsis');
 
     let analysis = {};
     [emP, cdiP, sepP].forEach(p => { if (!p.__err) Object.assign(analysis, p); });
