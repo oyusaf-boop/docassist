@@ -1,9 +1,26 @@
-import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import emScorer from '../emScorer.js';
+import sepsisScorer from '../sepsisScorer.js';
 
-const require = createRequire(import.meta.url);
-const emScorer = require('../emScorer.js');
-const sepsisScorer = require('../sepsisScorer.js');
-const emMdm = require('../em_mdm_FY2026.json');
+function loadProjectJson(filename) {
+  const candidates = [
+    join(process.cwd(), filename),
+    join(process.cwd(), 'docassist', filename)
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(readFileSync(candidate, 'utf8'));
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+  }
+
+  throw new Error(`Unable to load ${filename}`);
+}
+
+const emMdm = loadProjectJson('em_mdm_FY2026.json');
 
 const LEVELS = new Set(['straightforward', 'low', 'moderate', 'high']);
 const ENCOUNTER_TYPES = new Set(Object.keys(emMdm.meta.encounter_type_map));
