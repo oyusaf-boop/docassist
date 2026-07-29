@@ -14,7 +14,7 @@ export const CDI_EXTRACTION_V2_SCHEMA = Object.freeze({
         additionalProperties: false,
         required: [
           'diagnosis', 'documentation_status', 'clinical_support', 'severity',
-          'meat_status', 'evidence', 'missing_evidence', 'action'
+          'meat_status', 'clinical_rationale', 'evidence', 'missing_evidence', 'action'
         ],
         properties: {
           diagnosis: { type: 'string' },
@@ -31,6 +31,7 @@ export const CDI_EXTRACTION_V2_SCHEMA = Object.freeze({
             type: 'string',
             enum: ['met', 'partial', 'absent', 'not_applicable']
           },
+          clinical_rationale: { type: 'string' },
           evidence: {
             type: 'array',
             items: { type: 'string' }
@@ -104,6 +105,9 @@ UI prose, CC/MCC classifications, counts, revenue estimates, GMLOS, or a final
 DRG assignment. The server derives those fields from FY2026 reference data.
 Use evidence copied faithfully from the submitted note. A query must identify
 the missing evidence. Never turn a clinical indicator into an asserted diagnosis.
+For every diagnosis, clinical_rationale must be one concise, diagnosis-specific,
+evidence-grounded sentence that explains the documentation finding. Do not use
+generic phrases such as "clarification opportunity" or "review the cited evidence."
 `;
 
 function loadFoundationKnowledge() {
@@ -180,6 +184,31 @@ function alertStatus(diagnosis) {
   return 'query';
 }
 
+function diagnosisSpecificBody(diagnosis, status, evidence) {
+  const rationale = String(diagnosis.clinical_rationale || '').trim();
+  if (rationale) return rationale.slice(0, 800);
+
+  const name = String(diagnosis.diagnosis || 'This diagnosis').trim();
+  const strongestEvidence = evidence[0];
+  if (strongestEvidence) {
+    if (status === 'unsupported') {
+      return `${name} is not fully supported by the available documentation; the note states: ${strongestEvidence}`.slice(0, 800);
+    }
+    if (status === 'confirmed') {
+      return `${name} is documented and clinically supported; the note states: ${strongestEvidence}`.slice(0, 800);
+    }
+    return `${name} requires clarification based on the documented finding: ${strongestEvidence}`.slice(0, 800);
+  }
+
+  if (status === 'unsupported') {
+    return `${name} is documented but lacks supporting clinical evidence in the submitted note.`.slice(0, 800);
+  }
+  if (status === 'confirmed') {
+    return `${name} is documented and clinically supported in the submitted note.`.slice(0, 800);
+  }
+  return `${name} requires clarification because the submitted note does not establish the missing diagnostic elements.`.slice(0, 800);
+}
+
 export function transformCdiExtractionV2(value) {
   const root = parseExtraction(value);
   const diagnoses = root.diagnoses.slice(0, 6);
@@ -197,11 +226,7 @@ export function transformCdiExtractionV2(value) {
         ? diagnosis.severity
         : 'info',
       title: String(diagnosis.diagnosis || 'Documentation review').slice(0, 200),
-      body: status === 'confirmed'
-        ? 'Diagnosis is documented and supported by the cited note evidence.'
-        : status === 'query'
-          ? 'The note contains a clarification opportunity; review the cited evidence and missing elements.'
-          : 'The documented diagnosis is not supported by the available note evidence.',
+      body: diagnosisSpecificBody(diagnosis, status, evidence),
       action: String(diagnosis.action || 'Review the documentation and clarify if clinically appropriate.').slice(0, 800),
       evidence,
       missing_evidence: missing,
