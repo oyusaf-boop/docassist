@@ -794,7 +794,7 @@ async function callAPI(taskId, encounter, attempt) {
   return data.text;
 }
 
-async function allSettledWithConcurrency(tasks, limit) {
+async function allSettledWithConcurrency(tasks, limit, onSettled) {
   const results = new Array(tasks.length);
   let next = 0;
   async function worker() {
@@ -805,6 +805,7 @@ async function allSettledWithConcurrency(tasks, limit) {
       } catch (reason) {
         results[index] = { status:'rejected', reason };
       }
+      if (onSettled) onSettled(results[index], index);
     }
   }
   await Promise.all(Array.from({ length:Math.min(limit, tasks.length) }, worker));
@@ -1304,6 +1305,8 @@ async function analyze() {
 
   setBusy(true); setSpinners(true); resetOutputs();
   prog(true, 0, 'Starting analysis...');
+  const performanceStartedAt = performance.now();
+  let firstUsefulMs = null;
 
   // Build context — freeform tabs pass raw paste; structured tabs (discharge) pass labeled sections
   let context;
@@ -1350,7 +1353,29 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
           ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
           : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
       )
-    ], 2);
+    ], 2, (result) => {
+      if (firstUsefulMs === null && result.status === 'fulfilled') {
+        firstUsefulMs = Math.round(performance.now() - performanceStartedAt);
+        prog(true, 55, 'First validated section ready in ' + (firstUsefulMs / 1000).toFixed(1) + 's...');
+      }
+    });
+
+    const totalCompletionMs = Math.round(performance.now() - performanceStartedAt);
+    const performanceRecord = {
+      ts: new Date().toISOString(),
+      first_useful_ms: firstUsefulMs,
+      total_completion_ms: totalCompletionMs,
+      successful_sections: settled.filter(r => r.status === 'fulfilled').length,
+      failed_sections: settled.filter(r => r.status === 'rejected').length
+    };
+    try {
+      const history = JSON.parse(localStorage.getItem('docassist_performance_v1') || '[]');
+      history.push(performanceRecord);
+      localStorage.setItem('docassist_performance_v1', JSON.stringify(history.slice(-50)));
+    } catch (error) {
+      console.warn('[performance] unable to persist timing history');
+    }
+    console.info('[performance]', performanceRecord);
 
     prog(true, 80, 'Rendering results...');
 
