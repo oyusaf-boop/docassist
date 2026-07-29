@@ -763,11 +763,23 @@ function getInputs() {
 }
 function v(id) { const el=document.getElementById(id); return el ? el.value.trim() : ''; }
 
-async function callAPI(taskId, encounter) {
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function callAPI(taskId, encounter, attempt) {
+  attempt = attempt || 0;
   const res = await fetch('/api/analyze', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ taskId, encounter })
   });
+  // A warm serverless instance may already be serving another analysis. Retry
+  // only the transient capacity response; all other failures surface normally.
+  if (res.status === 429 && res.headers.get('x-docassist-retry') === 'capacity' && attempt < 2) {
+    const retrySeconds = Math.min(5, Math.max(1, Number(res.headers.get('retry-after')) || 2));
+    await wait(retrySeconds * 1000);
+    return callAPI(taskId, encounter, attempt + 1);
+  }
   const contentType = res.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
     const errText = await res.text();
@@ -780,6 +792,23 @@ async function callAPI(taskId, encounter) {
     throw new Error('The AI response was cut off at the length limit before finishing. Please retry — if it persists, trim the pasted note.');
   }
   return data.text;
+}
+
+async function allSettledWithConcurrency(tasks, limit) {
+  const results = new Array(tasks.length);
+  let next = 0;
+  async function worker() {
+    while (next < tasks.length) {
+      const index = next++;
+      try {
+        results[index] = { status:'fulfilled', value:await tasks[index]() };
+      } catch (reason) {
+        results[index] = { status:'rejected', reason };
+      }
+    }
+  }
+  await Promise.all(Array.from({ length:Math.min(limit, tasks.length) }, worker));
+  return results;
 }
 
 function parseAPText(raw) {
@@ -1310,16 +1339,18 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     const priorForAP = inputs.prior
       ? '\n\nPRIOR RECORDS (baseline/chronic context only — DO NOT pull active diagnoses from here):\n' + inputs.prior
       : '';
-    const settled = await Promise.allSettled([
-      callAPI('em', context),
-      callAPI('cdi', context),
-      callAPI('sepsis', context),
-      callAPI('optimized_ap',
+    // The API permits two concurrent requests per client. Keep the four
+    // independent panels within that contract instead of self-triggering 429s.
+    const settled = await allSettledWithConcurrency([
+      () => callAPI('em', context),
+      () => callAPI('cdi', context),
+      () => callAPI('sepsis', context),
+      () => callAPI('optimized_ap',
         inputs.freeform
           ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
           : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
       )
-    ]);
+    ], 2);
 
     prog(true, 80, 'Rendering results...');
 
