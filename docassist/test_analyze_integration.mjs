@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import handler from './api/analyze.js';
 import { createSessionToken, SESSION_COOKIE } from './api/session.js';
+import { acquireAnalysisSlot } from './api/rateLimit.js';
 
 const originalFetch = global.fetch;
 const originalEnv = {
@@ -126,6 +127,16 @@ try {
     'The analysis service could not complete this section. Please retry.',
     'provider details are not exposed',
   );
+
+  const releaseFirst = acquireAnalysisSlot('unknown');
+  const releaseSecond = acquireAnalysisSlot('unknown');
+  const busy = response();
+  await handler(request(), busy);
+  equal(busy.statusCode, 429, 'per-client capacity is enforced');
+  equal(busy.headers['retry-after'], '2', 'capacity response provides retry timing');
+  equal(busy.headers['x-docassist-retry'], 'capacity', 'capacity response is safe to retry');
+  releaseSecond();
+  releaseFirst();
 
   global.fetch = async () => {
     throw new Error('socket detail');
