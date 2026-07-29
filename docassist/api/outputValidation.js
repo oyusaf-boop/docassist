@@ -82,6 +82,18 @@ function enumValue(value, path, allowed, fallback) {
   return clean;
 }
 
+function ccMccStatus(value, path) {
+  if (value == null) return 'unknown';
+  const clean = string(value, path, 80).toLowerCase().trim();
+  const compact = clean.replace(/[\s_-]+/g, '');
+  if (compact === 'mcc') return 'mcc';
+  if (compact === 'cc') return 'cc';
+  if (['noncc', 'none', 'nocc', 'notccmcc', 'na', 'unknown'].includes(compact)) {
+    return compact === 'unknown' ? 'unknown' : 'non_cc';
+  }
+  fail(path, `contains unsupported value "${clean}"`);
+}
+
 function stringArray(value, path, maxItems, maxLength = 500, fallback = undefined) {
   return array(value, path, maxItems, fallback).map((item, index) =>
     string(item, `${path}[${index}]`, maxLength)
@@ -233,7 +245,7 @@ function validateCdi(raw) {
         code: string(value.code, `icd_codes[${index}].code`, 20),
         description: string(value.description, `icd_codes[${index}].description`, 300),
         type: enumValue(value.type, `icd_codes[${index}].type`, new Set(['principal_candidate', 'secondary']), 'secondary'),
-        cc_mcc_status: enumValue(value.cc_mcc_status, `icd_codes[${index}].cc_mcc_status`, new Set(['mcc', 'cc', 'non_cc', 'unknown']), 'unknown'),
+        cc_mcc_status: ccMccStatus(value.cc_mcc_status, `icd_codes[${index}].cc_mcc_status`),
         support_status: normalizedSupport,
         evidence,
         missing_evidence: missingEvidence,
