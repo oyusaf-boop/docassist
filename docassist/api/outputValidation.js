@@ -93,7 +93,7 @@ function enumValue(value, path, allowed, fallback) {
 function sep1Status(value, path) {
   if (value == null) return 'indeterminate';
   const clean = string(value, path, 80).toLowerCase().trim();
-  const compact = clean.replace(/[\s_-]+/g, '');
+  const compact = clean.replace(/[^a-z0-9]+/g, '');
   if (compact === 'complete') return 'complete';
   if (compact === 'incomplete') return 'incomplete';
   if (compact === 'indeterminate' || compact === 'unknown') return 'indeterminate';
