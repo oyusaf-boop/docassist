@@ -192,6 +192,14 @@ equal(sepsis.sepsis.sepsis3.baseline_sofa_score, 0, 'SOFA baseline is determinis
 equal(sepsis.sepsis.sepsis3.verdict, 'met', 'Sepsis-3 verdict uses deterministic acute SOFA change');
 equal(sepsis.sepsis.sep1.status, 'indeterminate', 'SEP-1 stays separate from diagnosis criteria');
 
+for (const variant of ['not applicable', 'Not Applicable', 'NOT-APPLICABLE', 'not_applicable', 'N/A']) {
+  const normalized = JSON.parse(validateModelOutput('sepsis', JSON.stringify({
+    sepsis_facts: {},
+    sep1: { applicable: false, status: variant, evidence: [], missing: [] },
+  })));
+  equal(normalized.sepsis.sep1.status, 'not_applicable', `${variant} normalizes to not_applicable`);
+}
+
 const sparseSepsis = JSON.parse(validateModelOutput('sepsis', JSON.stringify({
   sepsis_facts: {},
 })));
