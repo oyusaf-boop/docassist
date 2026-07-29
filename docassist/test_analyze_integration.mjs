@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import handler from './api/analyze.js';
 import { createSessionToken, SESSION_COOKIE } from './api/session.js';
 import { acquireAnalysisSlot } from './api/rateLimit.js';
@@ -13,6 +14,15 @@ process.env.ANTHROPIC_API_KEY = 'test-key';
 process.env.SESSION_SECRET = secret;
 
 let assertions = 0;
+
+for (const modulePath of ['./api/foundationPrompt.js', './api/outputValidation.js']) {
+  assert.equal(
+    readFileSync(new URL(modulePath, import.meta.url), 'utf8').includes('import.meta'),
+    false,
+    `${modulePath} must remain compatible with Vercel's CommonJS function bundle`
+  );
+  assertions += 1;
+}
 
 function equal(actual, expected, message) {
   assert.deepEqual(actual, expected, message);
