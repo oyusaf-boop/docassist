@@ -174,7 +174,7 @@ Line two",
     "cc_mcc_status": "unknown",
   }],
 }`));
-equal(repairedJson.icd_codes[0].description, 'Line one\\nLine two', 'raw newlines and trailing commas are repaired deterministically');
+equal(repairedJson.icd_codes[0].description, 'Line one\nLine two', 'raw newlines and trailing commas are repaired deterministically');
 
 const sparseCdi = JSON.parse(validateModelOutput('cdi', JSON.stringify({
   cdi_alerts: [],
