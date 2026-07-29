@@ -66,6 +66,7 @@ export default async function handler(req, res) {
   const releaseAnalysisSlot = acquireAnalysisSlot(key);
   if (!releaseAnalysisSlot) {
     res.setHeader('Retry-After', '2');
+    res.setHeader('X-DocAssist-Retry', 'capacity');
     return res.status(429).json({ error: 'Analysis capacity is busy. Try again shortly.' });
   }
 
