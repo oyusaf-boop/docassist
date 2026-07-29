@@ -327,6 +327,15 @@ Return ONLY raw JSON:
   "summary":{"coding_note":"Coding suggestions require physician/coder review."}
 }
 
+ENUM CONTRACT (exact values only):
+- cdi_alerts[].severity: "critical", "warning", or "info"
+- cdi_alerts[].status and icd_codes[].support_status: "confirmed", "query", or "unsupported"
+- cdi_alerts[].meat_status: "met", "partial", "absent", or "not_applicable"
+- drg.status: "not_grouped", "candidate", or "verified"
+- icd_codes[].type: "principal_candidate" or "secondary"
+- icd_codes[].cc_mcc_status: "mcc", "cc", "non_cc", or "unknown"
+Never append explanations such as "as documented" inside an enum field; put explanations in note or verification_note.
+
 DRG SAFETY RULES:
 - You are not an official MS-DRG grouper. Never invent or estimate GMLOS, reimbursement, revenue, relative weight, or financial impact.
 - Use status "not_grouped" unless the note contains enough principal-diagnosis, secondary-diagnosis, procedure, discharge-status, and POA context to name a candidate.
@@ -360,7 +369,8 @@ Return ONLY raw JSON:
   "sep1":{"applicable":true,"status":"indeterminate","evidence":["Lactate documented"],"missing":["Unable to establish all bundle timestamps"]}
 }
 
-SEP-1 is a CMS quality-measure screen, not a diagnostic definition. Report only directly documented bundle evidence/timestamps; use indeterminate when timing or applicability cannot be established.`;
+SEP-1 is a CMS quality-measure screen, not a diagnostic definition. Report only directly documented bundle evidence/timestamps.
+SEP-1 enum contract: status must be exactly "complete", "incomplete", "indeterminate", or "not_applicable". Use "indeterminate" when timing or applicability cannot be established; use "not_applicable" only when applicability is explicitly false.`;
 
 const SYSTEM_AP = `You are a CDI specialist rewriting a physician's Assessment & Plan to maximize documentation integrity for inpatient billing. You apply FY2026 ICD-10 rules, Prime Health documentation standards, and KDIGO/ASPEN clinical criteria.
 
