@@ -75,11 +75,19 @@ function array(value, path, max, fallback) {
   return value;
 }
 
+function canonicalEnumKey(value) {
+  return value.toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
 function enumValue(value, path, allowed, fallback) {
   if (value == null && fallback !== undefined) return fallback;
   const clean = string(value, path, 80).toLowerCase();
-  if (!allowed.has(clean)) fail(path, `contains unsupported value "${clean}"`);
-  return clean;
+  const canonical = canonicalEnumKey(clean);
+  if (allowed.has(canonical)) return canonical;
+  if (allowed.has(clean)) return clean;
+  fail(path, `contains unsupported value "${clean}"`);
 }
 
 function sep1Status(value, path) {
@@ -96,7 +104,10 @@ function sep1Status(value, path) {
 function ccMccStatus(value, path) {
   if (value == null) return 'unknown';
   const clean = string(value, path, 80).toLowerCase().trim();
-  const compact = clean.replace(/[\s_-]+/g, '');
+  // Strip only recognized provenance qualifiers; never infer from ambiguous prose.
+  const words = clean.replace(/[^a-z0-9]+/g, ' ').trim();
+  const unqualified = words.replace(/\s+(?:as\s+)?(?:documented|listed|reported)$/, '');
+  const compact = unqualified.replace(/\s+/g, '');
   if (compact === 'mcc') return 'mcc';
   if (compact === 'cc') return 'cc';
   if (['noncc', 'none', 'nocc', 'notccmcc', 'na', 'unknown'].includes(compact)) {
@@ -125,9 +136,38 @@ function icdCodeType(value, path) {
   fail(path, `contains unsupported value "${clean}"`);
 }
 
+function repairJsonTransport(text) {
+  let out = '';
+  let inString = false;
+  let escaped = false;
+  for (const char of text) {
+    if (escaped) {
+      out += char;
+      escaped = false;
+      continue;
+    }
+    if (char === '\\') {
+      out += char;
+      escaped = true;
+      continue;
+    }
+    if (char === '"') {
+      out += char;
+      inString = !inString;
+      continue;
+    }
+    if (inString && char === '\n') { out += '\\n'; continue; }
+    if (inString && char === '\r') { out += '\\r'; continue; }
+    if (inString && char === '\t') { out += '\\t'; continue; }
+    out += char;
+  }
+  // A trailing comma is a common model defect with one unambiguous repair.
+  return out.replace(/,\s*([}\]])/g, '$1');
+}
+
 function parseJson(text) {
   let clean = string(text, 'output', 100000);
-  clean = clean.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  clean = clean.replace(/^\`\`\`(?:json)?\s*/i, '').replace(/\s*\`\`\`$/i, '').trim();
   const first = clean.indexOf('{');
   const last = clean.lastIndexOf('}');
   if (first < 0 || last <= first) fail('output', 'must contain one JSON object');
@@ -135,7 +175,11 @@ function parseJson(text) {
   try {
     return JSON.parse(clean);
   } catch {
-    fail('output', 'is not valid JSON');
+    try {
+      return JSON.parse(repairJsonTransport(clean));
+    } catch {
+      fail('output', 'is not valid JSON');
+    }
   }
 }
 
