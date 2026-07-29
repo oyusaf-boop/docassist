@@ -95,9 +95,23 @@ function ccMccStatus(value, path) {
 }
 
 function stringArray(value, path, maxItems, maxLength = 500, fallback = undefined) {
-  return array(value, path, maxItems, fallback).map((item, index) =>
+  if (value == null && fallback !== undefined) value = fallback;
+  if (!Array.isArray(value)) fail(path, 'must be an array');
+  // Narrative/evidence lists are display-bounded rather than structurally
+  // significant. Preserve the first, most relevant items instead of rejecting
+  // an otherwise valid section when a model returns harmless extras.
+  return value.slice(0, maxItems).map((item, index) =>
     string(item, `${path}[${index}]`, maxLength)
   );
+}
+
+function icdCodeType(value, path) {
+  if (value == null) return 'secondary';
+  const clean = string(value, path, 80).toLowerCase().trim();
+  const compact = clean.replace(/[\s_-]+/g, '');
+  if (compact === 'principal' || compact === 'principalcandidate') return 'principal_candidate';
+  if (compact === 'secondary' || compact === 'secondarycandidate') return 'secondary';
+  fail(path, `contains unsupported value "${clean}"`);
 }
 
 function parseJson(text) {
@@ -244,7 +258,7 @@ function validateCdi(raw) {
       return {
         code: string(value.code, `icd_codes[${index}].code`, 20),
         description: string(value.description, `icd_codes[${index}].description`, 300),
-        type: enumValue(value.type, `icd_codes[${index}].type`, new Set(['principal_candidate', 'secondary']), 'secondary'),
+        type: icdCodeType(value.type, `icd_codes[${index}].type`),
         cc_mcc_status: ccMccStatus(value.cc_mcc_status, `icd_codes[${index}].cc_mcc_status`),
         support_status: normalizedSupport,
         evidence,
