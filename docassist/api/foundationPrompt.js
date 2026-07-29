@@ -1,7 +1,24 @@
-import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
-const require = createRequire(import.meta.url);
-const FOUNDATION_KB = require('../foundation_knowledge_FY2026.json');
+function loadProjectJson(filename) {
+  const candidates = [
+    join(process.cwd(), filename),
+    join(process.cwd(), 'docassist', filename)
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(readFileSync(candidate, 'utf8'));
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+  }
+
+  throw new Error(`Unable to load ${filename}`);
+}
+
+const FOUNDATION_KB = loadProjectJson('foundation_knowledge_FY2026.json');
 
 function buildKBSummary(kb, onlyDxKeys) {
   if (!kb || !kb.diagnoses) return '';
@@ -150,4 +167,3 @@ export function withFoundationKnowledge(systemPrompt, noteText) {
   const summary = buildKBSummary(FOUNDATION_KB, matched.length ? matched : null);
   return summary ? systemPrompt + '\n\n' + summary : systemPrompt;
 }
-
