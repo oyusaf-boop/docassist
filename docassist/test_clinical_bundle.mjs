@@ -7,6 +7,23 @@ import {
 assert.equal(CLINICAL_BUNDLE_SCHEMA.properties.schema_version.const, '1.0');
 assert.deepEqual(CLINICAL_BUNDLE_SCHEMA.required, ['schema_version', 'em', 'cdi', 'sepsis']);
 
+function findNumericBounds(value, path = '$', matches = []) {
+  if (!value || typeof value !== 'object') return matches;
+  for (const keyword of ['minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum']) {
+    if (Object.hasOwn(value, keyword)) matches.push(`${path}.${keyword}`);
+  }
+  for (const [key, child] of Object.entries(value)) {
+    findNumericBounds(child, `${path}.${key}`, matches);
+  }
+  return matches;
+}
+
+assert.deepEqual(
+  findNumericBounds(CLINICAL_BUNDLE_SCHEMA),
+  [],
+  'provider-facing clinical bundle schema must not contain unsupported numeric bounds'
+);
+
 const sepsisProperties =
   CLINICAL_BUNDLE_SCHEMA.properties.sepsis.properties.sepsis_facts.properties;
 const sepsisFacts = Object.fromEntries(

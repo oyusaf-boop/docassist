@@ -1,9 +1,12 @@
 import { CDI_EXTRACTION_V2_SCHEMA, transformCdiExtractionV2 } from './cdiExtractionV2.js';
 import { validateModelOutput } from './outputValidation.js';
 
-const nullableNumber = (minimum, maximum) => ({
-  anyOf: [{ type: 'number', minimum, maximum }, { type: 'null' }],
-});
+// Anthropic Structured Outputs supports number types, but not numeric bounds.
+// Range checks remain enforced by the server-owned E&M and Sepsis validators
+// after the provider returns schema-valid JSON.
+const nullableNumber = {
+  anyOf: [{ type: 'number' }, { type: 'null' }],
+};
 const nullableBoolean = { anyOf: [{ type: 'boolean' }, { type: 'null' }] };
 
 const EM_FACTS_SCHEMA = {
@@ -21,7 +24,7 @@ const EM_FACTS_SCHEMA = {
           type: 'string',
           enum: ['new_admit', 'overnight_admit', 'takeover', 'progress', 'obs_same_day', 'consult'],
         },
-        total_time_minutes: nullableNumber(0, 1440),
+        total_time_minutes: nullableNumber,
         problems: {
           type: 'array',
           items: {
@@ -88,9 +91,9 @@ const sepsisFactProperties = {
   respiratory_support: nullableBoolean,
   baseline_respiratory_support: nullableBoolean,
 };
-for (const [name, [minimum, maximum]] of Object.entries(SEPSIS_RANGES)) {
-  sepsisFactProperties[name] = nullableNumber(minimum, maximum);
-  sepsisFactProperties[`baseline_${name}`] = nullableNumber(minimum, maximum);
+for (const name of Object.keys(SEPSIS_RANGES)) {
+  sepsisFactProperties[name] = nullableNumber;
+  sepsisFactProperties[`baseline_${name}`] = nullableNumber;
 }
 
 const SEPSIS_FACTS_SCHEMA = {
