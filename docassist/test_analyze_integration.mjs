@@ -92,6 +92,9 @@ try {
     'validated output reaches the client',
   );
 
+  const bundleRequest = request('clinical_bundle');
+  equal(bundleRequest.body.taskId, 'clinical_bundle', 'clinical bundle is an accepted task route');
+
   const malformedUpstream = await runWithUpstream(anthropicResponse('<html>bad gateway</html>'));
   equal(malformedUpstream.statusCode, 502, 'non-JSON upstream response is rejected');
   equal(

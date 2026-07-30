@@ -535,6 +535,14 @@ Return ONLY raw JSON, no markdown, no backticks:
 
 export const TASK_DEFINITIONS = Object.freeze({
   em: Object.freeze({ system: SYSTEM_EM, maxTokens: 4096 }),
+  clinical_bundle: Object.freeze({
+    system: [SYSTEM_EM, SYSTEM_CDI, SYSTEM_SEPSIS].join('\n\n'),
+    buildSystem: encounter => withFoundationKnowledge(
+      [SYSTEM_EM, SYSTEM_CDI, SYSTEM_SEPSIS].join('\n\n'),
+      encounter
+    ),
+    maxTokens: 9000,
+  }),
   cdi: Object.freeze({
     system: SYSTEM_CDI,
     buildSystem: encounter => withFoundationKnowledge(SYSTEM_CDI, encounter),
