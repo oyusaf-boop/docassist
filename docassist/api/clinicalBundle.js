@@ -142,6 +142,31 @@ export const CLINICAL_BUNDLE_SCHEMA = Object.freeze({
   },
 });
 
+export const CLINICAL_CORE_SCHEMA = Object.freeze({
+  type: 'object',
+  additionalProperties: false,
+  required: ['schema_version', 'em', 'sepsis'],
+  properties: {
+    schema_version: { type: 'string', const: '1.0' },
+    em: EM_FACTS_SCHEMA,
+    sepsis: SEPSIS_FACTS_SCHEMA,
+  },
+});
+
+export const CLINICAL_CORE_INSTRUCTIONS = `
+
+CLINICAL CORE V1:
+Ignore the separate output examples above. Read the encounter once and return
+one JSON object matching the supplied schema. "em" contains documented E&M
+facts and "sepsis" contains only documented sepsis/SIRS/SOFA/SEP-1 facts.
+Do not calculate final E&M codes, SIRS, or SOFA; the server performs those
+calculations deterministically. For sepsis facts, list every explicitly
+documented optional field in documented_fields. Use 0 (or false for respiratory
+support) as the required placeholder for fields not listed in documented_fields;
+placeholders are discarded before scoring. Keep evidence concise and note-grounded.
+The top-level schema_version must be "1.0".
+`;
+
 export const CLINICAL_BUNDLE_INSTRUCTIONS = `
 
 CLINICAL BUNDLE V1:
@@ -175,4 +200,23 @@ export function transformClinicalBundle(value) {
   }
   const sepsis = JSON.parse(validateModelOutput('sepsis', JSON.stringify(normalizedSepsis)));
   return { ...em, ...cdi, ...sepsis };
+}
+
+export function transformClinicalCore(value) {
+  const root = typeof value === 'string' ? JSON.parse(value) : value;
+  if (!root || root.schema_version !== '1.0') {
+    throw new Error('clinical_core_v1: invalid schema version');
+  }
+  const em = JSON.parse(validateModelOutput('em', JSON.stringify(root.em)));
+  const documentedFields = new Set(root.sepsis?.sepsis_facts?.documented_fields || []);
+  const normalizedSepsis = {
+    ...root.sepsis,
+    sepsis_facts: { ...root.sepsis.sepsis_facts },
+  };
+  delete normalizedSepsis.sepsis_facts.documented_fields;
+  for (const name of optionalSepsisFactNames) {
+    if (!documentedFields.has(name)) normalizedSepsis.sepsis_facts[name] = null;
+  }
+  const sepsis = JSON.parse(validateModelOutput('sepsis', JSON.stringify(normalizedSepsis)));
+  return { ...em, ...sepsis };
 }

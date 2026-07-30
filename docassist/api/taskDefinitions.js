@@ -543,6 +543,10 @@ export const TASK_DEFINITIONS = Object.freeze({
     ),
     maxTokens: 9000,
   }),
+  clinical_core: Object.freeze({
+    system: [SYSTEM_EM, SYSTEM_SEPSIS].join('\n\n'),
+    maxTokens: 6000,
+  }),
   cdi: Object.freeze({
     system: SYSTEM_CDI,
     buildSystem: encounter => withFoundationKnowledge(SYSTEM_CDI, encounter),

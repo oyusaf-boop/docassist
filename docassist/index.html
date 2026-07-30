@@ -1342,26 +1342,33 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     const priorForAP = inputs.prior
       ? '\n\nPRIOR RECORDS (baseline/chronic context only — DO NOT pull active diagnoses from here):\n' + inputs.prior
       : '';
-    // Read the note once for E&M, CDI/DRG, and Sepsis while Optimized A&P runs
-    // independently in parallel. The beta query switch preserves an immediate
-    // rollback path to the prior four-call pipeline.
-    const useClinicalBundle =
+    // Keep each provider-facing grammar small: E&M + Sepsis share a compact
+    // clinical-core extraction, CDI/DRG reuse the proven v2 extraction, and
+    // Optimized A&P stays independent. The beta query switch preserves an
+    // immediate rollback path to the prior four-call pipeline.
+    const useSplitClinical =
       new URLSearchParams(window.location.search).get('clinical_bundle') !== '0';
-    const clinicalTasks = useClinicalBundle
-      ? [() => callAPI('clinical_bundle', context)]
+    const clinicalTasks = useSplitClinical
+      ? [
+          () => callAPI('optimized_ap',
+            inputs.freeform
+              ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
+              : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
+          ),
+          () => callAPI('clinical_core', context),
+          () => callAPI('cdi', context),
+        ]
       : [
           () => callAPI('em', context),
           () => callAPI('cdi', context),
           () => callAPI('sepsis', context),
+          () => callAPI('optimized_ap',
+            inputs.freeform
+              ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
+              : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
+          ),
         ];
-    const settled = await allSettledWithConcurrency([
-      ...clinicalTasks,
-      () => callAPI('optimized_ap',
-        inputs.freeform
-          ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
-          : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
-      )
-    ], 2, (result) => {
+    const settled = await allSettledWithConcurrency(clinicalTasks, 2, (result) => {
       if (firstUsefulMs === null && result.status === 'fulfilled') {
         firstUsefulMs = Math.round(performance.now() - performanceStartedAt);
         prog(true, 55, 'First validated section ready in ' + (firstUsefulMs / 1000).toFixed(1) + 's...');
@@ -1392,18 +1399,18 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
       try { return parseJSON(r.value); }
       catch(e) { console.warn('[' + label + '] parse failed. Raw head: ' + r.value.slice(0,200)); return { __err: label + ' output could not be read \u2014 please retry the analysis.' }; }
     };
-    const clinicalP = useClinicalBundle
-      ? takeResult(settled[0], 'Clinical bundle')
+    const clinicalP = useSplitClinical
+      ? takeResult(settled[1], 'Clinical core')
       : null;
     const takeAP = (r) => {
       if (r.status !== 'fulfilled') { console.warn('[A&P] call failed: ' + r.reason.message); return { __err: r.reason.message }; }
       try { return parseAPText(r.value); }
       catch(e) { console.warn('[A&P] parse failed. Raw head: ' + String(r.value).slice(0,200)); return { __err: 'A&P output could not be read \u2014 please retry the analysis.' }; }
     };
-    const apP = takeAP(settled[useClinicalBundle ? 1 : 3]);
-    const emP = useClinicalBundle ? clinicalP : takeResult(settled[0], 'E&M');
-    const cdiP = useClinicalBundle ? clinicalP : takeResult(settled[1], 'CDI');
-    const sepP = useClinicalBundle ? clinicalP : takeResult(settled[2], 'Sepsis');
+    const apP = takeAP(settled[useSplitClinical ? 0 : 3]);
+    const emP = useSplitClinical ? clinicalP : takeResult(settled[0], 'E&M');
+    const cdiP = useSplitClinical ? takeResult(settled[2], 'CDI') : takeResult(settled[1], 'CDI');
+    const sepP = useSplitClinical ? clinicalP : takeResult(settled[2], 'Sepsis');
 
     let analysis = {};
     [emP, cdiP, sepP].forEach(p => { if (!p.__err) Object.assign(analysis, p); });

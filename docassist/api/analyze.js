@@ -30,8 +30,11 @@ import {
   transformCdiExtractionV2,
 } from './cdiExtractionV2.js';
 import {
+  CLINICAL_CORE_INSTRUCTIONS,
+  CLINICAL_CORE_SCHEMA,
   CLINICAL_BUNDLE_INSTRUCTIONS,
   CLINICAL_BUNDLE_SCHEMA,
+  transformClinicalCore,
   transformClinicalBundle,
 } from './clinicalBundle.js';
 import {
@@ -99,11 +102,14 @@ export default async function handler(req, res) {
     }
     const { task, taskId, encounter } = validated;
     const useClinicalBundle = taskId === 'clinical_bundle';
+    const useClinicalCore = taskId === 'clinical_core';
     const useCdiV2 = taskId === 'cdi' && process.env.CDI_SCHEMA_VERSION !== '1';
     const baseSystem = task.buildSystem ? task.buildSystem(encounter) : task.system;
     const system = useClinicalBundle
       ? baseSystem + CLINICAL_BUNDLE_INSTRUCTIONS
-      : (useCdiV2 ? baseSystem + CDI_EXTRACTION_V2_INSTRUCTIONS : baseSystem);
+      : (useClinicalCore
+        ? baseSystem + CLINICAL_CORE_INSTRUCTIONS
+        : (useCdiV2 ? baseSystem + CDI_EXTRACTION_V2_INSTRUCTIONS : baseSystem));
 
     const payload = {
       model: MODEL,
@@ -117,10 +123,12 @@ export default async function handler(req, res) {
       // schema-bound extraction calls fast and inside the max_tokens ceiling.
       output_config: {
         effort: EFFORT,
-        ...((useCdiV2 || useClinicalBundle) ? {
+        ...((useCdiV2 || useClinicalBundle || useClinicalCore) ? {
           format: {
             type: 'json_schema',
-            schema: useClinicalBundle ? CLINICAL_BUNDLE_SCHEMA : CDI_EXTRACTION_V2_SCHEMA,
+            schema: useClinicalBundle
+              ? CLINICAL_BUNDLE_SCHEMA
+              : (useClinicalCore ? CLINICAL_CORE_SCHEMA : CDI_EXTRACTION_V2_SCHEMA),
           },
         } : {}),
       },
@@ -215,9 +223,11 @@ export default async function handler(req, res) {
     try {
       validatedText = useClinicalBundle
         ? JSON.stringify(transformClinicalBundle(text))
-        : (useCdiV2
-          ? JSON.stringify(transformCdiExtractionV2(text))
-          : validateModelOutput(taskId, text));
+        : (useClinicalCore
+          ? JSON.stringify(transformClinicalCore(text))
+          : (useCdiV2
+            ? JSON.stringify(transformCdiExtractionV2(text))
+            : validateModelOutput(taskId, text)));
     } catch (err) {
       if (!(err instanceof ModelOutputError)) throw err;
       console.warn('[analyze] invalid model output', {
