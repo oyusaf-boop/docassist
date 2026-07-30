@@ -18,22 +18,39 @@ function findNumericBounds(value, path = '$', matches = []) {
   return matches;
 }
 
+function countUnionTypes(value) {
+  if (!value || typeof value !== 'object') return 0;
+  const ownUnion = Array.isArray(value.anyOf) || Array.isArray(value.type) ? 1 : 0;
+  return ownUnion + Object.values(value)
+    .reduce((count, child) => count + countUnionTypes(child), 0);
+}
+
 assert.deepEqual(
   findNumericBounds(CLINICAL_BUNDLE_SCHEMA),
   [],
   'provider-facing clinical bundle schema must not contain unsupported numeric bounds'
 );
+assert.ok(
+  countUnionTypes(CLINICAL_BUNDLE_SCHEMA) <= 16,
+  'provider-facing clinical bundle schema must stay within Anthropic union limit'
+);
 
 const sepsisProperties =
   CLINICAL_BUNDLE_SCHEMA.properties.sepsis.properties.sepsis_facts.properties;
 const sepsisFacts = Object.fromEntries(
-  Object.keys(sepsisProperties).map(name => [
+  Object.keys(sepsisProperties)
+    .filter(name => name !== 'documented_fields')
+    .map(name => [
     name,
     name === 'sepsis_or_infection_suspected' || name === 'infection_documented'
       ? false
-      : null,
+      : name === 'respiratory_support' || name === 'baseline_respiratory_support'
+        ? false
+        : 0,
   ])
 );
+sepsisFacts.temperature_c = 38.5;
+sepsisFacts.documented_fields = ['temperature_c'];
 
 const result = transformClinicalBundle({
   schema_version: '1.0',
@@ -104,6 +121,8 @@ assert.equal(result.cdi_alerts[0].title, 'Acute kidney injury');
 assert.equal(result.icd_codes[0].cc_mcc_status, 'cc');
 assert.equal(result.sepsis.detected, false);
 assert.equal(result.sepsis.sep1.status, 'not_applicable');
+assert.equal(result.sepsis.sepsis2.criteria_known, 1);
+assert.equal(result.sepsis.sepsis2.criteria_met, 1);
 assert.throws(
   () => transformClinicalBundle({ schema_version: '2.0' }),
   /invalid schema version/

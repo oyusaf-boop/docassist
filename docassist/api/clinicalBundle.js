@@ -7,8 +7,6 @@ import { validateModelOutput } from './outputValidation.js';
 const nullableNumber = {
   anyOf: [{ type: 'number' }, { type: 'null' }],
 };
-const nullableBoolean = { anyOf: [{ type: 'boolean' }, { type: 'null' }] };
-
 const EM_FACTS_SCHEMA = {
   type: 'object',
   additionalProperties: false,
@@ -88,13 +86,15 @@ const SEPSIS_RANGES = {
 const sepsisFactProperties = {
   sepsis_or_infection_suspected: { type: 'boolean' },
   infection_documented: { type: 'boolean' },
-  respiratory_support: nullableBoolean,
-  baseline_respiratory_support: nullableBoolean,
+  respiratory_support: { type: 'boolean' },
+  baseline_respiratory_support: { type: 'boolean' },
 };
 for (const name of Object.keys(SEPSIS_RANGES)) {
-  sepsisFactProperties[name] = nullableNumber;
-  sepsisFactProperties[`baseline_${name}`] = nullableNumber;
+  sepsisFactProperties[name] = { type: 'number' };
+  sepsisFactProperties[`baseline_${name}`] = { type: 'number' };
 }
+const optionalSepsisFactNames = Object.keys(sepsisFactProperties)
+  .filter(name => !['sepsis_or_infection_suspected', 'infection_documented'].includes(name));
 
 const SEPSIS_FACTS_SCHEMA = {
   type: 'object',
@@ -104,8 +104,14 @@ const SEPSIS_FACTS_SCHEMA = {
     sepsis_facts: {
       type: 'object',
       additionalProperties: false,
-      required: Object.keys(sepsisFactProperties),
-      properties: sepsisFactProperties,
+      required: [...Object.keys(sepsisFactProperties), 'documented_fields'],
+      properties: {
+        ...sepsisFactProperties,
+        documented_fields: {
+          type: 'array',
+          items: { type: 'string', enum: optionalSepsisFactNames },
+        },
+      },
     },
     organ_dysfunction_documented: { type: 'boolean' },
     denial_risk: { type: 'string' },
@@ -144,7 +150,10 @@ one JSON object matching the supplied schema. "em" contains documented E&M
 facts, "cdi" contains clinical_extraction_v2 facts, and "sepsis" contains only
 documented sepsis/SIRS/SOFA/SEP-1 facts. Do not calculate final E&M codes, SIRS,
 SOFA, or CC/MCC status; the server performs those calculations deterministically.
-Use null for absent numeric values. Keep evidence concise and note-grounded.
+For sepsis facts, list every explicitly documented optional field in documented_fields.
+Use 0 (or false for respiratory support) as the required placeholder for fields not
+listed in documented_fields; placeholders are discarded before scoring. Keep evidence
+concise and note-grounded.
 The top-level schema_version must be "1.0".
 `;
 
@@ -155,6 +164,15 @@ export function transformClinicalBundle(value) {
   }
   const em = JSON.parse(validateModelOutput('em', JSON.stringify(root.em)));
   const cdi = transformCdiExtractionV2(root.cdi);
-  const sepsis = JSON.parse(validateModelOutput('sepsis', JSON.stringify(root.sepsis)));
+  const documentedFields = new Set(root.sepsis?.sepsis_facts?.documented_fields || []);
+  const normalizedSepsis = {
+    ...root.sepsis,
+    sepsis_facts: { ...root.sepsis.sepsis_facts },
+  };
+  delete normalizedSepsis.sepsis_facts.documented_fields;
+  for (const name of optionalSepsisFactNames) {
+    if (!documentedFields.has(name)) normalizedSepsis.sepsis_facts[name] = null;
+  }
+  const sepsis = JSON.parse(validateModelOutput('sepsis', JSON.stringify(normalizedSepsis)));
   return { ...em, ...cdi, ...sepsis };
 }
