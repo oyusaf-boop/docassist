@@ -29,6 +29,7 @@ import {
   CDI_EXTRACTION_V2_SCHEMA,
   transformCdiExtractionV2,
 } from './cdiExtractionV2.js';
+import { buildLocalHospitalistAnalysis } from './hospitalistLocalAnalysis.js';
 import {
   CLINICAL_CORE_INSTRUCTIONS,
   CLINICAL_CORE_SCHEMA,
@@ -103,13 +104,15 @@ export default async function handler(req, res) {
     const { task, taskId, encounter } = validated;
     const useClinicalBundle = taskId === 'clinical_bundle';
     const useClinicalCore = taskId === 'clinical_core';
-    const useCdiV2 = taskId === 'cdi' && process.env.CDI_SCHEMA_VERSION !== '1';
+    const useLocalClinicalAnalysis = taskId === 'clinical_analysis';
+    const useCdiV2 = useLocalClinicalAnalysis ||
+      (taskId === 'cdi' && process.env.CDI_SCHEMA_VERSION !== '1');
     const baseSystem = task.buildSystem ? task.buildSystem(encounter) : task.system;
     const system = useClinicalBundle
       ? baseSystem + CLINICAL_BUNDLE_INSTRUCTIONS
       : (useClinicalCore
         ? baseSystem + CLINICAL_CORE_INSTRUCTIONS
-        : (useCdiV2 ? baseSystem + CDI_EXTRACTION_V2_INSTRUCTIONS : baseSystem));
+          : (useCdiV2 ? baseSystem + CDI_EXTRACTION_V2_INSTRUCTIONS : baseSystem));
 
     const payload = {
       model: MODEL,
@@ -226,7 +229,13 @@ export default async function handler(req, res) {
         : (useClinicalCore
           ? JSON.stringify(transformClinicalCore(text))
           : (useCdiV2
-            ? JSON.stringify(transformCdiExtractionV2(text))
+            ? (() => {
+              const extraction = JSON.parse(text);
+              const cdi = transformCdiExtractionV2(extraction);
+              return JSON.stringify(useLocalClinicalAnalysis
+                ? { ...cdi, ...buildLocalHospitalistAnalysis(encounter, extraction) }
+                : cdi);
+            })()
             : validateModelOutput(taskId, text)));
     } catch (err) {
       if (!(err instanceof ModelOutputError)) throw err;

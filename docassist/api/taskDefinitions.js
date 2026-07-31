@@ -552,6 +552,11 @@ export const TASK_DEFINITIONS = Object.freeze({
     buildSystem: encounter => withFoundationKnowledge(SYSTEM_CDI, encounter),
     maxTokens: 5000,
   }),
+  clinical_analysis: Object.freeze({
+    system: SYSTEM_CDI,
+    buildSystem: encounter => withFoundationKnowledge(SYSTEM_CDI, encounter),
+    maxTokens: 5000,
+  }),
   sepsis: Object.freeze({ system: SYSTEM_SEPSIS, maxTokens: 4096 }),
   optimized_ap: Object.freeze({ system: SYSTEM_AP, maxTokens: 4096 }),
   discharge_course: Object.freeze({ system: SYSTEM_DC_COURSE, maxTokens: 4500 }),

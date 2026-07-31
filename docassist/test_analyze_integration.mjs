@@ -8,6 +8,7 @@ const originalFetch = global.fetch;
 const originalEnv = {
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
   SESSION_SECRET: process.env.SESSION_SECRET,
+  CDI_SCHEMA_VERSION: process.env.CDI_SCHEMA_VERSION,
 };
 const secret = 'integration-test-session-secret-with-enough-entropy';
 process.env.ANTHROPIC_API_KEY = 'test-key';
@@ -96,6 +97,41 @@ try {
   equal(bundleRequest.body.taskId, 'clinical_bundle', 'clinical bundle is an accepted task route');
   const coreRequest = request('clinical_core');
   equal(coreRequest.body.taskId, 'clinical_core', 'clinical core is an accepted task route');
+  process.env.CDI_SCHEMA_VERSION = '1';
+  const localClinical = await runWithUpstream(anthropicResponse({
+    content: [{
+      type: 'text',
+      text: JSON.stringify({
+        schema_version: '2.0',
+        diagnoses: [{
+          diagnosis: 'Acute kidney injury',
+          documentation_status: 'documented',
+          clinical_support: 'supported',
+          severity: 'warning',
+          meat_status: 'met',
+          clinical_rationale: 'The note documents acute kidney injury.',
+          evidence: ['Acute kidney injury'],
+          missing_evidence: [],
+          action: 'Continue documenting trajectory and etiology.'
+        }],
+        code_candidates: [],
+        drg_context: {
+          principal_diagnosis: '',
+          candidate_number: '',
+          candidate_description: '',
+          evidence: [],
+          missing_evidence: []
+        }
+      })
+    }],
+    stop_reason: 'end_turn',
+  }), 'clinical_analysis');
+  equal(localClinical.statusCode, 200, 'single-call clinical analysis succeeds');
+  const localClinicalBody = JSON.parse(localClinical.body.text);
+  equal(Array.isArray(localClinicalBody.cdi_alerts), true, 'clinical analysis includes CDI');
+  equal(typeof localClinicalBody.em.justified_code, 'string', 'clinical analysis includes local E&M');
+  equal(typeof localClinicalBody.sepsis.sepsis2.verdict, 'string', 'clinical analysis includes local Sepsis');
+  delete process.env.CDI_SCHEMA_VERSION;
 
   const malformedUpstream = await runWithUpstream(anthropicResponse('<html>bad gateway</html>'));
   equal(malformedUpstream.statusCode, 502, 'non-JSON upstream response is rejected');
@@ -170,6 +206,8 @@ try {
   else process.env.ANTHROPIC_API_KEY = originalEnv.ANTHROPIC_API_KEY;
   if (originalEnv.SESSION_SECRET === undefined) delete process.env.SESSION_SECRET;
   else process.env.SESSION_SECRET = originalEnv.SESSION_SECRET;
+  if (originalEnv.CDI_SCHEMA_VERSION === undefined) delete process.env.CDI_SCHEMA_VERSION;
+  else process.env.CDI_SCHEMA_VERSION = originalEnv.CDI_SCHEMA_VERSION;
 }
 
 console.log(`analyze API integration: ${assertions} assertions passed`);

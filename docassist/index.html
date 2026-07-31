@@ -189,6 +189,9 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
 #copy-btn { padding:8px 16px; background:var(--navy); color:white; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:6px; transition:background 0.15s; }
 #copy-btn:hover { background:#163d5e; }
 #copy-btn.copied { background:#0f5132; }
+#generate-ap-btn { padding:8px 16px; background:#eef7f6; color:var(--navy); border:1px solid var(--blue-mid); border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; }
+#generate-ap-btn:hover:not(:disabled) { background:#dff0ee; }
+#generate-ap-btn:disabled { cursor:not-allowed; opacity:.65; }
 #ap-body { padding:20px; }
 #ap-text { font-family:'SF Mono',ui-monospace,monospace; font-size:13px; line-height:1.8; color:var(--text); white-space:pre-wrap; word-break:break-word; }
 .ap-suggested { background:#fff8e8; border-left:3px solid #e0a020; padding:10px 14px; margin-top:10px; border-radius:0 6px 6px 0; font-size:13px; line-height:1.7; color:var(--text); }
@@ -343,7 +346,7 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
   <!-- LEFT INPUT -->
   <div id="left">
     <div class="type-tabs">
-      <button class="ntab on" onclick="setTab(this,'apgen')"><span class="ui-icon">A&amp;P</span> Generate A&amp;P</button>
+      <button class="ntab on" onclick="setTab(this,'apgen')"><span class="ui-icon">AN</span> Analyze Note</button>
       <button class="ntab"    onclick="setTab(this,'dcsummary')"><span class="ui-icon">DC</span> DC Builder</button>
     </div>
     <div id="input-card">
@@ -446,7 +449,10 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
               <div id="ap-hdr-title">Optimized A&P</div>
               <div id="ap-hdr-sub">CDI-enhanced · ready to paste into MT</div>
             </div>
-            <button id="copy-btn" onclick="copyAP()">📋 Copy A&P</button>
+            <div style="display:flex;gap:8px;">
+              <button id="generate-ap-btn" onclick="generateAPOnDemand()">Generate A&amp;P</button>
+              <button id="copy-btn" onclick="copyAP()">📋 Copy A&P</button>
+            </div>
           </div>
           <div id="ap-body"><div class="empty"><div class="empty-ico">A&amp;P</div><div class="empty-ttl">Optimized A&amp;P</div><div class="empty-sub">Run analysis first — your CDI-optimized note appears here ready to paste into MT</div></div></div>
         </div>
@@ -517,6 +523,7 @@ body { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
 <script>
 let currentTab = 'apgen';
 let apPlainText = '';
+let latestAPRequest = null;
 
 // ═══════════════════════════════════════════════
 // FOUNDATION KNOWLEDGE BASE (FY2026 — top 32 dx ladders)
@@ -720,7 +727,7 @@ function setTab(btn, tab) {
   const lbl = document.getElementById('analyze-btn-label');
   if (lbl) {
     if (tab==='dcsummary') lbl.textContent = 'Generate DC Summary';
-    else lbl.textContent = 'Generate A&P';
+    else lbl.textContent = 'Analyze Note';
   }
   // Show/hide DC output tab
   const dcOutTab = document.getElementById('dcsummary-tab-btn');
@@ -1346,14 +1353,24 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     // clinical-core extraction, CDI/DRG reuse the proven v2 extraction, and
     // Optimized A&P stays independent. The beta query switch preserves an
     // immediate rollback path to the prior four-call pipeline.
+    const useLocalEngine =
+      new URLSearchParams(window.location.search).get('local_engine') !== '0';
     const useSplitClinical =
       new URLSearchParams(window.location.search).get('clinical_bundle') !== '0';
-    const clinicalTasks = useSplitClinical
+    latestAPRequest = {
+      encounter: inputs.freeform
+        ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
+        : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
+      originalAP: inputs.ap || ''
+    };
+    const clinicalTasks = useLocalEngine
+      ? [
+          () => callAPI('clinical_analysis', context),
+        ]
+      : (useSplitClinical
       ? [
           () => callAPI('optimized_ap',
-            inputs.freeform
-              ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
-              : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
+            latestAPRequest.encounter,
           ),
           () => callAPI('clinical_core', context),
           () => callAPI('cdi', context),
@@ -1363,11 +1380,9 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
           () => callAPI('cdi', context),
           () => callAPI('sepsis', context),
           () => callAPI('optimized_ap',
-            inputs.freeform
-              ? `NOTE TYPE: ${inputs.type}\n\nCURRENT ENCOUNTER (free-form — extract A&P and context from this):\n${inputs.freeform}${priorForAP}\n\nIs this a discharge note? NO`
-              : `NOTE TYPE: ${inputs.type}\n\nOriginal A&P:\n${inputs.ap}\n\nContext (HPI/Labs for reference):\n${inputs.hpi}\n${inputs.labs}\n\nIs this a discharge note? ${currentTab==='discharge'?'YES — resolve all differentials':'NO'}`,
+            latestAPRequest.encounter,
           ),
-        ];
+        ]);
     const settled = await allSettledWithConcurrency(clinicalTasks, 2, (result) => {
       if (firstUsefulMs === null && result.status === 'fulfilled') {
         firstUsefulMs = Math.round(performance.now() - performanceStartedAt);
@@ -1399,7 +1414,10 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
       try { return parseJSON(r.value); }
       catch(e) { console.warn('[' + label + '] parse failed. Raw head: ' + r.value.slice(0,200)); return { __err: label + ' output could not be read \u2014 please retry the analysis.' }; }
     };
-    const clinicalP = useSplitClinical
+    const localP = useLocalEngine
+      ? takeResult(settled[0], 'Clinical analysis')
+      : null;
+    const clinicalP = !useLocalEngine && useSplitClinical
       ? takeResult(settled[1], 'Clinical core')
       : null;
     const takeAP = (r) => {
@@ -1407,10 +1425,12 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
       try { return parseAPText(r.value); }
       catch(e) { console.warn('[A&P] parse failed. Raw head: ' + String(r.value).slice(0,200)); return { __err: 'A&P output could not be read \u2014 please retry the analysis.' }; }
     };
-    const apP = takeAP(settled[useSplitClinical ? 0 : 3]);
-    const emP = useSplitClinical ? clinicalP : takeResult(settled[0], 'E&M');
-    const cdiP = useSplitClinical ? takeResult(settled[2], 'CDI') : takeResult(settled[1], 'CDI');
-    const sepP = useSplitClinical ? clinicalP : takeResult(settled[2], 'Sepsis');
+    const apP = useLocalEngine
+      ? { __deferred: true }
+      : takeAP(settled[useSplitClinical ? 0 : 3]);
+    const emP = useLocalEngine ? localP : (useSplitClinical ? clinicalP : takeResult(settled[0], 'E&M'));
+    const cdiP = useLocalEngine ? localP : (useSplitClinical ? takeResult(settled[2], 'CDI') : takeResult(settled[1], 'CDI'));
+    const sepP = useLocalEngine ? localP : (useSplitClinical ? clinicalP : takeResult(settled[2], 'Sepsis'));
 
     let analysis = {};
     [emP, cdiP, sepP].forEach(p => { if (!p.__err) Object.assign(analysis, p); });
@@ -1436,7 +1456,9 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
       const chartContent = [inputs.freeform, inputs.prior, inputs.hpi, inputs.labs, inputs.ap].filter(Boolean).join('\n');
       apData.ap_text = processLabPlaceholders(apData.ap_text, chartContent);
     }
-    if (apP.__err) panelError('ap-body', apP.__err); else renderAP(apData, inputs.ap);
+    if (apP.__deferred) renderDeferredAP();
+    else if (apP.__err) panelError('ap-body', apP.__err);
+    else renderAP(apData, inputs.ap);
 
     try { captureMetrics(analysis); } catch(e) { console.warn('metrics capture skipped: ' + e.message); }
 
@@ -1448,13 +1470,14 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
       document.getElementById('sepsis-tab-btn').innerHTML = '<span class="ui-icon">SP</span> Sepsis Criteria <span class="otab-badge">!</span>';
     }
 
-    const failCount = [emP, cdiP, sepP, apP].filter(p => p.__err).length;
+    const completionParts = useLocalEngine ? [localP] : [emP, cdiP, sepP, apP];
+    const failCount = completionParts.filter(p => p.__err).length;
     if (failCount > 0) {
-      const message = failCount === 4
+      const message = failCount === completionParts.length
         ? 'Analysis service unavailable — verify the beta API key and model settings'
-        : failCount + ' of 4 sections need a retry';
+        : failCount + ' analysis section' + (failCount === 1 ? '' : 's') + ' need a retry';
       prog(true, 100, message);
-      setTimeout(() => prog(false), failCount === 4 ? 7000 : 3500);
+      setTimeout(() => prog(false), failCount === completionParts.length ? 7000 : 3500);
     } else {
       prog(true, 100, 'Analysis complete \u2713');
       setTimeout(() => prog(false), 1500);
@@ -1804,6 +1827,39 @@ function renderAP(apData, originalAP) {
   document.getElementById('ap-body').innerHTML = html;
 }
 
+function renderDeferredAP() {
+  document.getElementById('ap-body').innerHTML =
+    '<div class="empty"><div class="empty-ico">A&amp;P</div>' +
+    '<div class="empty-ttl">A&amp;P generation is optional</div>' +
+    '<div class="empty-sub">Your analysis is complete. Generate an optimized A&amp;P only when you want one.</div></div>';
+}
+
+async function generateAPOnDemand() {
+  if (!latestAPRequest || !latestAPRequest.encounter) {
+    alert('Analyze the note first, then generate the A&P.');
+    return;
+  }
+  const btn = document.getElementById('generate-ap-btn');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  document.getElementById('ap-body').innerHTML =
+    '<div class="spin-wrap"><div class="spin"></div>Generating optimized A&amp;P...</div>';
+  try {
+    const raw = await callAPI('optimized_ap', latestAPRequest.encounter);
+    const apData = parseAPText(raw);
+    const chartContent = [
+      v('apgen-freeform'), v('apgen-prior'), latestAPRequest.originalAP
+    ].filter(Boolean).join('\n');
+    apData.ap_text = processLabPlaceholders(apData.ap_text, chartContent);
+    renderAP(apData, latestAPRequest.originalAP);
+  } catch (error) {
+    panelError('ap-body', error.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate A&P';
+  }
+}
+
 function renderRevBar(s) {
   if (!s) return;
   document.getElementById('rev-em').textContent = s.em_code||'—';
@@ -1861,6 +1917,7 @@ function resetOutputs() {
 
 function clearAll() {
   ['apgen-freeform','apgen-prior','dc2-hp','dc2-consult','dc2-progress'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  latestAPRequest = null;
   resetOutputs(); prog(false);
   document.getElementById('em-body').innerHTML='<div class="empty"><div class="empty-ico">E&amp;M</div><div class="empty-ttl">E&amp;M Level Analysis</div><div class="empty-sub">Paste your note and click Analyze</div></div>';
   document.getElementById('cdi-body').innerHTML='<div class="empty"><div class="empty-ico">CDI</div><div class="empty-ttl">CDI Alerts</div><div class="empty-sub">Specificity gaps and coding opportunities appear here</div></div>';
