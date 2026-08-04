@@ -18,6 +18,20 @@ assert.equal(valid.encounter, 'Hospitalist progress note');
 assert.equal(valid.task.maxTokens, 4096);
 assert.equal(typeof valid.task.system, 'string');
 
+const apWithLedger = validateAnalysisRequest(request({
+  taskId: 'optimized_ap',
+  encounter: 'Hospitalist progress note',
+  encounterLedger: { schema_version: '1.0', conditions: [] },
+  encounterLedgerSignature: 'signed-ledger',
+}));
+assert.equal(apWithLedger.encounterLedger.schema_version, '1.0');
+
+assert.equal(validateAnalysisRequest(request({
+  taskId: 'em',
+  encounter: 'Hospitalist progress note',
+  encounterLedger: { schema_version: '1.0' },
+})).status, 400);
+
 const cdi = validateAnalysisRequest(request({
   taskId: 'cdi',
   encounter: 'Sepsis with AKI and creatinine 2.2',
@@ -59,4 +73,4 @@ assert.equal(validateAnalysisRequest(request(
   { 'content-length': String(MAX_REQUEST_BYTES + 1) },
 )).status, 413);
 
-console.log('analysis request validation: 12 assertions passed');
+console.log('analysis request validation: 14 assertions passed');

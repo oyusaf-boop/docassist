@@ -133,9 +133,13 @@ function problemTier(item) {
   return 'low';
 }
 
-function emInput(encounter, extraction) {
+function emInput(encounter, extraction, ledger) {
   const diagnoses = Array.isArray(extraction?.diagnoses) ? extraction.diagnoses : [];
-  const problems = diagnoses.slice(0, 12).map(item => ({
+  const permitted = new Set((ledger?.established_diagnoses || []).map(name => String(name).toLowerCase()));
+  const countableDiagnoses = ledger
+    ? diagnoses.filter(item => permitted.has(String(item.diagnosis || '').toLowerCase()))
+    : diagnoses.filter(item => item.documentation_status === 'documented' && item.clinical_support === 'supported');
+  const problems = countableDiagnoses.slice(0, 12).map(item => ({
     text: String(item.diagnosis || 'Hospital problem').slice(0, 500),
     tier: problemTier(item),
   }));
@@ -203,8 +207,8 @@ function sepsisInput(encounter) {
   };
 }
 
-export function buildLocalHospitalistAnalysis(encounter, extraction) {
-  const em = JSON.parse(validateModelOutput('em', JSON.stringify(emInput(encounter, extraction))));
+export function buildLocalHospitalistAnalysis(encounter, extraction, ledger) {
+  const em = JSON.parse(validateModelOutput('em', JSON.stringify(emInput(encounter, extraction, ledger))));
   const sepsis = JSON.parse(validateModelOutput('sepsis', JSON.stringify(sepsisInput(encounter))));
   return { ...em, ...sepsis };
 }

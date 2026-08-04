@@ -31,6 +31,14 @@ import {
 } from './cdiExtractionV2.js';
 import { buildLocalHospitalistAnalysis } from './hospitalistLocalAnalysis.js';
 import {
+  attachSepsisLedger,
+  buildEncounterLedger,
+  reconcileExtractionWithLedger,
+  signEncounterLedger,
+  verifyEncounterLedger,
+} from './encounterLedger.js';
+import { ledgerInstructions, validateAPOutput } from './apSafety.js';
+import {
   CLINICAL_CORE_INSTRUCTIONS,
   CLINICAL_CORE_SCHEMA,
   CLINICAL_BUNDLE_INSTRUCTIONS,
@@ -101,18 +109,29 @@ export default async function handler(req, res) {
     if (validated.error) {
       return res.status(validated.status).json({ error: validated.error });
     }
-    const { task, taskId, encounter } = validated;
+    const { task, taskId, encounter, encounterLedger, encounterLedgerSignature } = validated;
+    if (taskId === 'optimized_ap' && encounterLedger && !verifyEncounterLedger(
+      encounterLedger,
+      encounter,
+      encounterLedgerSignature,
+      process.env.SESSION_SECRET,
+    )) {
+      return res.status(400).json({ error: 'The analysis context is invalid or stale. Run Analyze again.' });
+    }
     const useClinicalBundle = taskId === 'clinical_bundle';
     const useClinicalCore = taskId === 'clinical_core';
     const useLocalClinicalAnalysis = taskId === 'clinical_analysis';
     const useCdiV2 = useLocalClinicalAnalysis ||
       (taskId === 'cdi' && process.env.CDI_SCHEMA_VERSION !== '1');
     const baseSystem = task.buildSystem ? task.buildSystem(encounter) : task.system;
-    const system = useClinicalBundle
+    const taskSystem = useClinicalBundle
       ? baseSystem + CLINICAL_BUNDLE_INSTRUCTIONS
       : (useClinicalCore
         ? baseSystem + CLINICAL_CORE_INSTRUCTIONS
           : (useCdiV2 ? baseSystem + CDI_EXTRACTION_V2_INSTRUCTIONS : baseSystem));
+    const system = taskId === 'optimized_ap'
+      ? taskSystem + ledgerInstructions(encounterLedger)
+      : taskSystem;
 
     const payload = {
       model: MODEL,
@@ -230,11 +249,19 @@ export default async function handler(req, res) {
           ? JSON.stringify(transformClinicalCore(text))
           : (useCdiV2
             ? (() => {
-              const extraction = JSON.parse(text);
+              const rawExtraction = JSON.parse(text);
+              let ledger = buildEncounterLedger(encounter, rawExtraction);
+              const extraction = reconcileExtractionWithLedger(rawExtraction, ledger);
               const cdi = transformCdiExtractionV2(extraction);
-              return JSON.stringify(useLocalClinicalAnalysis
-                ? { ...cdi, ...buildLocalHospitalistAnalysis(encounter, extraction) }
-                : cdi);
+              if (!useLocalClinicalAnalysis) return JSON.stringify(cdi);
+              const localAnalysis = buildLocalHospitalistAnalysis(encounter, extraction, ledger);
+              ledger = attachSepsisLedger(ledger, localAnalysis.sepsis);
+              return JSON.stringify({
+                ...cdi,
+                ...localAnalysis,
+                encounter_ledger: ledger,
+                encounter_ledger_signature: signEncounterLedger(ledger, encounter, process.env.SESSION_SECRET),
+              });
             })()
             : validateModelOutput(taskId, text)));
     } catch (err) {
@@ -247,6 +274,16 @@ export default async function handler(req, res) {
       return res.status(502).json({
         error: 'The analysis service returned an incomplete or invalid result. Please retry.',
       });
+    }
+
+    if (taskId === 'optimized_ap' && encounterLedger) {
+      const safety = validateAPOutput(validatedText, encounterLedger);
+      if (!safety.safe) {
+        console.warn('[analyze] blocked unsafe A&P output', { reasons: safety.reasons });
+        return res.status(422).json({
+          error: 'The generated A&P did not pass clinical consistency checks. Please review the analysis and retry.',
+        });
+      }
     }
 
     return res.status(200).json({ text: validatedText });

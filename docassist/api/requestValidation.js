@@ -19,7 +19,7 @@ export function validateAnalysisRequest(req) {
     return { error: 'Invalid request', status: 400 };
   }
 
-  const allowedFields = new Set(['taskId', 'encounter']);
+  const allowedFields = new Set(['taskId', 'encounter', 'encounterLedger', 'encounterLedgerSignature']);
   if (Object.keys(body).some(key => !allowedFields.has(key))) {
     return { error: 'Unsupported request fields', status: 400 };
   }
@@ -37,9 +37,29 @@ export function validateAnalysisRequest(req) {
     return { error: 'Encounter text is too long', status: 413 };
   }
 
+  let encounterLedger = null;
+  let encounterLedgerSignature = null;
+  if (body.encounterLedger !== undefined) {
+    if (body.taskId !== 'optimized_ap' || !body.encounterLedger || typeof body.encounterLedger !== 'object' || Array.isArray(body.encounterLedger)) {
+      return { error: 'Invalid encounter ledger', status: 400 };
+    }
+    if (body.encounterLedger.schema_version !== '1.0') {
+      return { error: 'Unsupported encounter ledger version', status: 400 };
+    }
+    encounterLedger = body.encounterLedger;
+    if (typeof body.encounterLedgerSignature !== 'string' || !body.encounterLedgerSignature) {
+      return { error: 'Encounter ledger signature is required', status: 400 };
+    }
+    encounterLedgerSignature = body.encounterLedgerSignature;
+  } else if (body.encounterLedgerSignature !== undefined) {
+    return { error: 'Encounter ledger is required', status: 400 };
+  }
+
   return {
     task,
     taskId: body.taskId,
     encounter: body.encounter.trim(),
+    encounterLedger,
+    encounterLedgerSignature,
   };
 }

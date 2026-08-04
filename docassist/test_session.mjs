@@ -26,8 +26,9 @@ assert.equal(
 assert.equal(credentialsMatch('correct', 'correct'), true);
 assert.equal(credentialsMatch('wrong', 'correct'), false);
 assert.equal(getCookie('theme=dark; da_session=abc.def', SESSION_COOKIE), 'abc.def');
+const currentToken = createSessionToken(secret);
 assert.equal(
-  hasValidSession({ headers: { cookie: `theme=dark; ${SESSION_COOKIE}=${token}` } }, secret),
+  hasValidSession({ headers: { cookie: `theme=dark; ${SESSION_COOKIE}=${currentToken}` } }, secret),
   true,
 );
 assert.match(sessionCookie(token), /HttpOnly; Secure; SameSite=Strict/);
