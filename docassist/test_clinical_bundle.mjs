@@ -4,7 +4,7 @@ import {
   CLINICAL_BUNDLE_SCHEMA,
   transformClinicalCore,
   transformClinicalBundle,
-} from './api/clinicalBundle.js';
+} from './lib/clinicalBundle.js';
 
 assert.equal(CLINICAL_BUNDLE_SCHEMA.properties.schema_version.const, '1.0');
 assert.deepEqual(CLINICAL_BUNDLE_SCHEMA.required, ['schema_version', 'em', 'cdi', 'sepsis']);

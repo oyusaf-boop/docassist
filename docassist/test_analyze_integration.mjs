@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import handler from './api/analyze.js';
-import { createSessionToken, SESSION_COOKIE } from './api/session.js';
-import { acquireAnalysisSlot } from './api/rateLimit.js';
+import { createSessionToken, SESSION_COOKIE } from './lib/session.js';
+import { acquireAnalysisSlot } from './lib/rateLimit.js';
 
 const originalFetch = global.fetch;
 const originalEnv = {
@@ -16,7 +16,7 @@ process.env.SESSION_SECRET = secret;
 
 let assertions = 0;
 
-for (const modulePath of ['./api/foundationPrompt.js', './api/outputValidation.js']) {
+for (const modulePath of ['./lib/foundationPrompt.js', './lib/outputValidation.js']) {
   assert.equal(
     readFileSync(new URL(modulePath, import.meta.url), 'utf8').includes('import.meta'),
     false,

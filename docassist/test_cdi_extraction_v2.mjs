@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {
   CDI_EXTRACTION_V2_SCHEMA,
   transformCdiExtractionV2
-} from './api/cdiExtractionV2.js';
+} from './lib/cdiExtractionV2.js';
 
 assert.equal(CDI_EXTRACTION_V2_SCHEMA.properties.schema_version.const, '2.0');
 assert.equal(CDI_EXTRACTION_V2_SCHEMA.properties.diagnoses.type, 'array');

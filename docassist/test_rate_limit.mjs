@@ -7,7 +7,7 @@ import {
   loginAttemptAllowed,
   recordLoginFailure,
   resetRateLimitStateForTests,
-} from './api/rateLimit.js';
+} from './lib/rateLimit.js';
 
 let assertions = 0;
 function check(actual, expected, message) {

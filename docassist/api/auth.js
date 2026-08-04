@@ -3,13 +3,13 @@ import {
   credentialsMatch,
   hasValidSession,
   sessionCookie,
-} from './session.js';
+} from '../lib/session.js';
 import {
   clearLoginFailures,
   clientKey,
   loginAttemptAllowed,
   recordLoginFailure,
-} from './rateLimit.js';
+} from '../lib/rateLimit.js';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {

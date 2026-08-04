@@ -5,7 +5,7 @@ import {
   reconcileExtractionWithLedger,
   signEncounterLedger,
   verifyEncounterLedger,
-} from './api/encounterLedger.js';
+} from './lib/encounterLedger.js';
 
 const extraction = {
   diagnoses: [

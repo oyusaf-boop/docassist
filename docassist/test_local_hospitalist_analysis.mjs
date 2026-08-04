@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {
   _test,
   buildLocalHospitalistAnalysis,
-} from './api/hospitalistLocalAnalysis.js';
+} from './lib/hospitalistLocalAnalysis.js';
 
 const note = `
 Hospital progress note

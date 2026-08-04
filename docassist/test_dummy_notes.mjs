@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { validateAnalysisRequest } from './api/requestValidation.js';
+import { validateAnalysisRequest } from './lib/requestValidation.js';
 
 const notes = JSON.parse(readFileSync(new URL('./dummy_notes.json', import.meta.url), 'utf8'));
 assert.equal(notes.length, 6, 'six representative dummy notes are present');

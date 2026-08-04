@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { validateAPOutput } from './api/apSafety.js';
+import { validateAPOutput } from './lib/apSafety.js';
 
 const ledger = {
   prohibited_diagnoses: ['Acute kidney injury', 'Chronic kidney disease'],

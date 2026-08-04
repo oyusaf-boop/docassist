@@ -3,7 +3,7 @@ import {
   MAX_ENCOUNTER_CHARS,
   MAX_REQUEST_BYTES,
   validateAnalysisRequest,
-} from './api/requestValidation.js';
+} from './lib/requestValidation.js';
 
 function request(body, headers = {}) {
   return { body, headers };

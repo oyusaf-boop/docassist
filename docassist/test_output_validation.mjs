@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { ModelOutputError, validateModelOutput } from './api/outputValidation.js';
+import { ModelOutputError, validateModelOutput } from './lib/outputValidation.js';
 
 let assertions = 0;
 function equal(actual, expected, message) {

@@ -21,23 +21,23 @@
 //
 // If the model returns no text, the error reports WHY (stop_reason + block types).
 
-import { hasValidSession } from './session.js';
-import { validateAnalysisRequest } from './requestValidation.js';
-import { ModelOutputError, validateModelOutput } from './outputValidation.js';
+import { hasValidSession } from '../lib/session.js';
+import { validateAnalysisRequest } from '../lib/requestValidation.js';
+import { ModelOutputError, validateModelOutput } from '../lib/outputValidation.js';
 import {
   CDI_EXTRACTION_V2_INSTRUCTIONS,
   CDI_EXTRACTION_V2_SCHEMA,
   transformCdiExtractionV2,
-} from './cdiExtractionV2.js';
-import { buildLocalHospitalistAnalysis } from './hospitalistLocalAnalysis.js';
+} from '../lib/cdiExtractionV2.js';
+import { buildLocalHospitalistAnalysis } from '../lib/hospitalistLocalAnalysis.js';
 import {
   attachSepsisLedger,
   buildEncounterLedger,
   reconcileExtractionWithLedger,
   signEncounterLedger,
   verifyEncounterLedger,
-} from './encounterLedger.js';
-import { ledgerInstructions, validateAPOutput } from './apSafety.js';
+} from '../lib/encounterLedger.js';
+import { ledgerInstructions, validateAPOutput } from '../lib/apSafety.js';
 import {
   CLINICAL_CORE_INSTRUCTIONS,
   CLINICAL_CORE_SCHEMA,
@@ -45,12 +45,12 @@ import {
   CLINICAL_BUNDLE_SCHEMA,
   transformClinicalCore,
   transformClinicalBundle,
-} from './clinicalBundle.js';
+} from '../lib/clinicalBundle.js';
 import {
   acquireAnalysisSlot,
   analysisRequestAllowed,
   clientKey,
-} from './rateLimit.js';
+} from '../lib/rateLimit.js';
 
 const DEFAULT_MODEL    = 'claude-sonnet-5';
 const DEFAULT_THINKING = 'disabled';

@@ -8,7 +8,7 @@ import {
   hasValidSession,
   sessionCookie,
   verifySessionToken,
-} from './api/session.js';
+} from './lib/session.js';
 
 const secret = 'test-secret-with-enough-entropy';
 const now = Date.UTC(2026, 6, 26);
