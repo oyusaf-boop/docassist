@@ -1441,10 +1441,6 @@ ASSUMED DOCUMENTED (do not flag): Physical exam, PMH, PSH, medications, allergie
     if (sepP.__err) panelError('sepsis-body', sepP.__err); else renderSepsis(analysis.sepsis);
     if (!emP.__err || !cdiP.__err) renderRevBar(analysis.summary);
 
-    if (apData && apData.ap_text) {
-      const chartContent = [inputs.freeform, inputs.prior, inputs.hpi, inputs.labs, inputs.ap].filter(Boolean).join('\n');
-      apData.ap_text = processLabPlaceholders(apData.ap_text, chartContent);
-    }
     if (apP.__deferred) renderDeferredAP();
     else if (apP.__err) panelError('ap-body', apP.__err);
     else renderAP(apData, inputs.ap);
@@ -1677,87 +1673,6 @@ function toggleSepsis(id) {
 // ═══════════════════════════════════════════════
 // LAB PLACEHOLDER POST-PROCESSOR
 // ═══════════════════════════════════════════════
-function extractLabs(text) {
-  if (!text) return {};
-  const t = text.toLowerCase();
-  const labs = {};
-
-  // Troponin (institutional URL = 20 pg/mL) — pick highest if multiple values
-  const tropRe = /\b(?:troponin\s*[it]?|trop(?!ical)|hs[\s-]?trop|tnt|tni)\b\s*[:=]?\s*(\d+\.?\d*)/g;
-  const tropVals = [];
-  let tm;
-  while ((tm = tropRe.exec(t)) !== null) tropVals.push(parseFloat(tm[1]));
-  if (tropVals.length) labs.trop = Math.max.apply(null, tropVals);
-
-  // BNP (exclude NT-proBNP)
-  const bnpRe = /\bbnp\b\s*[:=]?\s*(\d+\.?\d*)/g;
-  const bnpVals = [];
-  let bm;
-  while ((bm = bnpRe.exec(t)) !== null) {
-    const before = t.slice(Math.max(0, bm.index - 12), bm.index);
-    if (!/pro[\s-]?$|nt[\s-]?pro[\s-]?$/i.test(before)) {
-      bnpVals.push(parseFloat(bm[1]));
-    }
-  }
-  if (bnpVals.length) labs.bnp = Math.max.apply(null, bnpVals);
-
-  // D-dimer
-  const ddRe = /\bd[\s-]?dimer\b\s*[:=]?\s*(\d+\.?\d*)/g;
-  const ddVals = [];
-  let dm;
-  while ((dm = ddRe.exec(t)) !== null) ddVals.push(parseFloat(dm[1]));
-  if (ddVals.length) labs.ddimer = Math.max.apply(null, ddVals);
-
-  return labs;
-}
-
-function dDimerHasEtiology(text) {
-  if (!text) return false;
-  return /\b(p\.?e\.?\b|pulmonary embolism|d\.?v\.?t\.?\b|deep vein|\bvte\b|thromboembol|hypercoag|venous thromb)\b/i.test(text);
-}
-
-function processLabPlaceholders(apText, chartText) {
-  if (!apText) return apText;
-  const labs = extractLabs(chartText);
-  let out = apText;
-
-  // TROPONIN — tiered
-  if (labs.trop !== undefined && labs.trop > 20) {
-    let prompt;
-    if (labs.trop <= 50) {
-      prompt = '⚠️ Troponin mildly elevated (' + labs.trop + ' pg/mL): clinical correlation needed — consider rise/fall, ischemic features, clinical context. DocAssist will not suggest a diagnosis.';
-    } else if (labs.trop <= 500) {
-      prompt = '⚠️ Troponin elevated (' + labs.trop + ' pg/mL): document rise/fall pattern, ischemic symptoms, ECG changes, and clinical context (CHF, sepsis, CKD, tachyarrhythmia, PE, post-op). Physician writes the diagnosis manually.';
-    } else {
-      prompt = '⚠️ Troponin significantly elevated (' + labs.trop + ' pg/mL): document rise/fall, ischemic features, ECG changes, clinical context. Consider cardiology consult if not yet involved. Physician writes the diagnosis manually.';
-    }
-    out = out.split('{{TROP_SOFT}}').join(prompt);
-    out = out.split('{{TROP_FULL}}').join(prompt);
-    out = out.split('{{TROP_HIGH}}').join(prompt);
-  } else {
-    // Threshold not met or no trop — strip any orphan placeholders
-    out = out.replace(/\{\{TROP_(SOFT|FULL|HIGH)\}\}\s*\n?/g, '');
-  }
-
-  // BNP — simple
-  if (labs.bnp !== undefined && labs.bnp > 100) {
-    const bnpPrompt = '⚠️ Elevated BNP (' + labs.bnp + ' pg/mL): consider CHF or alternate diagnoses. Physician writes the diagnosis manually.';
-    out = out.split('{{BNP_PROMPT}}').join(bnpPrompt);
-  } else {
-    out = out.replace(/\{\{BNP_PROMPT\}\}\s*\n?/g, '');
-  }
-
-  // D-DIMER — conditional (elevated AND no etiology referenced)
-  if (labs.ddimer !== undefined && labs.ddimer > 500 && !dDimerHasEtiology(chartText)) {
-    const ddPrompt = '⚠️ Elevated D-Dimer (' + labs.ddimer + '): please document etiology or cause.';
-    out = out.split('{{DDIMER_PROMPT}}').join(ddPrompt);
-  } else {
-    out = out.replace(/\{\{DDIMER_PROMPT\}\}\s*\n?/g, '');
-  }
-
-  return out;
-}
-
 function renderAP(apData, originalAP) {
   if (!apData) {
     document.getElementById('ap-body').innerHTML = '<div class="empty"><div class="empty-ico">⚠️</div><div class="empty-ttl">Could not generate optimized A&P</div></div>';
@@ -1842,10 +1757,6 @@ async function generateAPOnDemand() {
       latestAPRequest.encounterLedgerSignature
     );
     const apData = parseAPText(raw);
-    const chartContent = [
-      v('apgen-freeform'), v('apgen-prior'), latestAPRequest.originalAP
-    ].filter(Boolean).join('\n');
-    apData.ap_text = processLabPlaceholders(apData.ap_text, chartContent);
     renderAP(apData, latestAPRequest.originalAP);
   } catch (error) {
     panelError('ap-body', error.message);
